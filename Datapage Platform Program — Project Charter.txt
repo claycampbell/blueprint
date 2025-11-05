@@ -1,0 +1,685 @@
+﻿Datapage Platform Program
+Project Charter
+
+
+Date: October 25, 2025
+Prepared by: Intelligent Agency for Datapage
+
+
+
+Executive Summary        2
+Program Intent        2
+Three Integrated Tracks        2
+Delivery Approach        2
+Key Deliverables        3
+Outcomes        3
+Purpose        4
+Objectives        4
+Program Overview        4
+1. Blueprint Transformation        5
+2. Connect 2.0 — Platform Rebuild        6
+3. Datapage GTM Strategy        8
+Program Phasing & MVP Timeline (Provisional)        9
+Delivery Approach — Agile Program Governance        12
+Program Governance Layer        12
+Cadence and Structure        13
+Governance Principles        14
+Assumptions & Dependencies        14
+Key Deliverables (End of 6 Months)        15
+Track 1 — Blueprint Transformation        15
+Track 2 — Connect 2.0 Platform Rebuild        16
+Track 3 — Datapage GTM Strategy        17
+Success Criteria (End of 6 Months)        18
+Appendix A — Glossary of Terms        19
+Executive Summary
+The Datapage Platform Program will transform Blueprint into a technology-enabled growth company while building the foundation for Datapage’s commercial platform strategy. Over an initial six-month period, three integrated work streams—Blueprint Transformation, Connect 2.0 Platform Rebuild and Datapage GTM Strategy—will deliver both near-term MVP outcomes and set the long-term foundation for Datapage’s growth.
+Program Intent
+Datapage aims to deliver 30% revenue growth while keeping headcount increases modest. This is achieved through technology, automation, and data that scale operational leverage. The MVP platform, processes, and operating system first proven with Blueprint will power Datapage’s go-to-market strategy and serve as the foundation for broader commercial expansion. 
+Three Integrated Tracks
+1. Blueprint Transformation — Defines how Blueprint operates as a frontier firm, including the enterprise-wide Blueprint Operating System, success model, and leadership cadence.
+
+2. Connect 2.0 Platform Rebuild — Delivers the full rebuild of Datapage’s core technology platform and user experience, with the Design & Entitlement MVP pilot ready to launch at the 90-day mark, and MVP versions of BPO (Blueprint Online) and Connect 1.0 modules completed by the end of six months.
+
+3. Datapage GTM Strategy — Defines Datapage’s brand positioning, strategy to target ideal customers, and partner/investor engagement with a clear value proposition and MVP business and financial model. The strategy also features an investor-ready narrative linking Blueprint’s transformation success and the Connect 2.0 platform to Datapage’s scalable growth story.
+
+Delivery Approach
+The program uses an Agile delivery model with two-week sprints and 90-day increments. Coordination follows a lean governance structure inspired by SAFe principles, ensuring oversight without excess process. A shared cadence across all three tracks ensures synchronized progress from initial planning to build and validation. Strategic direction and key decisions are provided by the Program Leadership Team — led jointly by Mark and Darin and supported by IA’s delivery and governance teams.
+Key Deliverables
+At the end of six months, the program will deliver:
+   * Blueprint Operating System v1 (MVP): Defined and implemented at the enterprise level, with adoption underway and iterative improvements continuing after the MVP phase.
+
+   * Connect 2.0 Platform MVP: A unified platform launched with the Design & Entitlement pilot launching at Day 90, followed by completed MVP versions of BPO and Connect 1.0 by program close.
+
+   * Datapage Business & Investment Model (MVP): A validated first version of Datapage’s commercial and financial framework, co-developed with Datapage leadership and positioned for refinement as operating data is collected. 
+
+   * Project Backlog for Sustained Engineering: A prioritized list of next-phase enhancements and capabilities, including planned feature iterations, deeper automation, and expanded AI use cases to drive future development.
+
+Outcomes
+By the end of the initial six-month program, Datapage and Blueprint will have a fully operational MVP foundation that unites the Blueprint Operating System, Connect 2.0 platform, and Datapage’s initial commercial model. This foundation will be validated in practice and serve as the baseline for continued evolution across operations, technology, and market positioning.
+A prioritized backlog for sustained engineering will guide the future enhancements and organizational refinements—ensuring both continuity and momentum as Datapage advances from MVP to scale.
+Purpose
+The Datapage Platform Program defines how Datapage will design, build, and commercialize its next-generation product and services platform.
+The program unites three integrated workstreams — Blueprint Transformation, Connect 2.0 Platform Rebuild, and Datapage GTM Strategy — into a single, coordinated effort to deliver near-term MVP outcomes and establish the long-term structure for Datapage’s growth.
+Blueprint serves as Client Zero, providing the live environment and operating model that guide Connect 2.0’s design and form the foundation for Datapage’s broader commercialization strategy.
+
+
+Objectives
+      * Transform Blueprint into a frontier firm capable of driving 30% revenue growth[a] with only a modest increase in headcount, using technology, data, and AI to scale productivity and margin. This includes designing and implementing the Blueprint Operating System (BOS) — codifying how the firm operates, makes decisions, and measures success — creating a model Datapage can replicate for future clients.
+
+      * Rebuild the Connect 2.0 platform and user experience as the technical and experiential foundation that powers the operating model and enables Blueprint’s transformation.
+
+      * Develop Datapage’s go-to-market and investment strategy to commercialize the combined platform and operating model, positioning Datapage as a scalable product and services company.
+
+      * Validate the integrated model through an MVP pilot, demonstrating measurable operational and financial outcomes within Blueprint and producing the reference implementation for Datapage’s future clients.
+
+Program Overview
+The six-month Datapage Platform Program is organized around three tightly connected tracks that together define how Datapage will build, validate, and scale its next-generation platform and business model.
+Each track has a distinct focus but reinforces the others, creating a closed loop between strategy, technology, and market execution:
+         * Blueprint Transformation defines how Blueprint will operate as a modern, data-driven frontier firm — establishing the operating system, organizational model, and success measures that will later serve as the reference model for other Datapage clients.
+
+         * Connect 2.0 Platform Rebuild translates that model into a new technical and user experience foundation, delivering the platform and interface that bring the operating system to life.
+
+         * Datapage GTM Strategy turns these outcomes into a commercial and investment framework, defining how Datapage will position, price, and scale its combined platform and services business.
+
+Together, these tracks form a single continuum — defining how Blueprint operates, delivering the platform that powers it, and establishing how Datapage monetizes and scales it.
+This structure creates a unified effort to deliver near-term MVP outcomes for Blueprint while laying the long-term foundation for Datapage’s product, operating, and business model. Each track advances in parallel with deliberate interdependencies across organization, user experience, and go-to-market execution.
+1. Blueprint Transformation
+This track focuses on transforming Blueprint into a modern, scalable frontier firm and codifying the frameworks Datapage can later replicate for future clients. 
+All work in this track is delivered under the Datapage brand, with IA acting as Datapage’s professional services arm — establishing a scalable consulting capability alongside the technology platform.
+Scope includes:
+            * Designing the Blueprint Operating System (BOS) — a complete model for how the firm operates, makes decisions, and measures success. The BOS becomes part of Datapage’s intellectual property alongside Connect 2.0.
+
+            * Defining the success model — key performance measures and behavioral norms that characterize a frontier firm.
+
+            * Leading organizational design and effectiveness, including role structure, decision rights, and leadership alignment.
+
+            * Mapping end-to-end user journeys and Jobs To Be Done (JTBD) across Blueprint to identify dependencies, friction points, and automation opportunities.
+
+            * Feeding journey mapping outputs directly into Connect 2.0 UX and workflow design, ensuring continuity between the operating model and product experience.
+
+            * Conducting a technology landscape assessment to define how Connect 2.0 fits within Blueprint’s broader application ecosystem.
+
+            * Developing a change management strategy to support adoption and alignment across teams.
+
+Outcome:
+A codified Blueprint Operating System — the integrated process, structure, and performance model that defines how a frontier firm runs. This becomes reusable Datapage IP and provides direct design input to Connect 2.0.
+2. Connect 2.0 — Platform Rebuild
+This track delivers the rebuild of Datapage’s core technology platform and user experience, creating the foundation for both Blueprint and future Datapage customers. Blueprint serves as Client Zero, where Connect 2.0 will be built, validated, and proven in production.
+MVP Scope:
+The Connect 2.0 MVP establishes the full product foundation — the core data model, infrastructure, API framework, and unified user interface and workflow engine that define the platform’s architecture and experience.
+Within that foundation, a focused Design & Entitlement MVP will provide the first live implementation, enabling these Blueprint teams (currently using SharePoint Online and PowerApps tools) to transition onto Connect 2.0.
+This Design & Entitlement MVP will focus on:
+               * Building and validating the core data model and infrastructure foundation that future modules will depend on.
+
+               * Designing and delivering the Connect 2.0 user interface and workflow experience for Design and Entitlement teams.
+
+               * Implementing workflow automation to replace manual processes.
+
+               * Creating temporary integrations back to BPO and Connect 1.0 where needed for continuity.
+
+               * Launching the Design & Entitlement MVP pilot at Day 90, with execution and validation continuing through the next increment as BPO and Connect 1.0 are integrated into the new platform.
+
+Architecture and Technology Approach:
+                  * Connect 2.0 is designed to be cloud-native, API-first, and experience-led, with platform and UI development proceeding in parallel.
+
+                  * Journey mapping and JTBD work from the Blueprint Transformation track directly inform UX design, workflow logic, and experience architecture.
+
+                  * The hosting environment (Azure, AWS, or GCP) will be selected within the first two weeks, followed immediately by infrastructure setup and development environment configuration.
+
+                  * Development begins at Day 31 and continues through Day 90 to deliver the Design & Entitlement MVP pilot.
+
+                  * Seedcode transitions to a support-only SLA, maintaining Connect 1.0 stability during the build.
+
+                  * During the second 90-day increment (Days 91–180), BPO (Blueprint Online) and Connect 1.0 will be fully rebuilt within Connect 2.0, creating a single, modern application environment and completing the unified Blueprint system.
+
+                  * Datapage’s two other customers (running heavily customized Connect 1.x instances) remain out of scope until after MVP launch and will be scoped separately.
+Data Governance & Migration Plan
+                     * Source of Truth: Connect 2.0 becomes authoritative for Design & Entitlement at pilot cutover; BPO/Connect 1.0 remains authoritative where not yet rebuilt.
+                     * Quality Gates: Completeness, referential integrity, duplicate rate, and key business rule checks must pass before cutover.
+                     * Migration Phases: (1) Inventory & mapping → (2) Dry-run → (3) Shadow (read in 2.0, write in 1.0) → (4) Phased cutover by team → (5) Decommission & archive.
+                     * Rollback: Documented revert steps executable within 2 hours; trigger criteria; comms tree.
+                     * Lineage & Telemetry: Field-level lineage for migrated entities; change data capture enabled.
+Cutover & Deprecation
+Shadow period ≥ 2 weeks; UAT exit criteria approved by PLT; progressive retirement of overlapping screens in 1.0; data archive policy retained 7 years (or per legal).
+
+
+Multi-Tenant Considerations:
+                     * The MVP will not yet be fully multi-tenant, as SaaS-level infrastructure (tenant isolation, provisioning, billing, scaling) is not required at this stage.
+
+                     * However, the architecture, data model, and UI will be engineered to support multi-tenancy in future releases, avoiding rework as Datapage scales to multiple customers.
+
+AI Guardrails:
+                        * Human-in-the-loop on entitlement and builder scoring decisions; explainable scoring with factor breakdowns; fairness checks each release; PII minimization and purpose binding; model performance & drift monitoring; incident playbook for model regressions.
+
+
+Outcome:
+Delivery of the Connect 2.0 Platform MVP — including the data model, infrastructure foundation, unified user interface, and workflow engine — with the Design & Entitlement MVP pilot ready to launch at Day 90. In the second increment, BPO and Connect 1.0 are consolidated as modules within the unified application, completing the unified Blueprint environment and establishing the baseline for Datapage’s next-generation product.
+3. Datapage GTM Strategy
+This track defines the go-to-market strategy, business model, and investment framework for Datapage as a product company. It translates the outcomes from Blueprint Transformation Connect 2.0 into a clear commercialization and growth strategy.
+The GTM strategy identifies target markets and customer profiles, defines the value proposition and pricing model, and outlines channels and sales approaches. For Datapage, this means articulating how the MVP platform and processes proven with Blueprint will power commercial expansion and support partner and investor engagement.
+Within the first 3-60 days, the team will create an initial perspective on market opportunity, product-market fit, customer acquisition, and unit economics. This framework will be refined as operating data emerges from Blueprint’s transformation and Connect 2.0 platform pilots, delivering an investor-ready narrative that links Blueprint's success to Datapage's scalable growth story.
+Scope includes:
+                        * Success model design—establishes growth goals, margin targets, recurring revenue structure, target market touchpoints, and clear KPIs.
+
+                        * Target market definition—conducts market segmentation analysis to identify priority segments, ideal customer profiles, and adoption pathways.
+
+                        * Value proposition and positioning—articulates how Datapage addresses key customer problems and differentiates from competitive alternatives.
+
+                        * Pricing and packaging framework—develops preliminary pricing and bundled offerings for market testing.
+
+                        * Financial modeling—builds baseline TCO and IRR models to guide investment requirements and set ROI expectations (co-developed with Datapage).
+
+                        * Commercialization roadmap—outlines phased business plan, including market entry and scaling (co-developed with Datapage).
+
+                        * Investment narrative—prepares an initial investor and partner deck that links Blueprint results, the Connect 2.0 vision, and the frontier firm model into one cohesive story.
+                        * Pricing & Packaging Experiments: Test seat vs usage vs value-based; module bundles (Entitlement, Feasibility, Servicing); willingness-to-pay interviews with 6–8 prospects.[b]
+                        * Lighthouse Customer Criteria: Market fit (jurisdiction complexity), data readiness, executive sponsor, case-study rights, and 90-day pilot commitment.[c]
+Guardrails:
+                           * The first 30–60 days focus on building a directional perspective, not a fully complete business plan.
+
+                           * The goal is to create enough clarity to validate investment levels and guide next-phase priorities.
+
+                           * Additional refinement, modeling, and market validation may continue in separate GTM workstreams after completion of the initial perspective, and as the strategy matures.
+Outcome:
+An initial Datapage go-to-market and investment strategy, including a first-phase financial model, market positioning, customer acquisition approach, and investor-ready narrative.
+
+
+Program Phasing & MVP Timeline (Provisional)
+The Datapage Platform Program runs over 180 days (six months), structured into two 90-day increments followed by a post-MVP stabilization and AI expansion phase. Each track advances in parallel with coordinated dependencies, progressing from definition to build, validation, and steady-state operation.
+Timeframe
+	Blueprint Transformation
+	Connect 2.0 Platform Rebuild
+	Datapage GTM Strategy
+	0–30 Days
+	• Establish governance and success metrics aligned to Blueprint’s 30% growth target.
+• Begin journey mapping and JTBD analysis, starting with Design & Entitlement.
+• Define the Blueprint Operating System framework, roles, and decision rights.
+• Launch initial change management and leadership alignment activities.
+	• Finalize architecture and technical approach.
+• Evaluate and select hosting platform (Azure, AWS, or GCP).
+• Stand up base infrastructure and DevOps environment.
+• Define initial data model and system boundaries.
+• Begin early UX concepting and experience framework informed by journey mapping.
+	• Build the preliminary Datapage success model.
+• Draft product narrative and value proposition.
+• Identify target segments and data needs for market analysis.
+• Outline modeling approach for TCO and IRR.
+	31–60 Days
+	• Continue journey mapping and JTBD discovery, extending to additional user groups.
+• Develop Blueprint Operating System v1 — org design, process model, and decision cadence.
+• Integrate updated journey insights directly into UX and product design.
+	• Begin full development of Connect 2.0 (data model, APIs, workflow engine, and UI).
+• Conduct UX design sprints for Design & Entitlement.
+• Establish temporary integrations with BPO and Connect 1.0 for continuity.
+• Implement initial workflow automation.
+	• Conduct market and customer segmentation analysis.
+• Develop first iteration of Datapage business plan.
+• Build baseline financial models (TCO, IRR, revenue levers).
+• Begin investor deck narrative framing.
+	61–90 Days
+	• Finalize journey mapping and Blueprint Operating System v1.
+• Validate leadership alignment on the operating model and success measures.
+• Support readiness and adoption planning for pilot users.
+	• Continue development and testing of Connect 2.0 MVP.
+• Finalize UI and workflow experience for Design & Entitlement.
+• Launch Design & Entitlement MVP pilot at Day 90 with defined success metrics and feedback loops.
+	• Create first draft of investor and partner deck.
+• Refine Datapage success model and growth assumptions.
+• Validate preliminary pricing and packaging framework.
+	91–180 Days
+	• Extend journey mapping to remaining Blueprint teams.
+• Transition the Blueprint Operating System into daily operations.
+• Prepare post-MVP change management and enablement roadmap.
+	• Execute and measure pilot performance.
+• Iterate UX and workflows based on pilot feedback.
+• Rebuild BPO (Blueprint Online) and Connect 1.0 within Connect 2.0, unifying the Blueprint environment.
+• Harden architecture and data model for scale.
+• Introduce initial AI-enabled features and automation capabilities within the rebuilt platform.
+	• Finalize Datapage GTM and investment strategy.
+• Complete investor-ready deck and product roadmap.
+• Validate TCO/IRR model with updated delivery and cost data.
+• Define next-phase growth plan and funding strategy.
+	Post-180 Days
+	• Institutionalize the Blueprint Operating System — governance cadence, metrics, and leadership routines.
+• Continue monitoring performance against growth targets.
+• Maintain change management support to drive adoption.
+	• Transition engineering to steady-state operations with defined ownership and release cadence.
+• Build on the MVP foundation to expand AI capability and workflow intelligence.
+• Maintain a living sustained engineering backlog capturing feature enhancements, automation opportunities, and improvements identified through MVP use.
+	• Move GTM from planning to execution, initiating investor and partner outreach.
+• Use Blueprint’s success metrics and early outcomes in marketing and investor storytelling.
+• Refine the long-term Datapage financial model and roadmap for scale.
+	Multi-Tenant Roadmap (Post-MVP)
+                              * 180–270 Days: Logical tenant isolation, provisioning APIs, theming.
+                              * 270–360 Days: Usage metering & billing, BYO-IdP options, tenant-scoped AI contexts, cost controls.
+Decision Gates
+Gate 1 — Architecture & Alignment (Day 30)
+ Purpose: Confirm the technical and operating foundation before major build spend.
+                              * Architecture and hosting platform selected and documented.
+
+                              * Blueprint Operating System v1 framework outlined and approved.
+
+                              * Initial backlog and resourcing validated.
+
+                              * Cumulative spend ≤ $X.
+Decision: Go or Hold for commencement of Day-31 build.
+Gate 2 — Pilot Validation (Day 90)
+ Purpose: Ensure the pilot delivers measurable business value before full-scale development.
+                                 * Design & Entitlement MVP live in production.
+
+                                 * At least 3 of 4 core KPIs (speed, adoption, quality, stability) met or trending positive.
+
+                                 * Feedback loop and backlog for next increment established. 
+Decision: Release next funding tranche ($Y) and proceed with full platform build-out.
+Gate 3 — Scale Readiness (Day 180)
+ Purpose: Confirm unified platform and organizational readiness for scale-out.
+                                    * Unified Blueprint environment operational (BPO and Connect 1.0 rebuilt within 2.0).
+
+                                    * User adoption ≥ 85% across pilot roles.
+
+                                    * Reliability ≥ 99.5%; core automation stable.
+
+                                    * Sustained-engineering backlog and post-MVP plan approved.
+Decision: Authorize scale-out and broader commercialization.
+
+
+Delivery Approach — Agile Program Governance
+The program operates under a standard Agile delivery model, coordinated through a light SAFe-style program governance layer that keeps work synchronized, transparent, and outcomes-focused across all three tracks. The goal is disciplined execution without unnecessary overhead — emphasizing alignment, velocity, and continuous learning.
+Teams work in two-week sprints on a shared cadence, with 90-day Program Increments (PIs) aligned to major milestones. Each increment concludes with a review and planning session. Shared sprint reviews and retrospectives keep strategy, technology, and GTM progress connected and visible across teams.
+Key Principles:
+                                       * Deliver in increments, learn continuously. Each 90-day PI delivers tangible results that feed into the next cycle.
+
+                                       * Align early, adapt quickly. Shared cadence ensures fast feedback and coordinated pivots.
+
+                                       * Visibility over ceremony. Lightweight tools and dashboards replace heavy governance.
+
+                                       * Integrated delivery. Each track operates independently but remains tied to a unified backlog and release rhythm.
+
+Program Governance Layer
+The Program Leadership Team (PLT) provides strategic direction, integration, and decision-making across all three program tracks. It ensures that business, product, and delivery priorities remain aligned while functional teams execute within their sprint cadence.
+Role
+	Person
+	Responsibilities
+	Co-Owner & Executive Sponsor / Product Owner
+	Mark
+	Co-owner of Datapage and Blueprint. Owns product vision and business outcomes; sets and prioritizes backlog; approves key scope and funding decisions; ensures alignment with Datapage’s long-term strategy and GTM priorities.
+	Co-Owner & Executive Sponsor
+	Darin
+	Co-owner of Datapage and Blueprint. Provides strategic oversight and operational alignment; ensures Blueprint transformation outcomes are achieved; removes organizational blockers; sponsors adoption and change management.
+	Program Lead (IA)
+	Nick
+	Leads overall delivery across all tracks; manages Agile cadence, dependencies, and risks; chairs PLT sessions; drives integration across strategy, product, and delivery; accountable for program execution and transparency.
+	Executive Sponsor (IA)
+	Paul
+	Provides IA-side executive oversight; ensures commercial, contractual, and delivery alignment; supports key decision checkpoints and governance reviews.
+	GTM Strategy
+(IA)
+	Lisa
+	Leads market research, customer profiling and development of value proposition and differentiation strategy. Defines marketing and sales approaches to maximize key journey touchpoints. Ensures a unified strategic narrative by maintaining consistency across program communications and stakeholder messaging for both internal and external audiences.Supports preparation of leadership and investor materials ensuring alignment with overall program objectives.
+	Business Model (IA)
+	Jason
+	Leads Datapage business modeling, pricing strategy, and financial analysis (TCO, IRR, unit economics). Develops success model design including growth goals, margin targets, and recurring revenue structure. Builds baseline financial models to guide investment requirements and ROI expectations. 
+	RACI for Critical Decisions
+Decision
+	Driver (D)
+	Approver (A)
+	Consulted (C)
+	Informed (I)
+	Hosting selection
+	Program Lead (Nick)
+	Mark
+	Darin, Eng Lead
+	PLT
+	MVP scope change
+	Mark
+	Nick
+	Track Leads
+	PLT
+	Connect 1.0 cutover date
+	Nick
+	Mark
+	Ops Leads
+	PLT
+	Security exceptions
+	Eng Lead
+	Mark
+	Sec/Compliance
+	PLT
+	Pricing hypothesis (GTM)
+	Lisa
+	Mark
+	Jason
+	PLT
+	Funding gate release
+	Mark
+	Darin
+	Nick, Jason
+	PLT
+	
+
+Cadence and Structure
+                                          * Weekly PLT Syncs: Focus on key risks, priorities, and decision points across all tracks.
+
+                                          * Quarterly PI Planning: Sets shared objectives and dependencies for each 90-day increment.
+
+                                          * Program Management: A dedicated PM manages day-to-day sprint coordination, dependencies, and tracking across technology, UX, infrastructure, and change management.
+
+                                          * Decision Escalation: Functional leads escalate key risks or trade-offs to the PLT through the Program Lead for resolution.
+                                          * Operational Readiness (Go-Live): On-call roster; incident severities & SLAs; escalation matrix; smoke tests; change control gates; hypercare for first 6 weeks post-pilot; weekly ops review with SLOs.
+
+
+Governance Principles
+                                             * Lean over heavy: Prioritize clarity and decision velocity over ceremony.
+
+                                             * Transparency: Maintain shared visibility across all workstreams through a unified backlog and delivery board.
+
+                                             * Accountability: Assign clear ownership for every deliverable and decision.
+
+                                             * Integration: Keep all tracks synchronized through shared sprint and review cadence.
+
+
+
+
+Assumptions & Dependencies
+The following assumptions and dependencies underpin the program’s design, timeline, and delivery approach. Each will be validated and refined as the program progresses.
+                                                * Shared Ownership and Alignment: Datapage and Blueprint remain jointly owned and strategically aligned through Darin and Mark, providing consistent direction and decision-making across all tracks.
+
+                                                * Dedicated Engagement: Blueprint leadership and functional teams will commit the time required for workshops, validation sessions, and adoption activities throughout the program.
+
+                                                * Stakeholder Engagement Mapping: IA will provide a stakeholder engagement map estimating the expected time commitments and touchpoints for Blueprint team members. This map will be defined prior to kickoff for the Design & Entitlement focus areas and refined in the first few weeks to include other functions.
+
+                                                * Hosting Platform Decision: The hosting platform (Azure, AWS, or GCP) will be selected within the first two weeks to enable infrastructure setup and early development.
+
+                                                * Vendor Transition: Seedcode will move to a support-only SLA as planned, ensuring platform stability while Connect 2.0 is rebuilt.
+
+                                                * Resource Continuity: Core delivery roles — including program management, engineering, UX, and change management — will remain consistent across both 90-day increments to ensure continuity and velocity.
+
+                                                * MVP Scope Discipline: The MVP will focus on foundational functionality and prioritized automation, deferring broader AI enablement and multi-tenant capabilities to later increments.
+
+                                                * Data Availability: Required data will be accessible immediately at program kickoff through the existing production environment, enabling early validation and model development.
+
+                                                * Incremental Adoption: The Blueprint Operating System and Connect 2.0 platform will be adopted progressively, with continued expansion and optimization beyond the initial 180-day program.
+
+                                                * Sustained Engineering Backlog: A comprehensive backlog for sustained engineering will be created prior to program close, providing continuity of development priorities and clear alignment between Datapage and IA teams for ongoing delivery.
+                                                * Stakeholder Time Budget: Acquisitions 4–6 hrs/wk; Entitlement 4–6; Servicing 2–4; Leadership 2; PM/PLT 2. Names assigned at kickoff.
+                                                * Baseline Access: Read access to current production data by Day 5 to validate model and migration maps.
+Key Deliverables (End of 6 Months)
+The following represent the program’s major deliverables (“big rocks”) — the tangible outcomes that will define completion of the six-month engagement. Each deliverable aligns to one or more program tracks and will reach the maturity level noted below by the end of the 180-day period.
+Track 1 — Blueprint Transformation
+Deliverable
+	Description
+	Expected State / Maturity at 180 Days
+	Blueprint Operating System v1 (MVP)
+	Enterprise-wide framework defining Blueprint’s operating model — principles, processes, roles, decision rights, and measures of success.
+	Version 1 complete and in use; leadership routines established; organization-wide adoption underway; ready for iterative refinement post-MVP.
+	Blueprint Success Model & Metrics Dashboard
+	Quantitative and qualitative success measures aligned to the 30 % growth target with modest headcount expansion.
+	Defined, baselined, and instrumented; integrated into leadership cadence; continuous tracking active.
+	Journey Maps & JTBD Library
+	End-to-end journey maps and jobs-to-be-done analysis across all Blueprint teams and functions.
+	Complete and validated; fully documented and linked to Connect 2.0 design and automation roadmap.
+	Track 2 — Connect 2.0 Platform Rebuild
+Deliverable
+	Description
+	Expected State / Maturity at 180 Days
+	Connect 2.0 Platform MVP
+	Unified platform including core data model, infrastructure, workflow engine, and UI.
+	Ready to pilot; Design & Entitlement live at Day 90; MVP versions of BPO (Blueprint Online) and Connect 1.0 complete at program close; stable baseline for future expansion.
+	Automation & Integration Layer
+	Workflow automation and temporary integrations between new and legacy systems.
+	Operational and stable; automation in use for Design & Entitlement; legacy integrations maintained until full deprecation.
+	Data Architecture & Model Documentation
+	Logical and physical data models supporting Connect 2.0 and future analytics / AI capabilities.
+	Defined, implemented, and validated against production data; governed under ongoing change-control.
+	AI Use-Case Backlog & Initial Features
+	Catalog of prioritized AI / automation opportunities and initial MVP-level implementations.
+	Backlog defined and prioritized with Datapage; initial features operational within MVP; framework in place for next increments.
+	Track 3 — Datapage GTM Strategy
+Deliverable
+	Description
+	Expected State / Maturity at 180 Days
+	Datapage Business Model & Financial Framework (MVP)
+	Core business and investment model for Datapage — TCO, IRR, revenue, and operating structure.
+	Co-owned with Datapage (Mark); validated baseline model using real build economics and MVP scope; ready for refinement with post-MVP data.
+	Datapage GTM & Investor Deck
+	Unified narrative connecting Blueprint results, Connect 2.0 capabilities, and Datapage’s growth strategy.
+	Co-developed and investor-ready; positioned for partner and funding discussions.
+	Project Backlog for Sustained Engineering
+	Prioritized backlog of next-phase enhancements and capability expansions, including planned feature iterations, deeper automation, and AI use cases.
+	Defined and approved by the Program Leadership Team; provides a ready runway for subsequent increments and continuous improvement.
+	Success Criteria (End of 6 Months)
+By the end of the six-month program, Datapage and Blueprint will have delivered an integrated MVP foundation across operations, technology, and commercial strategy. The following criteria define what “success” means at program close and establish the baseline for continued iteration and scale.
+                                                   * Blueprint Operating System v1 (Enterprise Scope): A complete first version of the company-wide Blueprint Operating System, defined at the enterprise level — including principles, processes, roles and decision rights, and performance measures. Leadership routines are initiated, adoption is underway, and continuous refinement will continue post-MVP based on live operational feedback.
+
+                                                   * Connect 2.0 Platform MVP (Unified Blueprint Baseline): A unified platform ready to pilot, with Design & Entitlement live on the new system at Day 90 and MVP versions of BPO (Blueprint Online) and Connect 1.0 complete by the end of six months. Core automation is operational; further functionality is prioritized for subsequent increments based on user feedback and adoption results.
+
+                                                      * A prioritized backlog for sustained engineering is documented and approved by the Program Leadership Team, providing a clear runway for future enhancements and expansion.
+
+                                                         * Validated Datapage Business & Investment Model (MVP): A clear, defensible commercial and investment framework for Datapage, including:
+
+                                                            * A validated financial model grounded in real build economics, delivery cadence, and MVP scope.
+
+                                                            * Defined product-market positioning and pricing approach informed by early customer and market analysis.
+
+                                                            * An investor- and partner-ready narrative connecting Blueprint outcomes, the Connect 2.0 platform, and Datapage’s growth and funding strategy.
+Success Metrics & Targets
+Domain
+	Metric
+	Baseline (To be Measured)
+	Target (Day 180)
+	Owner
+	Verification
+	Feasibility
+	Packet assembly cycle time
+	X days
+	–50%
+	Entitlement Lead
+	Time-to-complete logs
+	Entitlement
+	Submission prep time
+	X days
+	–50%
+	Entitlement Lead
+	Workflow timestamps
+	Throughput
+	Deals vetted per FTE
+	X/mo
+	2×
+	Acq Lead
+	Ops dashboard
+	Servicing
+	Avg. draw turnaround
+	X days
+	–60%
+	Servicing Lead
+	Draw queue metrics
+	Adoption
+	WAU (pilot roles)
+	Baseline
+	≥70% by Week 12; ≥85% by Day 180
+	Change Lead
+	Product analytics
+	Data Quality
+	Validation error rate
+	Baseline
+	–75%
+	Data Lead
+	DQ reports
+	NLQ
+	Accuracy (top 50 intents)
+	Baseline
+	≥90%
+	Product/AI
+	Eval set
+	Reliability
+	Uptime
+	—
+	≥99.5%
+	Eng Lead
+	SLO dashboard
+	DR
+	RPO / RTO
+	—
+	≤15m / ≤2h
+	Eng Lead
+	DR test report
+	
+
+Collectively, these outcomes confirm the program’s primary goal: to establish a functional, validated MVP that demonstrates measurable operational and financial results within Blueprint, while creating the platform, operating model, and commercial framework Datapage will scale in subsequent phases.
+Appendix A — Glossary of Terms
+Term
+	Definition / Description
+	AI (Artificial Intelligence)
+	Technologies that enable machines or software to perform tasks that typically require human intelligence, such as pattern recognition, prediction, and language processing. Within this program, AI refers primarily to workflow automation and data-driven features planned for Connect 2.0.
+	API (Application Programming Interface)
+	A defined set of protocols that allow one system or component to communicate with another. Connect 2.0 is designed as an API-first platform to ensure flexibility and integration across systems.
+	Backlog
+	A prioritized list of user stories, features, and enhancements awaiting development. Managed jointly by Datapage and IA and reviewed every sprint to maintain alignment with program goals.
+	Baseline
+	The authoritative version of the project charter or related document against which all future changes or updates are measured. Example: “Baseline v11” represents the current, locked version of this charter.
+	Blueprint
+	The operating company serving as “Client Zero” for the Connect 2.0 platform. Blueprint provides the live environment for platform development and operational transformation under Datapage ownership.
+	Blueprint Operating System (BOS)
+	The enterprise framework that defines how Blueprint operates — including principles, processes, roles, decision rights, and success measures. The BOS becomes part of Datapage’s intellectual property.
+	BPO (Blueprint Online)
+	Blueprint’s public-facing platform used to engage real estate agents and originate opportunities. It is the front door of deal flow and intake, capturing submissions and moving qualified opportunities into the internal pipeline.
+	Change Management
+	The structured approach to driving adoption of new processes, systems, and behaviors within Blueprint. Includes communication, training, and leadership alignment activities.
+	Client Zero
+	The first live implementation of a new system or model used to validate its effectiveness in production. Blueprint serves as Client Zero for Connect 2.0 and the Blueprint Operating System.
+	Connect 1.0
+	The legacy platform currently used by Blueprint and two other Datapage clients. It will be rebuilt within Connect 2.0 during the second 90-day increment as part of the MVP baseline for Blueprint.
+	Connect 2.0
+	Datapage’s next-generation platform — a unified, cloud-native, API-first system that integrates data, workflows, and automation across Blueprint’s operations. The foundation for Datapage’s scalable SaaS offering.
+	Datapage
+	The platform company co-owned by Darin and Mark. Datapage owns Connect 2.0 and the Blueprint Operating System IP and will commercialize the combined product and services model.
+	Datapage GTM Strategy
+	The commercial and investment model for Datapage’s product and services business, including pricing, segmentation, and investor readiness.
+	Design & Entitlement
+	The initial Blueprint user groups and workflows targeted for the MVP. These teams manage entitlement (permitting) and design/architecture processes.
+	DevOps (Developer Operations)
+	Practices and tools that combine software development and IT operations to improve delivery speed and platform reliability. Connect 2.0 infrastructure will be managed through DevOps pipelines.
+	Increment (Program Increment / PI)
+	A 90-day delivery cycle made up of multiple Agile sprints. Each increment delivers specific outcomes and concludes with a review and planning session.
+	Intelligent Agency (IA)
+	The strategic partner responsible for leading program delivery alongside Datapage. IA provides advisory, design, engineering, and strategy expertise across all tracks.
+	Jobs To Be Done (JTBD)
+	A framework for understanding user needs and desired outcomes. JTBD analysis identifies what users are trying to accomplish, informing UX design and automation priorities.
+	Journey Mapping
+	Visualization of end-to-end steps, pain points, and data interactions users experience in completing their work. Used to inform workflow design and automation opportunities.
+	MVP (Minimum Viable Product)
+	The first functional version of a system or product that delivers core business value with essential features. For Connect 2.0, the MVP includes Design & Entitlement, BPO, and Connect 1.0 modules.
+	Operating Cadence
+	The rhythm of recurring meetings, reviews, and checkpoints used to manage program execution (e.g., sprint reviews, PI planning, PLT syncs).
+	PI Planning (Program Increment Planning)
+	Quarterly planning sessions where all teams align on priorities, objectives, and dependencies for the next increment.
+	PLT (Program Leadership Team)
+	The cross-functional leadership team responsible for strategy, decision-making, and alignment across all program tracks. Members include Darin, Mark, Nick, Paul, Lisa, and Jason.
+	Post-180 Days
+	The phase following MVP completion, focused on adoption, optimization, and expansion of automation and AI-enabled capabilities.
+	Program Lead
+	Role accountable for overall delivery and coordination across all tracks. Manages cadence, dependencies, and alignment; held by Nick (IA).
+	Program Management
+	The coordination and planning function supporting the Program Lead and all tracks. Manages sprint cycles, dependencies, and progress tracking.
+	Program Tracks
+	The three major workstreams within the Datapage Platform Program: (1) Blueprint Transformation, (2) Connect 2.0 Platform Rebuild, and (3) Datapage GTM Strategy.
+	SAFe (Scaled Agile Framework)
+	A framework for managing large-scale Agile programs. This program applies a lightweight version to maintain alignment and governance across tracks.
+	Seedcode
+	The legacy vendor supporting Connect 1.0. Seedcode will shift to a limited support-only role during the Connect 2.0 rebuild.
+	SLA (Service Level Agreement)
+	A defined set of support terms and response commitments between Datapage and Seedcode during the transition period.
+	Sprint
+	A two-week Agile iteration during which teams deliver defined work items.
+	Success Model
+	The measurement framework used to assess Blueprint’s performance improvement, including efficiency, throughput, and growth metrics.
+	Sustained Engineering Backlog
+	A prioritized list of post-MVP enhancements, feature expansions, and automation opportunities. Serves as the foundation for ongoing development beyond the initial program.
+	Track Lead
+	The individual responsible for coordinating delivery within each program track and escalating issues to the Program Lead as needed.
+	Unified Blueprint Environment
+	The integrated system state achieved when Connect 2.0 incorporates BPO, Connect 1.0, and Design & Entitlement modules into one operational platform.
+	User Experience (UX)
+	The end-to-end experience of a user interacting with Connect 2.0, including interface design, workflow flow, and data interactions informed by journey mapping and JTBD.
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Datapage | Intelligent Agency | Confidential                                                                                                
+[a]Needs a timeframe associated with the growth
+[b]Sug: 
+Replace the Pricing and Packaging framework bullet above with this bullet point.
+[c]If Blueprint is client Zero, wouldn't they be our case study and pilot?  
+Also, The target market definition/criteria is listed in the second bullet -- is this the same thing?
