@@ -3,7 +3,8 @@
     "allow": [
       "Bash(if [ -d .github ])",
       "Bash(then find .github -type f)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []
