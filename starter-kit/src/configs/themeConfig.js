@@ -16,9 +16,9 @@
  * Another way is to clear the cookie from the browser's Application/Storage tab and then reload the page.
  */
 const themeConfig = {
-  templateName: 'Materialize',
-  homePageUrl: '/home',
-  settingsCookieName: 'materialize-mui-next-demo-1',
+  templateName: 'Connect 2.0',
+  homePageUrl: '/dashboard',
+  settingsCookieName: 'connect-2-blueprint',
   mode: 'system', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false
