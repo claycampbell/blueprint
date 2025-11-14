@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acquisitions - Connect 2.0 Internal</title>
+  <link rel="stylesheet" href="assets/css/design-system.css">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    .app-container {
+      display: flex;
+      width: 100%;
+    }
+
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-light);
+      padding: var(--space-md) var(--space-xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      flex: 1;
+      max-width: 600px;
+    }
+
+    .search-input {
+      flex: 1;
+    }
+
+    .main-area {
+      flex: 1;
+      padding: var(--space-xl);
+      overflow-y: auto;
+    }
+
+    .page-header-section {
+      margin-bottom: var(--space-xl);
+    }
+
+    .metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .metric-card {
+      background: var(--bg-primary);
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+      border-left: 4px solid var(--primary-blue);
+    }
+
+    .metric-card.warning {
+      border-left-color: var(--warning);
+    }
+
+    .metric-card.success {
+      border-left-color: var(--success);
+    }
+
+    .metric-card.info {
+      border-left-color: var(--info);
+    }
+
+    .metric-value {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      color: var(--primary-blue);
+    }
+
+    .metric-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-top: var(--space-xs);
+    }
+
+    .filters-bar {
+      background: var(--bg-primary);
+      padding: var(--space-lg);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-lg);
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    .lead-queue {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .lead-item {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      gap: var(--space-lg);
+      align-items: start;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .lead-item:hover {
+      background: var(--gray-50);
+    }
+
+    .lead-score {
+      flex-shrink: 0;
+      width: 80px;
+      text-align: center;
+    }
+
+    .score-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-xs);
+    }
+
+    .score-high {
+      background: var(--success-light);
+      color: var(--success-dark);
+      border: 3px solid var(--success);
+    }
+
+    .score-medium {
+      background: var(--warning-light);
+      color: var(--warning-dark);
+      border: 3px solid var(--warning);
+    }
+
+    .score-low {
+      background: var(--danger-light);
+      color: var(--danger-dark);
+      border: 3px solid var(--danger);
+    }
+
+    .score-label {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .lead-details {
+      flex: 1;
+    }
+
+    .lead-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-md);
+    }
+
+    .lead-address {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+      color: var(--primary-blue);
+      margin-bottom: var(--space-xs);
+    }
+
+    .lead-meta {
+      display: flex;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-md);
+    }
+
+    .lead-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .meta-label {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+    }
+
+    .meta-value {
+      font-weight: var(--font-medium);
+    }
+
+    .ai-insights {
+      background: var(--info-light);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--info);
+      margin-top: var(--space-md);
+    }
+
+    .ai-insights-title {
+      font-size: var(--text-sm);
+      font-weight: var(--font-semibold);
+      color: var(--info-dark);
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .lead-actions {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+    }
+
+    .consultant-order-panel {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+
+    .consultant-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    .consultant-card {
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .consultant-card:hover {
+      border-color: var(--primary-blue);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .consultant-card.selected {
+      border-color: var(--primary-blue);
+      background: rgba(0, 102, 204, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="navbar-brand">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 2L2 10v12l14 8 14-8V10L16 2zm0 2.8l10.5 6L16 17.2 5.5 10.8l10.5-6zM4 12.5l11 6.3v10.4L4 22.9V12.5zm13 16.7v-10.4l11-6.3v10.4l-11 6.3z"/>
+          </svg>
+          <span>Connect 2.0</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link active">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+              </svg>
+              Lead Queue
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Feasibility Pipeline
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              Contacts
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Documents
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="internal-dashboard.html" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Analytics
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="search-bar">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" class="form-control search-input" placeholder="Search leads, projects, contacts...">
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-sm btn-outline-primary">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+          </button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar">SA</div>
+            <div>
+              <div class="font-medium text-sm">Sarah Anderson</div>
+              <div class="text-xs text-secondary">Acquisitions Lead</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Area -->
+      <div class="main-area">
+        <!-- Page Header -->
+        <div class="page-header-section">
+          <h1 class="text-3xl font-bold mb-2">Lead Queue</h1>
+          <p class="text-secondary">AI-powered lead prioritization and instant feasibility assessment</p>
+        </div>
+
+        <!-- Metrics Bar -->
+        <div class="metrics-bar">
+          <div class="metric-card">
+            <div class="metric-value">23</div>
+            <div class="metric-label">New Leads (Today)</div>
+          </div>
+          <div class="metric-card warning">
+            <div class="metric-value">47</div>
+            <div class="metric-label">Pending Review</div>
+          </div>
+          <div class="metric-card success">
+            <div class="metric-value">12</div>
+            <div class="metric-label">In Feasibility</div>
+          </div>
+          <div class="metric-card info">
+            <div class="metric-value">8 min</div>
+            <div class="metric-label">Avg Response Time</div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <select class="form-control form-select" style="width: auto;">
+            <option>All Priorities</option>
+            <option>High Priority</option>
+            <option>Medium Priority</option>
+            <option>Low Priority</option>
+          </select>
+          <select class="form-control form-select" style="width: auto;">
+            <option>All Markets</option>
+            <option>Seattle</option>
+            <option>Phoenix</option>
+            <option>Bellevue</option>
+          </select>
+          <select class="form-control form-select" style="width: auto;">
+            <option>All Agents</option>
+            <option>Top Performers</option>
+            <option>New Agents</option>
+          </select>
+          <select class="form-control form-select" style="width: auto;">
+            <option>Sort by: AI Score (High-Low)</option>
+            <option>Sort by: Submission Time</option>
+            <option>Sort by: Value (High-Low)</option>
+          </select>
+          <button class="btn btn-sm btn-primary" style="margin-left: auto;">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Manual Lead Entry
+          </button>
+        </div>
+
+        <!-- Lead Queue -->
+        <div class="lead-queue">
+          <!-- Lead Item 1 - High Priority -->
+          <div class="lead-item">
+            <div class="lead-score">
+              <div class="score-circle score-high">92</div>
+              <div class="score-label">AI Score</div>
+            </div>
+            <div class="lead-details">
+              <div class="lead-header">
+                <div>
+                  <div class="lead-address">4521 Meridian Ave N</div>
+                  <div class="text-sm text-secondary">Seattle, WA 98103 • Submitted 15 min ago by Jane Doe</div>
+                </div>
+                <span class="badge badge-success">High Priority</span>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-meta-item">
+                  <span class="meta-label">Purchase Price</span>
+                  <span class="meta-value">$875,000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Est. List Price</span>
+                  <span class="meta-value">$1,250,000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Zoning</span>
+                  <span class="meta-value">LR3</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Lot Size</span>
+                  <span class="meta-value">5,500 sq ft</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Parcel</span>
+                  <span class="meta-value">123-456-7890</span>
+                </div>
+              </div>
+              <div class="ai-insights">
+                <div class="ai-insights-title">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  AI Insights
+                </div>
+                <ul style="margin: 0; padding-left: 1.25rem; font-size: var(--text-sm);">
+                  <li><strong>Strong development potential:</strong> LR3 zoning supports 4+ units on 5,500 sq ft lot</li>
+                  <li><strong>Prime location:</strong> Within 0.3 miles of 3 recently funded projects (avg yield: 18.2%)</li>
+                  <li><strong>Top-tier agent:</strong> Jane Doe has 94% acceptance rate, 12 funded projects YTD</li>
+                  <li><strong>Market comps:</strong> Similar lots trading at $875K-$950K (this is priced competitively)</li>
+                </ul>
+              </div>
+              <div class="lead-actions">
+                <button class="btn btn-success">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                  Move to Feasibility
+                </button>
+                <button class="btn btn-outline-primary">Request More Info</button>
+                <button class="btn btn-outline-secondary">Pass</button>
+                <button class="btn btn-outline-secondary">Assign to Specialist</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lead Item 2 - Medium Priority -->
+          <div class="lead-item">
+            <div class="lead-score">
+              <div class="score-circle score-medium">68</div>
+              <div class="score-label">AI Score</div>
+            </div>
+            <div class="lead-details">
+              <div class="lead-header">
+                <div>
+                  <div class="lead-address">7890 E Thomas Rd</div>
+                  <div class="text-sm text-secondary">Phoenix, AZ 85251 • Submitted 1 hour ago by Mike Johnson</div>
+                </div>
+                <span class="badge badge-warning">Medium Priority</span>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-meta-item">
+                  <span class="meta-label">Purchase Price</span>
+                  <span class="meta-value">$425,000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Est. List Price</span>
+                  <span class="meta-value">$680,000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Zoning</span>
+                  <span class="meta-value">R-3</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Lot Size</span>
+                  <span class="meta-value">7,200 sq ft</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Parcel</span>
+                  <span class="meta-value">234-567-8901</span>
+                </div>
+              </div>
+              <div class="ai-insights">
+                <div class="ai-insights-title">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  AI Insights
+                </div>
+                <ul style="margin: 0; padding-left: 1.25rem; font-size: var(--text-sm);">
+                  <li><strong>Moderate potential:</strong> R-3 zoning allows 3 units; margins appear tight at current pricing</li>
+                  <li><strong>Agent track record:</strong> Mike Johnson is newer (6 months), 2 funded projects, 45% acceptance</li>
+                  <li><strong>Flag:</strong> No parcel verification yet; recommend title search before advancing</li>
+                  <li><strong>Market note:</strong> Phoenix R-3 deals averaging 14.5% yield (vs 18% Seattle benchmark)</li>
+                </ul>
+              </div>
+              <div class="lead-actions">
+                <button class="btn btn-success">Move to Feasibility</button>
+                <button class="btn btn-outline-primary">Request More Info</button>
+                <button class="btn btn-outline-secondary">Pass</button>
+                <button class="btn btn-outline-secondary">Assign to Specialist</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lead Item 3 - Low Priority -->
+          <div class="lead-item">
+            <div class="lead-score">
+              <div class="score-circle score-low">34</div>
+              <div class="score-label">AI Score</div>
+            </div>
+            <div class="lead-details">
+              <div class="lead-header">
+                <div>
+                  <div class="lead-address">1234 SW 152nd St</div>
+                  <div class="text-sm text-secondary">Burien, WA 98166 • Submitted 3 hours ago by Tom Wilson</div>
+                </div>
+                <span class="badge badge-danger">Low Priority</span>
+              </div>
+              <div class="lead-meta">
+                <div class="lead-meta-item">
+                  <span class="meta-label">Purchase Price</span>
+                  <span class="meta-value">$550,000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Est. List Price</span>
+                  <span class="meta-value">$750,000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Zoning</span>
+                  <span class="meta-value">SF-5000</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Lot Size</span>
+                  <span class="meta-value">5,000 sq ft</span>
+                </div>
+                <div class="lead-meta-item">
+                  <span class="meta-label">Parcel</span>
+                  <span class="meta-value">Not provided</span>
+                </div>
+              </div>
+              <div class="ai-insights">
+                <div class="ai-insights-title">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                  </svg>
+                  AI Insights
+                </div>
+                <ul style="margin: 0; padding-left: 1.25rem; font-size: var(--text-sm); color: var(--danger-dark);">
+                  <li><strong>Low potential:</strong> SF-5000 limits to single-family; margins unlikely to work</li>
+                  <li><strong>Outside focus area:</strong> Burien is outside Blueprint's core Seattle markets</li>
+                  <li><strong>Agent concern:</strong> Tom Wilson has 0 funded projects, 10% acceptance rate</li>
+                  <li><strong>Recommendation:</strong> Consider passing; low likelihood of feasibility</li>
+                </ul>
+              </div>
+              <div class="lead-actions">
+                <button class="btn btn-success">Move to Feasibility</button>
+                <button class="btn btn-outline-primary">Request More Info</button>
+                <button class="btn btn-danger">Pass with Feedback</button>
+                <button class="btn btn-outline-secondary">Assign to Specialist</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Consultant Ordering Panel -->
+        <div class="consultant-order-panel">
+          <h3 class="mb-3">Order Consultant Reports</h3>
+          <p class="text-secondary mb-4">Select consultants for 4521 Meridian Ave N feasibility assessment</p>
+
+          <div class="consultant-grid">
+            <div class="consultant-card selected">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" checked>
+                <label class="form-check-label font-medium">Survey</label>
+              </div>
+              <div class="text-sm text-secondary mt-2">
+                Preferred: ABC Surveying<br>
+                Est. 5-7 days • $1,200
+              </div>
+            </div>
+
+            <div class="consultant-card selected">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" checked>
+                <label class="form-check-label font-medium">Title Report</label>
+              </div>
+              <div class="text-sm text-secondary mt-2">
+                Preferred: First American<br>
+                Est. 3-5 days • $450
+              </div>
+            </div>
+
+            <div class="consultant-card selected">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" checked>
+                <label class="form-check-label font-medium">Arborist Report</label>
+              </div>
+              <div class="text-sm text-secondary mt-2">
+                Preferred: TreeTech NW<br>
+                Est. 7-10 days • $800
+              </div>
+            </div>
+
+            <div class="consultant-card selected">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" checked>
+                <label class="form-check-label font-medium">Civil Engineering</label>
+              </div>
+              <div class="text-sm text-secondary mt-2">
+                Preferred: Civil Dynamics<br>
+                Est. 10-14 days • $2,500
+              </div>
+            </div>
+
+            <div class="consultant-card">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input">
+                <label class="form-check-label font-medium">Geotechnical</label>
+              </div>
+              <div class="text-sm text-secondary mt-2">
+                Optional for hillside sites<br>
+                Est. 14-21 days • $3,200
+              </div>
+            </div>
+
+            <div class="consultant-card">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input">
+                <label class="form-check-label font-medium">Environmental (Phase I)</label>
+              </div>
+              <div class="text-sm text-secondary mt-2">
+                Optional for commercial sites<br>
+                Est. 14-21 days • $2,800
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="font-medium">Total Estimated Cost: $4,950</div>
+              <div class="text-sm text-secondary">Estimated completion: Nov 25, 2025</div>
+            </div>
+            <button class="btn btn-primary">
+              Order Selected Reports
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+</body>
+</html>

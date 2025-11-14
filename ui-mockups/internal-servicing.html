@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Servicing - Connect 2.0</title>
+  <link rel="stylesheet" href="assets/css/design-system.css">
+  <style>
+    body { margin: 0; display: flex; min-height: 100vh; background: var(--bg-secondary); }
+    .loan-list-item {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .loan-list-item:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue);
+    }
+    .loan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-md);
+    }
+    .draw-review-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-bottom: var(--space-lg);
+    }
+    .condition-check {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-sm);
+    }
+    .condition-check.passed {
+      background: var(--success-light);
+      border-left: 4px solid var(--success);
+    }
+    .condition-check.failed {
+      background: var(--danger-light);
+      border-left: 4px solid var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <div style="display: flex; width: 100%;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="navbar-brand">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 2L2 10v12l14 8 14-8V10L16 2zm0 2.8l10.5 6L16 17.2 5.5 10.8l10.5-6zM4 12.5l11 6.3v10.4L4 22.9V12.5zm13 16.7v-10.4l11-6.3v10.4l-11 6.3z"/>
+          </svg>
+          <span>Connect 2.0</span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-nav-item">
+            <a href="internal-dashboard.html" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link active">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+              Active Loans
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+              </svg>
+              Draw Review
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Documents
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              Bank Reporting
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div style="flex: 1; display: flex; flex-direction: column;">
+      <div style="background: var(--bg-primary); border-bottom: 1px solid var(--border-light); padding: var(--space-md) var(--space-xl); display: flex; justify-content: space-between; align-items: center;">
+        <h1 class="text-2xl font-bold m-0">Loan Servicing</h1>
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-primary">Generate Monthly Statements</button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar">LS</div>
+            <div>
+              <div class="font-medium text-sm">Lisa Smith</div>
+              <div class="text-xs text-secondary">Servicing Associate</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex: 1; padding: var(--space-xl); overflow-y: auto;">
+        <!-- Quick Stats -->
+        <div class="row mb-4">
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold text-primary">24</div>
+                <div class="text-sm text-secondary">Active Loans</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold" style="color: var(--info);">8</div>
+                <div class="text-sm text-secondary">Pending Draws</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold" style="color: var(--warning);">3</div>
+                <div class="text-sm text-secondary">Holds/Conditions</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold" style="color: var(--success);">$18.7M</div>
+                <div class="text-sm text-secondary">Total Serviced</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Draw Review Section -->
+        <h3 class="mb-3">Pending Draw Approvals</h3>
+
+        <div class="draw-review-card">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+              <h4 class="text-xl font-semibold text-primary m-0">Draw #5 - 1234 E Pine St</h4>
+              <div class="text-sm text-secondary mt-1">BuildCo Development • Loan #BP-2025-0342</div>
+            </div>
+            <span class="badge status-badge status-in-progress">Under Review</span>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-3">
+              <div class="text-sm text-secondary">Requested Amount</div>
+              <div class="text-2xl font-bold">$125,000</div>
+            </div>
+            <div class="col-3">
+              <div class="text-sm text-secondary">Inspection Date</div>
+              <div class="text-lg font-medium">Nov 11, 2025</div>
+            </div>
+            <div class="col-3">
+              <div class="text-sm text-secondary">Completion Stage</div>
+              <div class="text-lg font-medium">Frame Complete</div>
+            </div>
+            <div class="col-3">
+              <div class="text-sm text-secondary">Total Drawn to Date</div>
+              <div class="text-lg font-medium">$1,125,000</div>
+            </div>
+          </div>
+
+          <h5 class="mb-3">Automated Condition Checks</h5>
+
+          <div class="condition-check passed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="flex: 1;">
+              <div class="font-medium">Credit Report Status</div>
+              <div class="text-sm">Report dated Oct 15, 2025 (27 days old) - Within 90-day requirement</div>
+            </div>
+          </div>
+
+          <div class="condition-check passed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="flex: 1;">
+              <div class="font-medium">Insurance Coverage</div>
+              <div class="text-sm">Builder's risk policy valid through Apr 30, 2026 - Current</div>
+            </div>
+          </div>
+
+          <div class="condition-check passed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="flex: 1;">
+              <div class="font-medium">Lien Waivers</div>
+              <div class="text-sm">Conditional lien waiver received from all subcontractors (4 of 4)</div>
+            </div>
+          </div>
+
+          <div class="condition-check passed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="flex: 1;">
+              <div class="font-medium">Budget Variance Check</div>
+              <div class="text-sm">Project 2.3% over budget - Within acceptable threshold (<10%)</div>
+            </div>
+          </div>
+
+          <div class="condition-check passed">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="flex: 1;">
+              <div class="font-medium">Inspection Report</div>
+              <div class="text-sm">Field inspection completed Nov 11 - Frame work verified at 100%</div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-success-light rounded">
+            <div class="d-flex align-items-center gap-2">
+              <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div class="font-medium text-success-dark">All conditions met - Ready for approval</div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2 justify-content-end">
+            <button class="btn btn-outline-secondary">Request Additional Documentation</button>
+            <button class="btn btn-warning">Hold Draw</button>
+            <button class="btn btn-success">Approve Draw - $125,000</button>
+          </div>
+        </div>
+
+        <!-- Active Loans List -->
+        <h3 class="mb-3 mt-5">Active Loans</h3>
+
+        <div class="mb-3 d-flex gap-2">
+          <input type="text" class="form-control" placeholder="Search loans..." style="max-width: 300px;">
+          <select class="form-control form-select" style="width: auto;">
+            <option>All Stages</option>
+            <option>Funded</option>
+            <option>Construction</option>
+            <option>Finishing</option>
+          </select>
+          <button class="btn btn-outline-primary" style="margin-left: auto;">Export to Excel</button>
+        </div>
+
+        <div class="loan-list-item">
+          <div class="loan-header">
+            <div>
+              <div class="text-lg font-semibold text-primary">4521 Meridian Ave N</div>
+              <div class="text-sm text-secondary">Loan #BP-2025-0415 • BuildCo Development</div>
+            </div>
+            <span class="badge status-badge status-in-progress">Construction</span>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <div class="text-xs text-secondary">Loan Amount</div>
+              <div class="font-medium">$1,200,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Drawn to Date</div>
+              <div class="font-medium">$650,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Available</div>
+              <div class="font-medium text-success">$550,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Maturity Date</div>
+              <div class="font-medium">Jun 30, 2026</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Last Draw</div>
+              <div class="font-medium">Nov 12, 2025</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Next Statement</div>
+              <div class="font-medium">Dec 1, 2025</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="loan-list-item">
+          <div class="loan-header">
+            <div>
+              <div class="text-lg font-semibold text-primary">1234 E Pine St</div>
+              <div class="text-sm text-secondary">Loan #BP-2025-0342 • BuildCo Development</div>
+            </div>
+            <span class="badge status-badge status-in-progress">Construction</span>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <div class="text-xs text-secondary">Loan Amount</div>
+              <div class="font-medium">$1,750,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Drawn to Date</div>
+              <div class="font-medium">$1,125,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Available</div>
+              <div class="font-medium text-success">$625,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Maturity Date</div>
+              <div class="font-medium">May 15, 2026</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Last Draw</div>
+              <div class="font-medium">Pending Review</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Status</div>
+              <span class="badge badge-info">Draw Under Review</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="loan-list-item">
+          <div class="loan-header">
+            <div>
+              <div class="text-lg font-semibold text-primary">8901 NE 24th St</div>
+              <div class="text-sm text-secondary">Loan #BP-2025-0201 • Pacific Builders LLC</div>
+            </div>
+            <span class="badge status-badge status-approved">Finishing</span>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <div class="text-xs text-secondary">Loan Amount</div>
+              <div class="font-medium">$2,100,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Drawn to Date</div>
+              <div class="font-medium">$1,875,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Available</div>
+              <div class="font-medium text-success">$225,000</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Maturity Date</div>
+              <div class="font-medium">Mar 31, 2026</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Last Draw</div>
+              <div class="font-medium">Nov 8, 2025</div>
+            </div>
+            <div class="col-2">
+              <div class="text-xs text-secondary">Est. Completion</div>
+              <div class="font-medium">Nov 25, 2025</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+</body>
+</html>

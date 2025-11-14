@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Dashboard - Connect 2.0</title>
+  <link rel="stylesheet" href="assets/css/design-system.css">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+
+    .dashboard-card {
+      background: var(--bg-primary);
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dashboard-card.feature {
+      grid-column: span 2;
+    }
+
+    .dashboard-card.large {
+      grid-column: span 4;
+    }
+
+    .chart-placeholder {
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-50) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      margin-top: var(--space-md);
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .kpi-item {
+      text-align: center;
+      padding: var(--space-md);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+    }
+
+    .kpi-value {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      color: var(--primary-blue);
+    }
+
+    .kpi-label {
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-top: var(--space-xs);
+    }
+
+    .kpi-change {
+      font-size: var(--text-sm);
+      margin-top: var(--space-xs);
+    }
+
+    .kpi-change.positive {
+      color: var(--success);
+    }
+
+    .kpi-change.negative {
+      color: var(--danger);
+    }
+
+    .funnel-stage {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-sm);
+    }
+
+    .funnel-bar {
+      flex: 1;
+      height: 40px;
+      background: var(--primary-blue);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-md);
+      color: var(--text-inverse);
+      font-weight: var(--font-medium);
+      position: relative;
+    }
+
+    .funnel-bar::after {
+      content: attr(data-count);
+      position: absolute;
+      right: var(--space-md);
+    }
+  </style>
+</head>
+<body>
+  <div style="display: flex; width: 100%;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="navbar-brand">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 2L2 10v12l14 8 14-8V10L16 2zm0 2.8l10.5 6L16 17.2 5.5 10.8l10.5-6zM4 12.5l11 6.3v10.4L4 22.9V12.5zm13 16.7v-10.4l11-6.3v10.4l-11 6.3z"/>
+          </svg>
+          <span>Connect 2.0</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link active">
+              <svg class="sidebar-nav-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+              Executive Dashboard
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="internal-acquisitions.html" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+              </svg>
+              Acquisitions
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="internal-entitlement.html" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Entitlement
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="internal-servicing.html" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+              </svg>
+              Servicing
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Reports
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div style="flex: 1; display: flex; flex-direction: column;">
+      <!-- Top Bar -->
+      <div style="background: var(--bg-primary); border-bottom: 1px solid var(--border-light); padding: var(--space-md) var(--space-xl); display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h1 class="text-2xl font-bold m-0">Executive Dashboard</h1>
+          <p class="text-sm text-secondary m-0">Real-time performance metrics and pipeline visibility</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <select class="form-control form-select form-control-sm" style="width: auto;">
+            <option>Last 30 Days</option>
+            <option>Last 90 Days</option>
+            <option>Last 12 Months</option>
+            <option>Year to Date</option>
+            <option>Custom Range</option>
+          </select>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar">DM</div>
+            <div>
+              <div class="font-medium text-sm">Darin/Mark</div>
+              <div class="text-xs text-secondary">Leadership</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Area -->
+      <div style="flex: 1; padding: var(--space-xl); overflow-y: auto;">
+        <!-- Key Metrics -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <div class="kpi-value">$42.3M</div>
+            <div class="kpi-label">Pipeline Value</div>
+            <div class="kpi-change positive">↑ 23% vs last month</div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="kpi-value">89</div>
+            <div class="kpi-label">Active Deals</div>
+            <div class="kpi-change positive">↑ 12 new this month</div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="kpi-value">$18.7M</div>
+            <div class="kpi-label">Funded YTD</div>
+            <div class="kpi-change positive">↑ 31% vs last year</div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="kpi-value">6 min</div>
+            <div class="kpi-label">Avg Lead Response</div>
+            <div class="kpi-change positive">↓ 2 min (Target: <10)</div>
+          </div>
+        </div>
+
+        <!-- Deal Funnel -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card large">
+            <h3 class="mb-4">Deal Conversion Funnel - Last 30 Days</h3>
+            <div>
+              <div class="funnel-stage">
+                <div style="width: 120px; font-weight: var(--font-medium);">New Leads</div>
+                <div class="funnel-bar" style="width: 100%; background: linear-gradient(to right, #0066CC, #004D99);" data-count="247">
+                  247 leads submitted
+                </div>
+              </div>
+
+              <div class="funnel-stage">
+                <div style="width: 120px; font-weight: var(--font-medium);">Reviewed</div>
+                <div class="funnel-bar" style="width: 85%;" data-count="210">
+                  210 reviewed (85%)
+                </div>
+              </div>
+
+              <div class="funnel-stage">
+                <div style="width: 120px; font-weight: var(--font-medium);">Feasibility</div>
+                <div class="funnel-bar" style="width: 48%;" data-count="119">
+                  119 in feasibility (48%)
+                </div>
+              </div>
+
+              <div class="funnel-stage">
+                <div style="width: 120px; font-weight: var(--font-medium);">GO Decision</div>
+                <div class="funnel-bar" style="width: 32%;" data-count="79">
+                  79 approved (32%)
+                </div>
+              </div>
+
+              <div class="funnel-stage">
+                <div style="width: 120px; font-weight: var(--font-medium);">Funded</div>
+                <div class="funnel-bar" style="width: 18%; background: linear-gradient(to right, #28A745, #155724);" data-count="44">
+                  44 funded (18%)
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-secondary rounded">
+              <div class="row text-center">
+                <div class="col-3">
+                  <div class="font-medium">Lead → Feasibility</div>
+                  <div class="text-2xl font-bold text-primary">48%</div>
+                  <div class="text-xs text-secondary">Target: 40-50%</div>
+                </div>
+                <div class="col-3">
+                  <div class="font-medium">Feasibility → GO</div>
+                  <div class="text-2xl font-bold text-primary">66%</div>
+                  <div class="text-xs text-secondary">Target: 60-70%</div>
+                </div>
+                <div class="col-3">
+                  <div class="font-medium">GO → Funded</div>
+                  <div class="text-2xl font-bold text-primary">56%</div>
+                  <div class="text-xs text-secondary">Target: 70-80%</div>
+                </div>
+                <div class="col-3">
+                  <div class="font-medium">Overall Conversion</div>
+                  <div class="text-2xl font-bold text-success">18%</div>
+                  <div class="text-xs text-secondary">Target: 15-20%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card feature">
+            <h3 class="mb-4">Cycle Time Performance</h3>
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Lead → Feasibility</div>
+                <div class="text-sm text-secondary">Target: < 24 hours</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">8 hours</div>
+                <div class="text-sm text-success">↓ 67% improvement</div>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Feasibility Cycle Time</div>
+                <div class="text-sm text-secondary">Target: -50% reduction</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">12 days</div>
+                <div class="text-sm text-success">↓ 58% vs baseline</div>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Entitlement Submission Prep</div>
+                <div class="text-sm text-secondary">Target: -50% reduction</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-warning">8 days</div>
+                <div class="text-sm text-warning">↓ 43% (Near target)</div>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Draw Turnaround Time</div>
+                <div class="text-sm text-secondary">Target: -60% reduction</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">2.8 days</div>
+                <div class="text-sm text-success">↓ 72% vs baseline</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card feature">
+            <h3 class="mb-4">Team Productivity</h3>
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Deals Vetted per FTE</div>
+                <div class="text-sm text-secondary">Acquisitions team efficiency</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">2.4x</div>
+                <div class="text-sm text-success">↑ 140% (Target: 2x)</div>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Platform Adoption (WAU)</div>
+                <div class="text-sm text-secondary">Week 12 target: ≥70%</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">87%</div>
+                <div class="text-sm text-success">Above target</div>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Data Validation Errors</div>
+                <div class="text-sm text-secondary">Target: -75% reduction</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">↓ 81%</div>
+                <div class="text-sm text-success">Exceeding target</div>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">System Uptime</div>
+                <div class="text-sm text-secondary">Target: ≥99.5%</div>
+              </div>
+              <div class="text-right">
+                <div class="text-xl font-bold text-success">99.8%</div>
+                <div class="text-sm text-success">Above target</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Market Analysis -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card feature">
+            <h3 class="mb-4">Market Distribution</h3>
+            <div class="chart-placeholder">
+              [Pie Chart: Deal Volume by Market]<br>
+              <span style="font-size: var(--text-xs);">Seattle: 68% | Phoenix: 22% | Bellevue: 10%</span>
+            </div>
+          </div>
+
+          <div class="dashboard-card feature">
+            <h3 class="mb-4">Monthly Originations Trend</h3>
+            <div class="chart-placeholder">
+              [Line Chart: Monthly Loan Originations]<br>
+              <span style="font-size: var(--text-xs);">Trending up +31% YoY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pipeline by Stage -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card large">
+            <h3 class="mb-4">Active Pipeline by Stage</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>Count</th>
+                  <th>Total Value</th>
+                  <th>Avg Deal Size</th>
+                  <th>Avg Days in Stage</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge badge-warning">New Leads</span></td>
+                  <td class="font-medium">37</td>
+                  <td class="font-medium">$8.2M</td>
+                  <td>$221K</td>
+                  <td>0.8 days</td>
+                  <td><span class="text-success">↑ 12%</span></td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-info">Feasibility</span></td>
+                  <td class="font-medium">28</td>
+                  <td class="font-medium">$11.4M</td>
+                  <td>$407K</td>
+                  <td>14.2 days</td>
+                  <td><span class="text-success">↑ 8%</span></td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-primary">Entitlement</span></td>
+                  <td class="font-medium">15</td>
+                  <td class="font-medium">$9.8M</td>
+                  <td>$653K</td>
+                  <td>48.5 days</td>
+                  <td><span class="text-muted">→ 0%</span></td>
+                </tr>
+                <tr>
+                  <td><span class="badge badge-success">Construction</span></td>
+                  <td class="font-medium">9</td>
+                  <td class="font-medium">$12.9M</td>
+                  <td>$1.4M</td>
+                  <td>187 days</td>
+                  <td><span class="text-danger">↓ 3%</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Risk Indicators -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card feature">
+            <h3 class="mb-4">Risk & Exception Monitoring</h3>
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Stale Credit Reports</div>
+                <div class="text-sm text-secondary">Reports > 90 days old</div>
+              </div>
+              <div class="text-right">
+                <span class="badge badge-success">0</span>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Overdue Consultant Deliverables</div>
+                <div class="text-sm text-secondary">Past SLA deadline</div>
+              </div>
+              <div class="text-right">
+                <span class="badge badge-warning">3</span>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Entitlement Delays</div>
+                <div class="text-sm text-secondary">> 60 days in city review</div>
+              </div>
+              <div class="text-right">
+                <span class="badge badge-warning">5</span>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Draw Holds</div>
+                <div class="text-sm text-secondary">Pending conditions</div>
+              </div>
+              <div class="text-right">
+                <span class="badge badge-danger">2</span>
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div>
+                <div class="font-medium">Budget Overruns</div>
+                <div class="text-sm text-secondary">> 10% over budget</div>
+              </div>
+              <div class="text-right">
+                <span class="badge badge-success">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card feature">
+            <h3 class="mb-4">Builder Performance</h3>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Builder</th>
+                  <th>Active Projects</th>
+                  <th>On-Time %</th>
+                  <th>Quality Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-medium">BuildCo Development</td>
+                  <td>6</td>
+                  <td><span class="text-success">94%</span></td>
+                  <td><span class="badge badge-success">A+</span></td>
+                </tr>
+                <tr>
+                  <td class="font-medium">Pacific Builders LLC</td>
+                  <td>4</td>
+                  <td><span class="text-success">89%</span></td>
+                  <td><span class="badge badge-success">A</span></td>
+                </tr>
+                <tr>
+                  <td class="font-medium">Northwest Homes Inc</td>
+                  <td>3</td>
+                  <td><span class="text-warning">76%</span></td>
+                  <td><span class="badge badge-warning">B+</span></td>
+                </tr>
+                <tr>
+                  <td class="font-medium">Cascade Construction</td>
+                  <td>2</td>
+                  <td><span class="text-success">91%</span></td>
+                  <td><span class="badge badge-success">A</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+</body>
+</html>

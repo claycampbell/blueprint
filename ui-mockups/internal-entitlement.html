@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design & Entitlement - Connect 2.0 Internal</title>
+  <link rel="stylesheet" href="assets/css/design-system.css">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+      background: var(--bg-secondary);
+    }
+
+    .app-container { display: flex; width: 100%; }
+    .content-wrapper { flex: 1; display: flex; flex-direction: column; }
+
+    .top-bar {
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border-light);
+      padding: var(--space-md) var(--space-xl);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .main-area {
+      flex: 1;
+      padding: var(--space-xl);
+      overflow-y: auto;
+    }
+
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: var(--space-lg);
+      margin-top: var(--space-xl);
+    }
+
+    .kanban-column {
+      background: var(--gray-100);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      min-height: 500px;
+    }
+
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .column-title {
+      font-weight: var(--font-semibold);
+      font-size: var(--text-lg);
+    }
+
+    .column-count {
+      background: var(--gray-300);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: var(--font-medium);
+    }
+
+    .project-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-sm);
+      cursor: move;
+      transition: all var(--transition-fast);
+    }
+
+    .project-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .project-card-title {
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-xs);
+      color: var(--primary-blue);
+    }
+
+    .project-card-meta {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-md);
+    }
+
+    .task-list {
+      margin: var(--space-md) 0;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-xs) 0;
+      font-size: var(--text-sm);
+    }
+
+    .task-checkbox {
+      flex-shrink: 0;
+    }
+
+    .consultant-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+      margin-top: var(--space-sm);
+    }
+
+    .consultant-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 0.25rem 0.5rem;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .status-dot.pending { background: var(--warning); }
+    .status-dot.complete { background: var(--success); }
+    .status-dot.overdue { background: var(--danger); }
+
+    .timeline-view {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      margin-top: var(--space-xl);
+    }
+
+    .correction-cycle {
+      border-left: 3px solid var(--border-medium);
+      padding-left: var(--space-lg);
+      margin-bottom: var(--space-xl);
+      position: relative;
+    }
+
+    .correction-cycle::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      top: 0;
+      width: 11px;
+      height: 11px;
+      border-radius: var(--radius-full);
+      background: var(--primary-blue);
+      border: 2px solid var(--bg-primary);
+    }
+
+    .correction-header {
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-sm);
+    }
+
+    .action-items {
+      list-style: none;
+      padding: 0;
+      margin: var(--space-md) 0;
+    }
+
+    .action-item {
+      padding: var(--space-sm);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--space-sm);
+      font-size: var(--text-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="navbar-brand">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 2L2 10v12l14 8 14-8V10L16 2zm0 2.8l10.5 6L16 17.2 5.5 10.8l10.5-6zM4 12.5l11 6.3v10.4L4 22.9V12.5zm13 16.7v-10.4l11-6.3v10.4l-11 6.3z"/>
+          </svg>
+          <span>Connect 2.0</span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link active">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+              </svg>
+              Project Board
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+              Consultants
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+              Plan Library (1,500)
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Permit Packets
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="internal-dashboard.html" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Analytics
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <h1 class="text-2xl font-bold">Design & Entitlement Pipeline</h1>
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-primary">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            New Project
+          </button>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar">EC</div>
+            <div>
+              <div class="font-medium text-sm">Emily Chen</div>
+              <div class="text-xs text-secondary">Entitlement Coordinator</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Area -->
+      <div class="main-area">
+        <!-- Quick Stats -->
+        <div class="row">
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold text-primary">18</div>
+                <div class="text-sm text-secondary">Active Projects</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold" style="color: var(--info);">7</div>
+                <div class="text-sm text-secondary">Pending Tasks</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold" style="color: var(--success);">5</div>
+                <div class="text-sm text-secondary">Approved This Month</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="card">
+              <div class="card-body text-center">
+                <div class="text-3xl font-bold" style="color: var(--warning);">3</div>
+                <div class="text-sm text-secondary">Correction Cycles</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-board">
+          <!-- Column 1: Intake -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">Intake</span>
+              <span class="column-count">4</span>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">4521 Meridian Ave N</div>
+              <div class="project-card-meta">Seattle, WA • LR3 Zoning</div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Project data imported from BPO</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Select plan from library</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Assign consultants</span>
+                </div>
+              </div>
+              <div class="consultant-badges">
+                <span class="consultant-badge">
+                  <span class="status-dot pending"></span>
+                  Survey
+                </span>
+                <span class="consultant-badge">
+                  <span class="status-dot pending"></span>
+                  Civil
+                </span>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">Assign Tasks</button>
+              </div>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">7890 E Thomas Rd</div>
+              <div class="project-card-meta">Phoenix, AZ • R-3 Zoning</div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Project data imported from BPO</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Select plan from library</span>
+                </div>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">View Details</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: Consultant Review -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">Consultant Review</span>
+              <span class="column-count">6</span>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">1234 E Pine St</div>
+              <div class="project-card-meta">Seattle, WA • LR2 Zoning</div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Survey (Delivered Nov 8)</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Title Report (Delivered Nov 9)</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Civil Engineering (Due Nov 18)</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Arborist (Due Nov 20)</span>
+                </div>
+              </div>
+              <div class="consultant-badges">
+                <span class="consultant-badge">
+                  <span class="status-dot complete"></span>
+                  Survey
+                </span>
+                <span class="consultant-badge">
+                  <span class="status-dot complete"></span>
+                  Title
+                </span>
+                <span class="consultant-badge">
+                  <span class="status-dot pending"></span>
+                  Civil
+                </span>
+                <span class="consultant-badge">
+                  <span class="status-dot pending"></span>
+                  Arborist
+                </span>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">Send Reminder</button>
+              </div>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">5678 Greenwood Ave N</div>
+              <div class="project-card-meta">Seattle, WA • SF-5000 Zoning</div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Survey (Delivered Nov 10)</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span style="color: var(--danger);">Civil Engineering (Overdue 2 days)</span>
+                </div>
+              </div>
+              <div class="consultant-badges">
+                <span class="consultant-badge">
+                  <span class="status-dot complete"></span>
+                  Survey
+                </span>
+                <span class="consultant-badge">
+                  <span class="status-dot overdue"></span>
+                  Civil
+                </span>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-danger w-100">Escalate Overdue</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Permit Prep -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">Permit Prep</span>
+              <span class="column-count">5</span>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">8901 NE 24th St</div>
+              <div class="project-card-meta">Bellevue, WA • R-4 Zoning</div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>All consultant reports received</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Plan customization complete</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Assemble permit packet</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>City pre-submission review</span>
+                </div>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-success w-100">Generate Packet</button>
+              </div>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">3456 W Dravus St</div>
+              <div class="project-card-meta">Seattle, WA • LR1 Zoning</div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>All consultant reports received</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Plan customization in progress</span>
+                </div>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">View Plans</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 4: City Review -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">City Review</span>
+              <span class="column-count">3</span>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">2345 Broadway E</div>
+              <div class="project-card-meta">Seattle, WA • NC3-40 Zoning</div>
+              <div style="margin: var(--space-md) 0; font-size: var(--text-sm);">
+                <div class="mb-2"><strong>Submitted:</strong> Oct 28, 2025</div>
+                <div class="mb-2"><strong>Est. Review:</strong> 45-60 days</div>
+                <div class="mb-2"><strong>Status:</strong> <span class="badge status-badge status-in-progress">Under Review</span></div>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" style="width: 35%"></div>
+              </div>
+              <div class="text-xs text-secondary mt-2">21 days elapsed (35% of typical timeline)</div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">Check Status</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 5: Corrections -->
+          <div class="kanban-column">
+            <div class="column-header">
+              <span class="column-title">Corrections</span>
+              <span class="column-count">2</span>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">6789 15th Ave NW</div>
+              <div class="project-card-meta">Seattle, WA • SF-5000 Zoning</div>
+              <div style="margin: var(--space-md) 0; font-size: var(--text-sm);">
+                <div class="mb-2"><strong>Correction #:</strong> 2</div>
+                <div class="mb-2"><strong>Received:</strong> Nov 10, 2025</div>
+                <div class="mb-2"><strong>Items:</strong> 3 outstanding</div>
+              </div>
+              <div class="task-list">
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox" checked>
+                  <span>Revise setback dimensions</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Update drainage plan</span>
+                </div>
+                <div class="task-item">
+                  <input type="checkbox" class="task-checkbox">
+                  <span>Add tree protection fence</span>
+                </div>
+              </div>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-warning w-100">Assign Corrections</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 6: Approved -->
+          <div class="kanban-column" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);">
+            <div class="column-header">
+              <span class="column-title">Approved</span>
+              <span class="column-count">5</span>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">9012 Stone Ave N</div>
+              <div class="project-card-meta">Seattle, WA • LR3 Zoning</div>
+              <div style="margin: var(--space-md) 0; font-size: var(--text-sm);">
+                <div class="mb-2"><strong>Approved:</strong> Nov 9, 2025</div>
+                <div class="mb-2"><strong>Permit #:</strong> 6789456</div>
+                <div class="mb-2"><strong>Total Timeline:</strong> 52 days</div>
+              </div>
+              <span class="badge badge-success w-100">Permit Approved</span>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">View Permit</button>
+              </div>
+            </div>
+
+            <div class="project-card">
+              <div class="project-card-title">1111 Queen Anne Ave N</div>
+              <div class="project-card-meta">Seattle, WA • NC2-40 Zoning</div>
+              <div style="margin: var(--space-md) 0; font-size: var(--text-sm);">
+                <div class="mb-2"><strong>Approved:</strong> Nov 5, 2025</div>
+                <div class="mb-2"><strong>Permit #:</strong> 6788321</div>
+                <div class="mb-2"><strong>Total Timeline:</strong> 48 days</div>
+              </div>
+              <span class="badge badge-success w-100">Permit Approved</span>
+              <div class="mt-3">
+                <button class="btn btn-sm btn-outline-primary w-100">View Permit</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Correction Cycle Detail -->
+        <div class="timeline-view">
+          <h3 class="mb-4">Correction Cycle History - 6789 15th Ave NW</h3>
+
+          <div class="correction-cycle">
+            <div class="correction-header">
+              Correction Cycle #2 - Received Nov 10, 2025
+            </div>
+            <div class="text-sm text-secondary mb-3">
+              City of Seattle Planning Department - 3 items to address
+            </div>
+            <ul class="action-items">
+              <li class="action-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <input type="checkbox" checked style="margin-right: 8px;">
+                    <strong>Revise setback dimensions</strong> - South setback must be 5ft minimum
+                  </div>
+                  <span class="badge badge-success">Complete</span>
+                </div>
+                <div class="text-xs text-secondary mt-1" style="margin-left: 24px;">
+                  Assigned to: Civil Dynamics • Completed Nov 11
+                </div>
+              </li>
+              <li class="action-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <input type="checkbox" style="margin-right: 8px;">
+                    <strong>Update drainage plan</strong> - Show connection to city storm system
+                  </div>
+                  <span class="badge badge-warning">In Progress</span>
+                </div>
+                <div class="text-xs text-secondary mt-1" style="margin-left: 24px;">
+                  Assigned to: Civil Dynamics • Due Nov 15
+                </div>
+              </li>
+              <li class="action-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <input type="checkbox" style="margin-right: 8px;">
+                    <strong>Add tree protection fence</strong> - Detail required per arborist report
+                  </div>
+                  <span class="badge badge-secondary">Pending</span>
+                </div>
+                <div class="text-xs text-secondary mt-1" style="margin-left: 24px;">
+                  Assigned to: TreeTech NW • Due Nov 16
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="correction-cycle" style="opacity: 0.7;">
+            <div class="correction-header">
+              Correction Cycle #1 - Received Oct 20, 2025
+            </div>
+            <div class="text-sm text-secondary mb-3">
+              City of Seattle Planning Department - 5 items (All resolved)
+            </div>
+            <div class="text-sm">
+              <span class="badge badge-success">All items completed Oct 28, 2025</span>
+              <span class="text-secondary ml-2">Resubmitted Oct 29, 2025</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+</body>
+</html>

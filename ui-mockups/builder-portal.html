@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Builder Portal - Connect 2.0</title>
+  <link rel="stylesheet" href="assets/css/design-system.css">
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .main-wrapper {
+      display: flex;
+      width: 100%;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-header {
+      background: var(--bg-primary);
+      padding: var(--space-xl);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .page-title {
+      font-size: var(--text-3xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-sm);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: var(--text-base);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: var(--space-2xl);
+      background: var(--bg-secondary);
+    }
+
+    .project-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--space-lg);
+      margin-bottom: var(--space-2xl);
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+      color: var(--text-inverse);
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+
+    .summary-card.secondary {
+      background: linear-gradient(135deg, var(--secondary-teal) 0%, var(--secondary-teal-dark) 100%);
+    }
+
+    .summary-card.accent {
+      background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    }
+
+    .summary-value {
+      font-size: var(--text-4xl);
+      font-weight: var(--font-bold);
+      margin-bottom: var(--space-xs);
+    }
+
+    .summary-label {
+      font-size: var(--text-sm);
+      opacity: 0.9;
+    }
+
+    .projects-table-wrapper {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .draw-timeline {
+      background: var(--bg-primary);
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-xl);
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .draw-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      transition: all var(--transition-fast);
+    }
+
+    .draw-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue);
+    }
+
+    .draw-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .draw-title {
+      font-size: var(--text-lg);
+      font-weight: var(--font-semibold);
+    }
+
+    .draw-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .draw-detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .draw-detail-label {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xs);
+    }
+
+    .draw-detail-value {
+      font-weight: var(--font-medium);
+    }
+
+    .documents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-lg);
+    }
+
+    .document-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .document-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary-blue);
+    }
+
+    .document-header {
+      display: flex;
+      align-items: start;
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .doc-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gray-100);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .doc-info {
+      flex: 1;
+    }
+
+    .doc-name {
+      font-weight: var(--font-semibold);
+      margin-bottom: var(--space-xs);
+      font-size: var(--text-base);
+    }
+
+    .doc-meta {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="main-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="navbar-brand">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+            <path d="M16 2L2 10v12l14 8 14-8V10L16 2zm0 2.8l10.5 6L16 17.2 5.5 10.8l10.5-6zM4 12.5l11 6.3v10.4L4 22.9V12.5zm13 16.7v-10.4l11-6.3v10.4l-11 6.3z"/>
+          </svg>
+          <span>Connect 2.0</span>
+        </a>
+        <div style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--bg-secondary); border-radius: var(--radius-md);">
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar avatar-lg">BC</div>
+            <div>
+              <div class="font-medium">BuildCo Development</div>
+              <div class="text-sm text-secondary">Builder Portal</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link active">
+              <svg class="sidebar-nav-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Dashboard
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+              </svg>
+              My Projects
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+              Draws & Payments
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Documents
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+              </svg>
+              Messages
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg class="sidebar-nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Settings
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="content-area">
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Welcome back! Here's an overview of your active projects and draws.</p>
+      </header>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Project Summary Cards -->
+        <div class="project-summary">
+          <div class="summary-card">
+            <div class="summary-value">6</div>
+            <div class="summary-label">Active Projects</div>
+          </div>
+          <div class="summary-card secondary">
+            <div class="summary-value">$8.2M</div>
+            <div class="summary-label">Total Project Value</div>
+          </div>
+          <div class="summary-card accent">
+            <div class="summary-value">3</div>
+            <div class="summary-label">Pending Draws</div>
+          </div>
+          <div class="summary-card" style="background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);">
+            <div class="summary-value">$245K</div>
+            <div class="summary-label">Available to Draw</div>
+          </div>
+        </div>
+
+        <!-- Recent Draws -->
+        <div class="draw-timeline">
+          <div class="timeline-header">
+            <h2>Recent Draws</h2>
+            <button class="btn btn-primary">Request New Draw</button>
+          </div>
+
+          <div class="draw-card">
+            <div class="draw-header">
+              <div class="draw-title">4521 Meridian Ave N - Draw #3</div>
+              <span class="badge status-badge status-approved">Approved</span>
+            </div>
+            <div class="draw-details">
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Requested Amount</span>
+                <span class="draw-detail-value">$85,000</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Approved Amount</span>
+                <span class="draw-detail-value">$82,500</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Inspection Date</span>
+                <span class="draw-detail-value">Nov 10, 2025</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Payment Status</span>
+                <span class="draw-detail-value text-success">Paid - Nov 12</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="draw-card">
+            <div class="draw-header">
+              <div class="draw-title">1234 E Pine St - Draw #5</div>
+              <span class="badge status-badge status-in-progress">Under Review</span>
+            </div>
+            <div class="draw-details">
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Requested Amount</span>
+                <span class="draw-detail-value">$125,000</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Inspection Date</span>
+                <span class="draw-detail-value">Nov 11, 2025</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Estimated Approval</span>
+                <span class="draw-detail-value">Nov 15, 2025</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Inspector Notes</span>
+                <span class="draw-detail-value">Frame complete, ready for review</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="draw-card">
+            <div class="draw-header">
+              <div class="draw-title">5678 Greenwood Ave N - Draw #2</div>
+              <span class="badge status-badge status-pending">Pending Inspection</span>
+            </div>
+            <div class="draw-details">
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Requested Amount</span>
+                <span class="draw-detail-value">$65,000</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Scheduled Inspection</span>
+                <span class="draw-detail-value">Nov 14, 2025</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Completion Stage</span>
+                <span class="draw-detail-value">Foundation & Rough Plumbing</span>
+              </div>
+              <div class="draw-detail-item">
+                <span class="draw-detail-label">Required Documents</span>
+                <span class="draw-detail-value">Lien waiver pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Projects Table -->
+        <div class="projects-table-wrapper">
+          <div class="table-header">
+            <h3 style="margin: 0;">Active Projects</h3>
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control form-control-sm" placeholder="Search projects..." style="width: 250px;">
+              <select class="form-control form-control-sm form-select" style="width: auto;">
+                <option>All Stages</option>
+                <option>Feasibility</option>
+                <option>Permitting</option>
+                <option>Construction</option>
+                <option>Closeout</option>
+              </select>
+            </div>
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Project Address</th>
+                <th>Stage</th>
+                <th>Loan Amount</th>
+                <th>Drawn to Date</th>
+                <th>Available</th>
+                <th>Next Milestone</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="font-medium">4521 Meridian Ave N</div>
+                  <div class="text-sm text-secondary">Seattle, WA 98103</div>
+                </td>
+                <td><span class="badge status-badge status-in-progress">Construction</span></td>
+                <td>$1,200,000</td>
+                <td>$650,000</td>
+                <td class="text-success font-medium">$550,000</td>
+                <td>
+                  <div>Roofing Complete</div>
+                  <div class="text-sm text-secondary">Est. Nov 20</div>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="font-medium">1234 E Pine St</div>
+                  <div class="text-sm text-secondary">Seattle, WA 98122</div>
+                </td>
+                <td><span class="badge status-badge status-in-progress">Construction</span></td>
+                <td>$1,750,000</td>
+                <td>$1,125,000</td>
+                <td class="text-success font-medium">$625,000</td>
+                <td>
+                  <div>MEP Rough-in</div>
+                  <div class="text-sm text-secondary">Est. Dec 1</div>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="font-medium">5678 Greenwood Ave N</div>
+                  <div class="text-sm text-secondary">Seattle, WA 98103</div>
+                </td>
+                <td><span class="badge status-badge status-pending">Foundation</span></td>
+                <td>$950,000</td>
+                <td>$185,000</td>
+                <td class="text-success font-medium">$765,000</td>
+                <td>
+                  <div>Foundation Complete</div>
+                  <div class="text-sm text-secondary">Est. Nov 18</div>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="font-medium">8901 NE 24th St</div>
+                  <div class="text-sm text-secondary">Bellevue, WA 98004</div>
+                </td>
+                <td><span class="badge status-badge status-approved">Finishing</span></td>
+                <td>$2,100,000</td>
+                <td>$1,875,000</td>
+                <td class="text-success font-medium">$225,000</td>
+                <td>
+                  <div>Final Inspection</div>
+                  <div class="text-sm text-secondary">Est. Nov 25</div>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary">View Details</button>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="font-medium">3456 W Dravus St</div>
+                  <div class="text-sm text-secondary">Seattle, WA 98199</div>
+                </td>
+                <td><span class="badge status-badge status-pending">Permitting</span></td>
+                <td>$1,425,000</td>
+                <td>$0</td>
+                <td class="text-muted">Not yet funded</td>
+                <td>
+                  <div>Permit Approval</div>
+                  <div class="text-sm text-secondary">Est. Dec 10</div>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary">View Details</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Recent Documents -->
+        <div style="margin-top: var(--space-2xl);">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Recent Documents</h2>
+            <a href="#" class="btn btn-outline-primary">View All Documents</a>
+          </div>
+
+          <div class="documents-grid">
+            <div class="document-card">
+              <div class="document-header">
+                <div class="doc-icon">
+                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <polyline points="14 2 14 8 20 8" fill="none" stroke="white" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="doc-info">
+                  <div class="doc-name">Loan Agreement</div>
+                  <div class="doc-meta">4521 Meridian Ave N</div>
+                </div>
+              </div>
+              <div class="text-sm text-secondary">
+                Uploaded Nov 5, 2025<br>
+                PDF • 2.4 MB
+              </div>
+            </div>
+
+            <div class="document-card">
+              <div class="document-header">
+                <div class="doc-icon">
+                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <polyline points="14 2 14 8 20 8" fill="none" stroke="white" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="doc-info">
+                  <div class="doc-name">Draw #3 Approval</div>
+                  <div class="doc-meta">4521 Meridian Ave N</div>
+                </div>
+              </div>
+              <div class="text-sm text-secondary">
+                Uploaded Nov 12, 2025<br>
+                PDF • 876 KB
+              </div>
+            </div>
+
+            <div class="document-card">
+              <div class="document-header">
+                <div class="doc-icon">
+                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <polyline points="14 2 14 8 20 8" fill="none" stroke="white" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="doc-info">
+                  <div class="doc-name">Construction Plans</div>
+                  <div class="doc-meta">1234 E Pine St</div>
+                </div>
+              </div>
+              <div class="text-sm text-secondary">
+                Uploaded Nov 8, 2025<br>
+                PDF • 12.3 MB
+              </div>
+            </div>
+
+            <div class="document-card">
+              <div class="document-header">
+                <div class="doc-icon">
+                  <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                    <polyline points="14 2 14 8 20 8" fill="none" stroke="white" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="doc-info">
+                  <div class="doc-name">Monthly Statement</div>
+                  <div class="doc-meta">All Projects</div>
+                </div>
+              </div>
+              <div class="text-sm text-secondary">
+                Uploaded Nov 1, 2025<br>
+                PDF • 445 KB
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="assets/js/common.js"></script>
+</body>
+</html>
