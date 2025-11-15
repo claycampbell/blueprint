@@ -1,5 +1,9 @@
 # Connect 2.0 - Baseline Cost of Ownership Analysis
-**Version 1.0 | November 13, 2025**
+**Version 1.1 | November 15, 2025**
+
+## Revision History
+- **v1.1 (Nov 15, 2025):** Updated user count assumptions from 25 to 215 users (65 internal + 150 external). Revised Year 1 costs from $41K to $57K (GCP). Added stakeholder validation requirements.
+- **v1.0 (Nov 13, 2025):** Initial baseline cost analysis
 
 ---
 
@@ -9,13 +13,17 @@ This document provides a comprehensive cost analysis for the Connect 2.0 platfor
 
 ### Total Cost Summary (Annual)
 
+#### ⚠️ UPDATED November 15, 2025 - Reflects revised user count (65 internal + ~150 external users)
+
 | Phase | Timeline | Azure | AWS | GCP | Notes |
 |-------|----------|-------|-----|-----|-------|
 | **MVP Phase 1** (Design & Entitlement) | Days 1-90 | $8,500 | $8,200 | $7,900 | 6 users, limited modules |
-| **MVP Phase 2** (Full Platform) | Days 91-180 | $15,200 | $14,800 | $14,300 | 20 users, all modules |
-| **Year 1 Operations** (Blueprint) | Post-Day 180 | $38,400 | $36,900 | $35,600 | 25 users, full production |
-| **Multi-Tenant (5 clients)** | Days 180-360 | $84,000 | $79,500 | $76,800 | ~100 users total |
-| **Multi-Tenant (20 clients)** | Year 2+ | $245,000 | $232,000 | $223,000 | ~400 users total |
+| **MVP Phase 2** (Full Platform) | Days 91-180 | $15,200 | $14,800 | $14,300 | 20-30 users, all modules |
+| **Year 1 Operations** (Blueprint) | Post-Day 180 | **$65,625** | **$61,530** | **$57,237** | **215 users** (65 internal + 150 external), full production |
+| **Multi-Tenant (5 clients)** | Days 180-360 | $101,100 | $92,600 | $85,500 | ~100 users total per client (500 total) |
+| **Multi-Tenant (20 clients)** | Year 2+ | $306,000 | $280,600 | $258,400 | ~400 users total per client tier (variable) |
+
+**CRITICAL CHANGE:** Year 1 costs increased from **$41K to $57K** (GCP) based on actual user count of 215 users (vs. original 25 user assumption).
 
 **Note:** All costs are *operational expenses only* and exclude:
 - Development team salaries
@@ -42,18 +50,47 @@ This document provides a comprehensive cost analysis for the Connect 2.0 platfor
 
 ## 1. Cost Model Assumptions
 
+### ⚠️ REVISED USER COUNT ASSUMPTIONS (November 15, 2025)
+
+**CRITICAL UPDATE:** Initial estimates significantly underestimated user count. Blueprint currently has **65 internal users** plus an unknown number of external users (builders, investors, real estate agents). This section reflects revised assumptions.
+
+**Items requiring stakeholder validation:**
+- [ ] Exact count of external users (builders, investors, agents)
+- [ ] Usage patterns by external user type
+- [ ] Expected growth trajectory for Year 1
+
 ### User & Usage Metrics (Blueprint as Client Zero)
 
 | Metric | MVP Phase 1 (Days 1-90) | MVP Phase 2 (Days 91-180) | Year 1 Operations |
 |--------|-------------------------|---------------------------|-------------------|
-| **Active Users** | 6 (Design & Entitlement team) | 20 (all teams) | 25 (all teams + growth) |
-| **Concurrent Users** | 3 | 10 | 15 |
+| **Active Internal Users** | 6 (Design & Entitlement team) | 20 (pilot teams) | **65 (all Blueprint staff)** |
+| **Active External Users** | 0 | ~10 (pilot builders/investors) | **~150 (est.)** builders, investors, agents |
+| **Total Active Users** | 6 | 30 | **~215** |
+| **Concurrent Users (Peak)** | 3 | 15 | **40-50** (based on 20-25% concurrency) |
 | **Projects/Year** | ~100 (entitlement only) | ~3,200 (leads) → ~500 deals | ~3,200 leads → ~600 deals |
 | **Active Loans** | 0 | ~150 | ~200 |
 | **Documents/Month** | ~200 | ~1,500 | ~2,000 |
 | **Document Storage** | 50 GB | 500 GB | 1.5 TB (cumulative) |
-| **API Calls/Day** | ~5,000 | ~50,000 | ~75,000 |
+| **API Calls/Day** | ~5,000 | ~50,000 | **~120,000** (increased for external portals) |
 | **Database Size** | 5 GB | 25 GB | 50 GB |
+
+### User Tier Definitions
+
+Different user types have different infrastructure impacts:
+
+| User Tier | Count (Year 1) | Concurrency Rate | Features | Cost Impact |
+|-----------|----------------|------------------|----------|-------------|
+| **Power Users** (Internal) | 65 | 30% (~20 concurrent) | Full platform access, heavy document processing, task management, reporting | **High** - drive compute, database connections |
+| **Portal Users** (External Builders) | ~100 | 15% (~15 concurrent) | Project portal, document upload, draw requests, read-only financials | **Medium** - document storage, moderate compute |
+| **Read-Only Users** (Investors/Agents) | ~50 | 10% (~5 concurrent) | Dashboard access, reports, notifications | **Low** - minimal compute, cached queries |
+
+**Total Concurrent Load:** 20 (power) + 15 (portal) + 5 (read-only) = **40 concurrent users at peak**
+
+**Key Assumptions:**
+- Power users drive 70% of infrastructure costs despite being 30% of user base
+- External users primarily access portals during business hours (Pacific Time)
+- Portal users have episodic usage patterns (weekly check-ins vs. daily use)
+- Read-only users leverage cached data (minimal database impact)
 
 ### Traffic & Performance Targets
 
@@ -61,6 +98,73 @@ This document provides a comprehensive cost analysis for the Connect 2.0 platfor
 - **Response Time:** <500ms (95th percentile)
 - **Peak Traffic:** 3x average (end-of-month draw cycles)
 - **Data Retention:** 7 years (legal/regulatory requirement)
+
+---
+
+## ⚠️ OPEN QUESTIONS REQUIRING STAKEHOLDER VALIDATION
+
+**Cost estimates revised on November 15, 2025** to reflect 215 total users (65 internal + 150 external). The following items require validation with Blueprint leadership to finalize Year 1 cost projections:
+
+### 1. External User Count & Breakdown
+
+**Current Assumption:** ~150 external users
+- ~100 builders (portal access for project updates, draw requests)
+- ~50 investors/real estate agents (read-only dashboard access)
+
+**Questions:**
+- What is the exact current count of external users with system access?
+- How many builders typically have active projects at any given time?
+- How many investors/agents require regular platform access?
+- What is the expected growth trajectory for external users in Year 1?
+
+**Cost Impact:** Each additional 50 external portal users = ~$3-5K/year infrastructure costs
+
+### 2. Internal User Roles & Usage Patterns
+
+**Current Assumption:** 65 internal users, 30% concurrency rate
+
+**Questions:**
+- Breakdown by team/role (Acquisitions, Design & Entitlement, Servicing, Admin)?
+- Which roles require "power user" access vs. lightweight portal access?
+- What are typical peak usage hours/days (end of month, end of quarter)?
+- Are there seasonal patterns (slower summer months, busy Q4)?
+
+**Cost Impact:** Higher concurrency rates could require +1-2 servers (+$3-6K/year)
+
+### 3. External Portal Feature Scope
+
+**Current Assumption:** Builders and investors access limited portal features (not full platform)
+
+**Questions:**
+- What features should external builders have access to? (document upload, draw requests, project timeline, financial dashboard)
+- What features should investors/agents see? (portfolio dashboard, reports, notifications only)
+- Should external users have mobile app access or web-only?
+- Any heavy features like document processing/AI summaries for external users?
+
+**Cost Impact:** Feature scope determines compute/database requirements
+
+### 4. Multi-Tenant Roadmap Timing
+
+**Questions:**
+- When do we expect first external paying client? (affects infrastructure planning)
+- Should Year 1 infrastructure be sized for multi-tenant from Day 1, or retrofit later?
+- Current external clients (Send Capital, Create Capital) - do they migrate to Connect 2.0 in Year 1?
+
+**Cost Impact:** Multi-tenant architecture from Day 1 adds ~$5-10K upfront but reduces retrofit costs
+
+### 5. Cost Allocation & Budgeting
+
+**Questions:**
+- Is the **$57K/year** (GCP revised estimate) within acceptable budget range for Year 1?
+- Should costs be optimized aggressively (reserved instances, smaller environments) or prioritize reliability?
+- Any hard budget ceiling we need to stay under?
+- Who approves infrastructure spending increases as user count grows?
+
+**Next Steps:**
+- [ ] Schedule stakeholder meeting to validate user count assumptions
+- [ ] Confirm external user counts and roles from Blueprint operations team
+- [ ] Review and approve revised Year 1 budget ($57K GCP / $62K AWS / $66K Azure)
+- [ ] Determine cost optimization priorities (reliability vs. cost savings)
 
 ### Geographic Distribution
 
@@ -76,6 +180,8 @@ This document provides a comprehensive cost analysis for the Connect 2.0 platfor
 
 **Architecture Assumption:** Kubernetes-based microservices or containerized modular monolith
 
+#### Original Assumptions (25 users, 15 concurrent)
+
 | Component | Azure | AWS | GCP | Specs |
 |-----------|-------|-----|-----|-------|
 | **Web/API Servers** | 2x D4s v5 ($280/mo) | 2x m6i.xlarge ($263/mo) | 2x e2-standard-4 ($245/mo) | 4 vCPU, 16GB RAM each |
@@ -85,14 +191,31 @@ This document provides a comprehensive cost analysis for the Connect 2.0 platfor
 | **SUBTOTAL (Monthly)** | **$830** | **$735** | **$688** | |
 | **ANNUAL** | **$9,960** | **$8,820** | **$8,256** | |
 
+#### ⚠️ REVISED Year 1 Assumptions (215 users, 40-50 concurrent)
+
+**Required to support 40-50 concurrent users + external portal traffic:**
+
+| Component | Azure | AWS | GCP | Specs |
+|-----------|-------|-----|-----|-------|
+| **Web/API Servers** | 4x D4s v5 ($560/mo) | 4x m6i.xlarge ($526/mo) | 4x e2-standard-4 ($490/mo) | 4 vCPU, 16GB RAM each |
+| **Background Workers** | 2x D2s v5 ($170/mo) | 2x m6i.large ($162/mo) | 2x e2-standard-2 ($148/mo) | 2 vCPU, 8GB RAM (doc processing) |
+| **Load Balancer** | App Gateway ($260/mo) | ALB ($30/mo) | Cloud Load Balancer ($25/mo) | Regional, basic tier |
+| **Auto-scaling buffer** | +25% ($248/mo) | +25% ($230/mo) | +25% ($216/mo) | Handle peak loads (3x avg) |
+| **SUBTOTAL (Monthly)** | **$1,238** | **$1,118** | **$1,049** | |
+| **ANNUAL** | **$14,856** | **$13,416** | **$12,588** | **+$4,332 - $4,896 increase** |
+
 **Scaling Notes:**
-- MVP Phase 1: Use 50% capacity ($4,980 Azure / $4,410 AWS / $4,128 GCP annually)
-- MVP Phase 2: Full capacity as shown
-- Year 1+: Add 1-2 additional servers as usage grows (+$3,000-6,000/year)
+- MVP Phase 1: Use 50% capacity (6 users, 3 concurrent) = original estimates apply
+- MVP Phase 2: Use 75% capacity (30 users, 15 concurrent) = original estimates apply
+- **Year 1 (REVISED):** Use configuration above to handle 215 users, 40-50 concurrent
+- **Rationale:** 2x more servers needed to handle 3x concurrent user load + external portal traffic
+- **Cost Impact:** +49% infrastructure compute costs (+$4,332-$4,896/year)
 
 ### 2.2 Database
 
 **Primary Option:** Managed PostgreSQL (relational data model per PRD)
+
+#### Original Assumptions (15 concurrent users, ~30 DB connections)
 
 | Component | Azure | AWS | GCP | Specs |
 |-----------|-------|-----|-----|-------|
@@ -103,10 +226,28 @@ This document provides a comprehensive cost analysis for the Connect 2.0 platfor
 | **SUBTOTAL (Monthly)** | **$495** | **$432** | **$408** | With read replica + extended backups |
 | **ANNUAL** | **$5,940** | **$5,184** | **$4,896** | |
 
+#### ⚠️ REVISED Year 1 Assumptions (40-50 concurrent users, ~100 DB connections)
+
+**Required to support higher concurrent connection load:**
+
+| Component | Azure | AWS | GCP | Specs |
+|-----------|-------|-----|-----|-------|
+| **Primary Database** | PostgreSQL Flexible 4 vCPU ($580/mo) | RDS db.m6i.xlarge ($560/mo) | Cloud SQL db-n1-standard-4 ($530/mo) | 4 vCPU, 16GB RAM, 200GB SSD |
+| **Read Replica** (for reports/dashboards) | +$290/mo | +$280/mo | +$265/mo | Same specs, secondary region |
+| **Backup Storage** | +$25/mo (30 days, 200GB) | +$20/mo | +$18/mo | 30-day retention |
+| **Connection Pooling** | Included (PgBouncer) | Included (RDS Proxy available) | Included (Cloud SQL Auth Proxy) | Handle 100+ connections |
+| **SUBTOTAL (Monthly)** | **$895** | **$860** | **$813** | Sized for 215 users |
+| **ANNUAL** | **$10,740** | **$10,320** | **$9,756** | **+$4,344 - $4,860 increase** |
+
 **Scaling Notes:**
-- MVP Phase 1: Single instance, no replica ($3,840 Azure / $3,360 AWS / $3,180 GCP annually)
-- MVP Phase 2: Add read replica as shown
-- Year 1: Grow to 200GB database (+$100-150/month)
+- MVP Phase 1: Single instance, no replica = original estimates apply
+- MVP Phase 2: Add read replica = original estimates apply
+- **Year 1 (REVISED):** Larger instance required to handle 40-50 concurrent users
+- **Rationale:**
+  - 40-50 concurrent users = ~100 database connections (avg 2 connections per user)
+  - Need 4 vCPU to handle connection overhead + query processing
+  - Doubled storage to 200GB for external user data (portal access logs, documents metadata)
+- **Cost Impact:** +81% database costs (+$4,344-$4,860/year)
 
 **Alternative: NoSQL Option (if preferred)**
 
@@ -192,6 +333,8 @@ Post-MVP for external portals:
 
 ### **Total Cloud Infrastructure Costs**
 
+#### Original Estimates (25 users, 15 concurrent)
+
 | Category | Azure (Annual) | AWS (Annual) | GCP (Annual) |
 |----------|----------------|--------------|--------------|
 | Compute | $9,960 | $8,820 | $8,256 |
@@ -203,6 +346,22 @@ Post-MVP for external portals:
 | Networking | $2,040 | $1,740 | $1,620 |
 | Backup/DR | $720 | $660 | $540 |
 | **TOTAL** | **$21,540** | **$19,416** | **$17,916** |
+
+#### ⚠️ REVISED Year 1 Estimates (215 users, 40-50 concurrent)
+
+| Category | Azure (Annual) | AWS (Annual) | GCP (Annual) | Change vs. Original |
+|----------|----------------|--------------|--------------|---------------------|
+| Compute | **$14,856** | **$13,416** | **$12,588** | +49% (+$4,332-$4,896) |
+| Database | **$10,740** | **$10,320** | **$9,756** | +81% (+$4,344-$4,860) |
+| Object Storage | $2,700 | $2,880 | $2,520 | No change (same doc volume) |
+| Message Queue | $180 | $132 | $84 | No change |
+| Auth/Identity | $0 | $0 | $0 | Still under 50K MAU free tier |
+| CDN | $0 | $0 | $0 | Defer to multi-tenant |
+| Networking | $2,040 | $1,740 | $1,620 | No change |
+| Backup/DR | $720 | $660 | $540 | No change |
+| **TOTAL** | **$31,236** | **$29,148** | **$27,108** | **+$8,676 - $9,756 (+45%)** |
+
+**Key Takeaway:** Infrastructure costs increase ~45% to support 215 users vs. 25 users, primarily driven by compute (+49%) and database (+81%) scaling requirements.
 
 ---
 
@@ -507,6 +666,8 @@ Jira / Linear / Monday.com
 
 ### 6.3 Year 1 Operations (Post-Day 180)
 
+#### Original Estimates (25 users)
+
 | Category | Azure | AWS | GCP |
 |----------|-------|-----|-----|
 | **Infrastructure** | $21,540 | $19,416 | $17,916 |
@@ -521,6 +682,31 @@ Jira / Linear / Monday.com
 **Documents:** 2,000/month
 **Storage:** 1.5TB cumulative
 **Active Loans:** ~200
+
+#### ⚠️ REVISED Year 1 Estimates (215 users: 65 internal + 150 external)
+
+| Category | Azure | AWS | GCP | Change vs. Original |
+|----------|-------|-----|-----|---------------------|
+| **Infrastructure** | **$31,236** | **$29,148** | **$27,108** | +$7,908 - $9,732 (+45%) |
+| **AI Services** | $5,532 | $5,100 | $4,386 | No change (same doc volume) |
+| **SaaS Services** | $4,452 | $4,452 | $4,452 | No change (internal tools) |
+| **Dev/Ops Tools** | $960 | $960 | $960 | No change |
+| **Dev/Staging Envs** | **$23,445** | **$21,870** | **$20,331** | +$6,894 - $7,290 (+50% scaled with prod) |
+| **TOTAL (Annual)** | **$65,625** | **$61,530** | **$57,237** | **+$14,802 - $17,486 (+36-40%)** |
+| **MONTHLY AVERAGE** | **$5,469** | **$5,128** | **$4,770** | +$1,234 - $2,016/month |
+
+**Users:** **215 total** (65 internal power users + ~100 external builders + ~50 investors/agents)
+**Concurrent Users (Peak):** 40-50
+**Documents:** 2,000/month (unchanged - same deal volume)
+**Storage:** 1.5TB cumulative
+**Active Loans:** ~200
+
+**Cost Impact Summary:**
+- Infrastructure scales with concurrent users (+45%)
+- Dev/staging environments scale proportionally with production (+50%)
+- AI services unchanged (driven by document volume, not user count)
+- SaaS unchanged (internal development tools only)
+- **Total increase:** $14,802 - $17,486/year (+36-40%)
 
 ### **6.4 Total First 180 Days**
 
@@ -859,19 +1045,35 @@ Total: $4,000 + $3,023 = $7,023/year ($585/mo)
 
 ### Key Takeaways
 
-1. **MVP is affordable:** $27K-33K total cost for first 180 days across all cloud providers
+1. **MVP is affordable:** $27K-33K total cost for first 180 days across all cloud providers (unchanged)
 2. **GCP offers best value:** 15-20% lower costs than Azure, suitable for MVP and scale
 3. **AI is manageable:** Document extraction + GPT services = $4K-5K/year (not a cost blocker)
-4. **Scaling is predictable:** Costs scale linearly with users/documents; economies kick in at 10+ clients
-5. **Margins are healthy:** With proper pricing ($18K-96K/year per client), 60-70% gross margins achievable
-6. **Optimization is critical:** $22K-38K/year savings available through best practices
+4. **⚠️ User count significantly impacts costs:** Revised estimate of 215 users (vs. 25) increases Year 1 costs by 36-40%
+5. **Infrastructure scales with concurrency:** Cost drivers are concurrent users and database connections, not total user count
+6. **Optimization is critical:** $22K-38K/year savings available through best practices (even more important with revised costs)
 
-### Budget Recommendation
+### Budget Recommendation (REVISED November 15, 2025)
 
 **Request approval for:**
-- **MVP (Days 1-180):** $35,000 budget ($30K estimated + $5K contingency)
-- **Year 1 Operations:** $50,000 budget ($42K estimated + $8K contingency)
+- **MVP (Days 1-180):** $35,000 budget ($30K estimated + $5K contingency) - **UNCHANGED**
+- **Year 1 Operations (REVISED):** **$65,000 budget** ($57K GCP estimated + $8K contingency)
+  - **Increase from original:** +$15K (+30%) due to revised user count (215 vs. 25 users)
+  - **Original estimate:** $50,000 (25 users)
+  - **Revised estimate:** $65,000 (215 users: 65 internal + 150 external)
 - **Multi-Tenant (5 clients):** $100,000 budget with revenue offset from client fees
+
+### Critical Actions Required
+
+**Before finalizing Year 1 budget:**
+1. **Validate user count** with Blueprint operations team (exact count of internal + external users)
+2. **Confirm external user roles** (builders, investors, agents) and portal feature requirements
+3. **Approve revised budget** of $65K/year (vs. original $50K)
+4. **Identify cost optimization priorities** (reliability vs. aggressive cost savings)
+
+**Cost Sensitivity:**
+- Each additional 50 external users: +$3-5K/year
+- Higher concurrency patterns: +$3-6K/year (additional servers)
+- Multi-tenant architecture from Day 1: +$5-10K upfront (reduces future retrofit costs)
 
 ### Next Steps
 
@@ -939,11 +1141,12 @@ All estimates based on:
 - GCP: https://cloud.google.com/products/calculator (November 2025)
 - Third-party SaaS: Public pricing pages (November 2025)
 
-**Last Updated:** November 13, 2025
-**Next Review:** Day 30 (actual costs vs. estimates)
+**Last Updated:** November 15, 2025
+**Next Review:** Day 30 (actual costs vs. estimates) + stakeholder validation of user count assumptions
 
 ---
 
-**Document Status:** Draft v1.0 - Ready for Leadership Review
+**Document Status:** Draft v1.1 - REVISED for User Count - Requires Leadership Review & Approval
 **Prepared by:** Claude Code (AI Assistant)
-**Approved by:** [Pending]
+**Critical Changes (v1.1):** Year 1 costs revised from $41K to $57K (GCP) due to actual user count of 215 vs. assumed 25 users
+**Approved by:** [Pending - requires validation of external user count and budget approval]
