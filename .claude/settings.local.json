@@ -4,7 +4,18 @@
       "Bash(if [ -d .github ])",
       "Bash(then find .github -type f)",
       "Bash(fi)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(cat:*)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(npm run build:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ],
     "deny": [],
     "ask": []

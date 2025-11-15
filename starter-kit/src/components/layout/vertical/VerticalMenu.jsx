@@ -58,19 +58,40 @@ const VerticalMenu = ({ scrollMenu }) => {
         <MenuItem href='/home' icon={<i className='ri-home-smile-line' />}>
           Home
         </MenuItem>
+        <MenuItem href='/dashboard' icon={<i className='ri-dashboard-line' />}>
+          Dashboard
+        </MenuItem>
+        <MenuItem href='/analytics' icon={<i className='ri-line-chart-line' />}>
+          Analytics
+        </MenuItem>
+        <MenuItem href='/leads' icon={<i className='ri-user-search-line' />}>
+          Leads
+        </MenuItem>
+        <MenuItem href='/leads/new' icon={<i className='ri-user-add-line' />}>
+          New Lead
+        </MenuItem>
+        <MenuItem href='/feasibility' icon={<i className='ri-file-list-3-line' />}>
+          Feasibility
+        </MenuItem>
+        <MenuItem href='/entitlement' icon={<i className='ri-government-line' />}>
+          Entitlement
+        </MenuItem>
+        <MenuItem href='/loans' icon={<i className='ri-money-dollar-circle-line' />}>
+          Loans
+        </MenuItem>
+        <MenuItem href='/servicing/draws' icon={<i className='ri-money-dollar-box-line' />}>
+          Servicing - Draws
+        </MenuItem>
+        <MenuItem href='/contacts' icon={<i className='ri-contacts-line' />}>
+          Contacts
+        </MenuItem>
+        <MenuItem href='/docs' icon={<i className='ri-book-2-line' />}>
+          Documentation
+        </MenuItem>
         <MenuItem href='/about' icon={<i className='ri-information-line' />}>
           About
         </MenuItem>
       </Menu>
-      {/* <Menu
-          popoutMenuOffset={{ mainAxis: 17 }}
-          menuItemStyles={menuItemStyles(verticalNavOptions, theme)}
-          renderExpandIcon={({ open }) => <RenderExpandIcon open={open} transitionDuration={transitionDuration} />}
-          renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-fill' /> }}
-          menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
-        >
-          <GenerateVerticalMenu menuData={menuData(dictionary, params)} />
-        </Menu> */}
     </ScrollWrapper>
   )
 }

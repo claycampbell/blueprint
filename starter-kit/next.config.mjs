@@ -8,6 +8,11 @@ const nextConfig = {
         destination: '/home',
         permanent: true,
         locale: false
+      },
+      {
+        source: '/index.html',
+        destination: '/home',
+        permanent: true
       }
     ]
   }
