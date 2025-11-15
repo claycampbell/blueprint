@@ -1,0 +1,228 @@
+Connect 2.0 Cost Calculator - Parameter-Driven Model
+Version 1.1 | November 15 2025
+
+PARAMETERS - USER ASSUMPTIONS,,,,,
+Parameter,MVP Phase 1,MVP Phase 2,Year 1 (Original),Year 1 (REVISED),Notes
+Internal Users,6,20,25,65,Full platform access (power users)
+External Builders,0,10,0,100,Portal access for projects/draws
+External Investors/Agents,0,0,0,50,Read-only dashboard access
+Total Users,6,30,25,215,Sum of all user types
+,,,,,
+Concurrency Assumptions,,,,,
+Internal User Concurrency %,50%,50%,60%,30%,% of internal users online at peak
+External User Concurrency %,0%,30%,0%,15%,% of external users online at peak
+Total Concurrent Users,3,15,15,45,Peak concurrent load
+,,,,,
+PARAMETERS - USAGE ASSUMPTIONS,,,,,
+Parameter,MVP Phase 1,MVP Phase 2,Year 1 (Original),Year 1 (REVISED),Notes
+Projects per Year,100,3200,3200,3200,Lead intake volume
+Active Loans,0,150,200,200,Loans in servicing
+Documents per Month,200,1500,2000,2000,Surveys + title + plans
+Document Storage (GB),50,500,1500,1500,Cumulative storage
+API Calls per Day,5000,50000,75000,120000,Increased for external portals
+Database Size (GB),5,25,50,50,Operational data
+,,,,,
+CLOUD INFRASTRUCTURE COSTS (ANNUAL),,,,,
+,,,,,
+COMPUTE - Original Config (2 web servers),,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (25 users),Notes,
+Azure,$4980,$9960,$9960,2x D4s v5 + 1x D2s v5 + LB + buffer,
+AWS,$4410,$8820,$8820,2x m6i.xlarge + 1x m6i.large + ALB,
+GCP,$4128,$8256,$8256,2x e2-standard-4 + 1x e2-standard-2 + LB,
+,,,,,
+COMPUTE - Revised Config (4 web servers),,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (215 users),Increase vs Original,
+Azure,$4980,$9960,$14856,+$4896,4x D4s v5 + 2x D2s v5
+AWS,$4410,$8820,$13416,+$4596,4x m6i.xlarge + 2x m6i.large
+GCP,$4128,$8256,$12588,+$4332,4x e2-standard-4 + 2x e2-standard-2
+,,,,,
+DATABASE - Original Config,,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (25 users),Notes,
+Azure,$3840,$5940,$5940,2 vCPU + read replica,
+AWS,$3360,$5184,$5184,db.m6i.large + replica,
+GCP,$3180,$4896,$4896,db-n1-standard-2 + replica,
+,,,,,
+DATABASE - Revised Config,,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (215 users),Increase vs Original,
+Azure,$3840,$5940,$10740,+$4800,4 vCPU + read replica + 200GB storage
+AWS,$3360,$5184,$10320,+$5136,db.m6i.xlarge + replica
+GCP,$3180,$4896,$9756,+$4860,db-n1-standard-4 + replica
+,,,,,
+OBJECT STORAGE,,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (All scenarios),Notes,
+Azure,$144,$1380,$2700,Blob Storage hot+cool tiers,
+AWS,$144,$1440,$2880,S3 Standard + IA,
+GCP,$126,$1260,$2520,Cloud Storage Standard + Nearline,
+,,,,,
+MESSAGE QUEUE,,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (All scenarios),Notes,
+Azure,$45,$135,$180,Service Bus,
+AWS,$33,$99,$132,SQS + SNS,
+GCP,$21,$63,$84,Pub/Sub,
+,,,,,
+NETWORKING & SECURITY,,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (All scenarios),Notes,
+Azure,$510,$1530,$2040,NAT Gateway + WAF,
+AWS,$435,$1305,$1740,NAT + WAF,
+GCP,$405,$1215,$1620,NAT + WAF,
+,,,,,
+BACKUP & DR,,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1 (All scenarios),Notes,
+Azure,$180,$540,$720,Snapshots + replication,
+AWS,$165,$495,$660,EBS snapshots + S3 replication,
+GCP,$135,$405,$540,Disk snapshots + storage replication,
+,,,,,
+TOTAL INFRASTRUCTURE - Original (25 users),,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1,Monthly Avg,
+Azure,$9699,$19485,$21540,$1795,
+AWS,$8547,$17343,$19416,$1618,
+GCP,$7995,$16155,$17916,$1493,
+,,,,,
+TOTAL INFRASTRUCTURE - Revised (215 users),,,,,
+Cloud Provider,MVP Phase 1,MVP Phase 2,Year 1,Increase vs Original,Monthly Avg
+Azure,$9699,$19485,$31236,+$9696,+45%,$2603
+AWS,$8547,$17343,$29148,+$9732,+50%,$2429
+GCP,$7995,$16155,$27108,+$9192,+51%,$2259
+,,,,,
+AI & ML SERVICES (ANNUAL),,,,,
+,,,,,
+DOCUMENT INTELLIGENCE,,,,,
+Service,MVP Phase 1,MVP Phase 2,Year 1 (All scenarios),Notes,
+Azure Document Intelligence,$130,$540,$1620,$1.50 per 1000 pages + custom models,
+AWS Textract,$130,$540,$1260,Same pricing + model training,
+GCP Document AI,$130,$540,$1440,Same pricing + model training,
+,,,,,
+GPT/LLM SERVICES,,,,,
+Service,MVP Phase 1,MVP Phase 2,Year 1 (All scenarios),Notes,
+Azure OpenAI,$260,$780,$3120,GPT-4 Turbo,
+OpenAI API,$260,$780,$3120,GPT-4 Turbo direct,
+GCP Vertex AI (Gemini),$182,$546,$2184,Gemini 1.5 Pro,
+,,,,,
+CUSTOM ML MODELS (Post-MVP),,,,,
+Service,MVP Phase 1,MVP Phase 2,Year 1,Notes,
+Azure ML,$0,$0,$792,Lead scoring + timeline forecasting,
+AWS SageMaker,$0,$0,$720,Post-MVP feature,
+GCP Vertex AI,$0,$0,$762,Post-MVP feature,
+,,,,,
+TOTAL AI/ML - MVP Only,,,,,
+Provider,MVP Phase 1,MVP Phase 2,Year 1 (No custom ML),Year 1 (With custom ML),
+Azure,$390,$1320,$4740,$5532,
+AWS/OpenAI,$390,$1320,$4380,$5100,
+GCP,$312,$1086,$3624,$4386,
+,,,,,
+SAAS & THIRD-PARTY SERVICES (ANNUAL),,,,,
+,,,,,
+Service,Cost per Year,Notes,,Provider Options,
+Email (SendGrid/SES),$240,100K emails/month,,SendGrid or AWS SES,
+SMS (Twilio),$480,5000 SMS/month (opt-in only),,Twilio or AWS SNS,
+E-Signature,$900,Loan documents,,DocuSign or HelloSign,
+Monitoring,$1380,APM + infrastructure,,App Insights or Datadog,
+Error Tracking,$312,50K errors/month,,Sentry,
+CI/CD,$240,3000 min/month,,GitHub Actions,
+Project Management,$0,Free tier during MVP,,Jira or Linear,
+Security & Compliance,$900,Secrets mgmt + vuln scanning,,Various,
+TOTAL SAAS,$4452,,,Fixed costs,
+,,,,,
+DEV/OPS TOOLS (ANNUAL),,,,,
+,,,,,
+Tool,Cost per Year,Notes,,,
+GitHub Team,$240,5 developers,,Source control,
+Postman Team,$432,3 users for API testing,,,
+Figma Professional,$288,2 designers,,,
+Database Tools,$0,pgAdmin or DBeaver free,,,
+TOTAL DEV TOOLS,$960,,,Fixed costs,
+,,,,,
+DEV/STAGING ENVIRONMENTS,,,,,
+,,,,,
+Environment,% of Production,Original (25 users),Revised (215 users),,
+Development,25%,$4479,$6777,,GCP example
+Staging,50%,$8958,$13554,,GCP example
+TOTAL DEV/STAGING,75%,$13437,$20331,,Scales with production
+,,,,,
+TOTAL COST SUMMARY BY PHASE,,,,,
+,,,,,
+ORIGINAL ASSUMPTIONS (25 Users),,,,,
+Category,MVP Phase 1,MVP Phase 2,Year 1 Operations,,
+Infrastructure (GCP),$7995,$16155,$17916,,
+AI Services (GCP),$312,$1086,$4386,,
+SaaS Services,$800,$1600,$4452,,
+Dev/Ops Tools,$240,$240,$960,,
+Dev/Staging Envs,$3360,$8100,$13437,,
+TOTAL (3 months),$12707,$27181,N/A,,
+TOTAL (Annual),N/A,N/A,$41151,,
+Monthly Average,$4236,$9060,$3429,,
+,,,,,
+REVISED ASSUMPTIONS (215 Users),,,,,
+Category,MVP Phase 1,MVP Phase 2,Year 1 Operations,Change vs Original,
+Infrastructure (GCP),$7995,$16155,$27108,+$9192,+51%
+AI Services (GCP),$312,$1086,$4386,$0,No change
+SaaS Services,$800,$1600,$4452,$0,No change
+Dev/Ops Tools,$240,$240,$960,$0,No change
+Dev/Staging Envs,$3360,$8100,$20331,+$6894,+51%
+TOTAL (3 months),$12707,$27181,N/A,,
+TOTAL (Annual),N/A,N/A,$57237,+$16086,+39%
+Monthly Average,$4236,$9060,$4770,+$1341,+39%
+,,,,,
+COST BY CLOUD PROVIDER (Year 1 Revised),,,,,
+Category,Azure,AWS,GCP,GCP Advantage,
+Infrastructure,$31236,$29148,$27108,GCP cheapest,
+AI/ML Services,$5532,$5100,$4386,GCP cheapest,
+SaaS Services,$4452,$4452,$4452,Same all providers,
+Dev/Ops Tools,$960,$960,$960,Same all providers,
+Dev/Staging,$23427,$21861,$20331,GCP cheapest,
+TOTAL (Annual),$65607,$61521,$57237,GCP saves $4K-$8K,
+Monthly Average,$5467,$5127,$4770,,
+,,,,,
+SENSITIVITY ANALYSIS,,,,,
+,,,,,
+Variable,Low Case,Base Case,High Case,Cost Impact (GCP),
+Total Users,150,215,300,+$8K per 100 users,
+Concurrent Users,30,45,65,+$6K per 20 concurrent,
+Documents/Month,1000,2000,5000,+$30/month per 1000 docs,
+Storage Growth,+100GB/year,+200GB/year,+500GB/year,+$2/GB/year,
+Concurrency Rate,15%,21%,30%,+$3K per 5% increase,
+,,,,,
+USER TIER COST ALLOCATION,,,,,
+,,,,,
+User Tier,Count,Concurrency Rate,Concurrent Users,Infrastructure % Allocation,Annual Cost (GCP)
+Power Users (Internal),65,30%,20,55%,$14906
+Portal Users (Builders),100,15%,15,35%,$9488
+Read-Only Users (Investors),50,10%,5,10%,$2711
+TOTAL,215,21%,40,100%,$27108
+,,,,,
+Cost per User by Tier,,,,,
+User Tier,Annual Cost per User,Monthly Cost per User,Notes,,
+Power Users,$229,$19,Full platform access + heavy compute,
+Portal Users,$95,$8,Portal access + document storage,
+Read-Only Users,$54,$5,Cached queries + dashboards,
+Blended Average,$126,$11,Average across all 215 users,
+,,,,,
+BUDGET RECOMMENDATIONS,,,,,
+,,,,,
+Phase,Estimated Cost,Contingency %,Recommended Budget,Status,
+MVP Phase 1 (90 days),$12707,20%,$15000,APPROVED,
+MVP Phase 2 (90 days),$27181,20%,$33000,APPROVED,
+Year 1 Operations (Original),$41151,20%,$50000,SUPERSEDED,
+Year 1 Operations (REVISED),$57237,15%,$65000,PENDING APPROVAL,
+,,,,,
+COST OPTIMIZATION OPPORTUNITIES,,,,,
+,,,,,
+Strategy,Potential Savings (Annual),Effort,Priority,Notes
+Reserved Instances (1-year),"-$5000 to -$8000",Medium,High,30-40% discount on compute
+Auto-scaling Policies,"-$3000 to -$5000",Low,High,Scale down off-hours
+Storage Lifecycle Policies,"-$1000 to -$2000",Low,Medium,Archive old documents
+Use GPT-3.5 vs GPT-4,"-$2000 to -$3000",Low,Low,Trade quality for cost
+Shut down dev/staging off-hours,"-$5000 to -$8000",Medium,High,60% runtime savings
+Use AWS SES vs SendGrid,"-$120",Low,Low,Minor savings
+TOTAL POTENTIAL SAVINGS,"-$16120 to -$28120",,,Optimized cost: $29K-$41K
+,,,,,
+VALIDATION CHECKLIST,,,,,
+,,,,,
+Item,Current Assumption,Requires Validation,Impact if Wrong,Priority
+Internal User Count,65,YES - confirm with ops team,±$3K per 20 users,CRITICAL
+External User Count,150,YES - confirm actual count,±$5K per 50 users,CRITICAL
+Concurrency Rate,21% average,YES - monitor actual usage,±$6K per 5%,HIGH
+External Portal Features,Limited portal access,YES - define feature scope,±$10K if full platform,HIGH
+Document Volume,2000/month,YES - validate against actuals,±$30/month per 1000 docs,MEDIUM
+Multi-tenant Timeline,Post Year 1,YES - confirm roadmap,±$10K if Day 1,MEDIUM
+Budget Ceiling,None specified,YES - confirm max spend,Could block deployment,CRITICAL
