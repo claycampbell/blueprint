@@ -5,8 +5,8 @@ import Login from '@views/Login'
 import { getServerMode } from '@core/utils/serverHelpers'
 
 export const metadata = {
-  title: 'Login',
-  description: 'Login to your account'
+  title: 'Login - Connect 2.0',
+  description: 'Login to Connect 2.0 - Blueprint Development Platform'
 }
 
 const LoginPage = async () => {

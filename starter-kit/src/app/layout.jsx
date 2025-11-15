@@ -14,8 +14,8 @@ import '@/app/globals.css'
 import '@assets/iconify-icons/generated-icons.css'
 
 export const metadata = {
-  title: 'Materialize - Material Next.js Admin Template',
-  description: 'Materialize - Material Next.js Admin Template'
+  title: 'Connect 2.0 - Blueprint Development Platform',
+  description: 'Connect 2.0 - Next-generation platform for residential construction lending and development management'
 }
 
 const RootLayout = async props => {
