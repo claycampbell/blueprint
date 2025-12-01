@@ -1,7 +1,8 @@
 # Connect 2.0 - Dependency Map & Execution Plan
 
-**Version:** 1.0
+**Version:** 1.1
 **Created:** November 6, 2025
+**Updated:** December 1, 2025
 **Status:** Ready for Review
 **Purpose:** Master dependency map, critical path analysis, and sprint-by-sprint execution plan
 
@@ -15,11 +16,19 @@ This document provides a comprehensive view of task dependencies, critical path 
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| **Total Story Points (Phase 1)** | 659 points | Days 1-90 MVP |
+| **Total Story Points (Phase 1)** | 848 points | Days 1-90 MVP (updated with E16-E18) |
 | **Critical Path Duration** | ~18 weeks | With 6 developers |
-| **Foundation Phase** | 136 points | Days 1-30 (must complete first) |
+| **Foundation Phase** | 190 points | Days 1-30 (includes E16 Audit foundation) |
 | **Parallel Workstreams** | 3-4 streams | Maximum team utilization |
 | **Decision Gates** | 4 gates | Days 7, 14, 30, 90 |
+
+### New Epics Added (December 2025)
+
+| Epic | Name | MVP Points | Phase | Rationale |
+|------|------|------------|-------|-----------|
+| **E16** | Audit, Compliance & Governance | 54 pts | Days 1-45 | Foundation for regulatory compliance |
+| **E17** | Document Intelligence Base Layer | 70 pts | Days 30-90 | Enables E5/E6 document automation |
+| **E18** | Collaboration & Handoff Engine | 65 pts | Days 15-75 | Addresses #1 pain point (cross-team friction) |
 
 ---
 
@@ -44,7 +53,7 @@ These epics **MUST** complete before any feature work can begin:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    FOUNDATION LAYER (136 pts)                    │
+│                    FOUNDATION LAYER (190 pts)                    │
 │                                                                   │
 │  E1: Foundation      E2: Core Data         E3: Auth              │
 │  & Setup            Model                  & Authorization       │
@@ -60,13 +69,30 @@ These epics **MUST** complete before any feature work can begin:
 │  ├─ BLOCKS: E6 (Entitlement consultant coordination)             │
 │  └─ Required for: All workflow automation                        │
 │                                                                   │
+│  ═══════════════════ NEW FOUNDATION EPICS ═══════════════════   │
+│                                                                   │
+│  E16: Audit &        E18: Collaboration                          │
+│  Compliance          & Handoff                                    │
+│  (54 pts)            (65 pts)                                     │
+│                                                                   │
+│  ├─ Audit Events     ├─ Handoff Objects                          │
+│  ├─ Immutable Log    ├─ SLA Tracking                             │
+│  ├─ PII Handling     ├─ Escalation Engine                        │
+│  └─ Compliance Export└─ @Mentions/Comments                       │
+│                                                                   │
+│  BLOCKS: All epics    BLOCKS: E5, E6 (consultant handoffs)       │
+│  (audit logging)      BLOCKS: E9, E10 (loan handoffs)            │
+│                                                                   │
 └─────────────────────────────────────────────────────────────────┘
              │                     │                     │
              ▼                     ▼                     ▼
          ALL FEATURE EPICS DEPEND ON FOUNDATION
 ```
 
-**Critical Finding:** E8 (Task Management) is a **critical blocker** for E5 and E6. Must prioritize in Weeks 3-4.
+**Critical Findings:**
+- E8 (Task Management) is a **critical blocker** for E5 and E6. Must prioritize in Weeks 3-4.
+- E16 (Audit) middleware must be available before APIs go live (Sprint 2-3).
+- E18 (Handoffs) enables SLA tracking for consultant workflows (Sprint 2-4).
 
 ---
 
@@ -98,6 +124,24 @@ E5: Feasibility (121 pts)          E7: Documents (88 pts)
                    ▼
           E13: External Integrations (56 pts)
           ├─ Email (E13-T8 to T14): 21 pts
+
+═══════════════════ NEW: DOCUMENT INTELLIGENCE ═══════════════════
+
+E17: Document Intelligence (70 pts MVP)
+    │
+    ├─ DEPENDS ON: E7 (Documents - storage layer)
+    ├─ DEPENDS ON: E2 (Data Model - extracted data storage)
+    │
+    ├─ BLOCKS: E5 (Feasibility - auto-extraction from surveys, title, arborist)
+    ├─ BLOCKS: E6 (Entitlement - permit document processing)
+    └─ BLOCKS: E14 (Analytics - document-based insights)
+
+    Features:
+    ├─ Document Ingestion Pipeline (17 pts)
+    ├─ OCR & Text Extraction via Azure (17 pts)
+    ├─ Document Type Registry (9 pts)
+    ├─ Metadata Extraction Engine (18 pts)
+    └─ AI Summarization (11 pts)
           ├─ DocuSign (E13-T1 to T7): 23 pts
           └─ SMS (E13-T15 to T19): 12 pts
 ```
@@ -833,6 +877,20 @@ DEPENDS ON E7 (Documents):
 
 DEPENDS ON E9 (Lending):
 - E10 (Servicing requires loans)
+
+═══════════════ NEW EPIC DEPENDENCIES (December 2025) ═══════════════
+
+E16 (Audit & Compliance):
+- NO DEPENDENCIES - Start with E1/E2
+- BLOCKS: All API endpoints (audit middleware)
+
+E17 (Document Intelligence):
+- DEPENDS ON: E2 (Data Model), E7 (Documents)
+- BLOCKS: E5 (Feasibility extraction), E6 (Entitlement docs)
+
+E18 (Collaboration & Handoff):
+- DEPENDS ON: E2, E3, E8 (Tasks), E11 (Contacts), E13 (Notifications)
+- BLOCKS: E5 (consultant handoffs), E6 (cross-team handoffs)
 ```
 
 ---
@@ -841,6 +899,7 @@ DEPENDS ON E9 (Lending):
 
 For detailed task descriptions, reference these epic backlog documents:
 
+**Original Epics:**
 - **E4:** [EPIC_E4_LEAD_PROJECT_MANAGEMENT.md](backlogs/EPIC_E4_LEAD_PROJECT_MANAGEMENT.md)
 - **E5:** [EPIC_E5_FEASIBILITY_MODULE.md](backlogs/EPIC_E5_FEASIBILITY_MODULE.md)
 - **E8:** [EPIC_E8_TASK_MANAGEMENT.md](backlogs/EPIC_E8_TASK_MANAGEMENT.md)
@@ -848,8 +907,57 @@ For detailed task descriptions, reference these epic backlog documents:
 - **E14:** [EPIC_E14_ANALYTICS_REPORTING.md](backlogs/EPIC_E14_ANALYTICS_REPORTING.md)
 - **E6, E7, E9, E10, E12, E13:** [BACKLOG_CREATION_PLAN.md](BACKLOG_CREATION_PLAN.md)
 
+**New Epics (December 2025):**
+- **E16:** [EPIC_E16_AUDIT_COMPLIANCE.md](backlogs/EPIC_E16_AUDIT_COMPLIANCE.md)
+- **E17:** [EPIC_E17_DOCUMENT_INTELLIGENCE.md](backlogs/EPIC_E17_DOCUMENT_INTELLIGENCE.md)
+- **E18:** [EPIC_E18_COLLABORATION_HANDOFF.md](backlogs/EPIC_E18_COLLABORATION_HANDOFF.md)
+
+---
+
+## Appendix C: New Epics Integration Summary
+
+### Impact on MVP Timeline
+
+| Original Plan | Updated Plan | Delta |
+|--------------|--------------|-------|
+| 659 points | 848 points | +189 points |
+| 6 sprints | 7-8 sprints | +1-2 sprints |
+| Day 90 MVP | Day 100-110 MVP | +10-20 days |
+
+### Recommended Approach
+
+**Option A: Extend Timeline**
+- Add 1-2 sprints to Phase 1
+- Day 90 becomes Day 100-110
+- Full feature set delivered
+
+**Option B: Defer Features**
+- Keep Day 90 deadline
+- Defer E17 AI summarization to Phase 2
+- Defer E18 escalation engine to Phase 2
+- Saves ~30 points
+
+**Option C: Add Resources**
+- Add 1-2 developers
+- Maintain Day 90 deadline
+- Full feature set delivered
+
+### Recommended Sprint Integration
+
+| Sprint | New Epic Work |
+|--------|---------------|
+| Sprint 2 | E16-T1 to T8 (Audit infrastructure) |
+| Sprint 2 | E18-T1 to T5 (Handoff core) |
+| Sprint 3 | E16-T9 to T17 (Audit query, export) |
+| Sprint 3 | E18-T6 to T16 (Handoff UI, SLAs) |
+| Sprint 4 | E17-T1 to T15 (Document ingestion, OCR) |
+| Sprint 4 | E18-T18 to T24 (Escalation) |
+| Sprint 5 | E17-T16 to T29 (Extraction engine) |
+| Sprint 5 | E18-T25 to T31 (Comments, mentions) |
+| Sprint 6 | E17-T30 to T35 (AI summarization) |
+
 ---
 
 **Document Status:** Ready for PLT Review
 **Next Steps:** Review → Import to GitHub → Begin Sprint 1
-**Last Updated:** November 6, 2025
+**Last Updated:** December 1, 2025
