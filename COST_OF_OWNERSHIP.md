@@ -1,9 +1,76 @@
 # Connect 2.0 - Baseline Cost of Ownership Analysis
-**Version 1.1 | November 15, 2025**
+**Version 1.2 | December 8, 2025**
 
 ## Revision History
+- **v1.2 (Dec 8, 2025):** Added Executive Overview & Recommendation section with firm GCP recommendation, budget summary, and immediate action items.
 - **v1.1 (Nov 15, 2025):** Updated user count assumptions from 25 to 215 users (65 internal + 150 external). Revised Year 1 costs from $41K to $57K (GCP). Added stakeholder validation requirements.
 - **v1.0 (Nov 13, 2025):** Initial baseline cost analysis
+
+---
+
+## Executive Overview & Recommendation
+
+### The Bottom Line
+
+**Recommended Cloud Provider: Google Cloud Platform (GCP)**
+
+After comprehensive analysis of Azure, AWS, and GCP across infrastructure, AI services, scalability, and total cost of ownership, **GCP is the clear choice for Connect 2.0** based on three decisive factors:
+
+| Decision Factor | GCP Advantage |
+|-----------------|---------------|
+| **Cost Leadership** | 15-20% lower than Azure, 7-10% lower than AWS across all phases |
+| **Firebase Migration Path** | Direct compatibility with existing BPO infrastructure reduces migration risk |
+| **AI/ML Ecosystem** | Vertex AI and Document AI provide enterprise-grade capabilities at competitive pricing |
+
+### Budget Summary
+
+| Phase | Duration | Budget Request | Notes |
+|-------|----------|----------------|-------|
+| **MVP Development** | Days 1-180 | **$35,000** | $27.8K estimated + $7.2K contingency |
+| **Year 1 Operations** | Post-Day 180 | **$65,000** | $57.2K estimated + $7.8K contingency (215 users) |
+| **Multi-Tenant (5 clients)** | Year 2+ | **$100,000** | Offset by client revenue (~$240K) |
+
+**Total Year 1 Investment: $100,000** (MVP + Operations)
+
+### Why GCP Over Alternatives
+
+**Versus Azure (+$8,400/year or +15%):**
+- Azure's only advantage is M365 integration—not critical for Connect 2.0 architecture
+- Azure OpenAI premium not justified for document summarization use case
+- Higher complexity in pricing and resource management
+
+**Versus AWS (+$4,300/year or +8%):**
+- AWS offers broader ecosystem but at higher cost
+- OpenAI API integration is equivalent (not embedded like Azure)
+- Blueprint team has limited AWS experience vs. Firebase/GCP familiarity
+
+### Risk Mitigation
+
+| Risk | Mitigation Built Into Recommendation |
+|------|-------------------------------------|
+| Vendor lock-in | GCP's containerized approach (Cloud Run, GKE) enables portability |
+| User count uncertainty | Budget includes 15% contingency; infrastructure auto-scales |
+| Multi-tenant pivot | GCP's pricing scales linearly; no architecture changes needed |
+
+### Critical Assumptions Requiring Validation
+
+Before finalizing, leadership must confirm:
+
+1. **External user count**: Analysis assumes ~150 external users (builders, investors, agents). Actual count impacts infrastructure sizing ±$3-5K per 50 users.
+2. **Portal feature scope**: Full portal access vs. read-only dashboards affects compute requirements.
+3. **Reliability vs. cost priority**: Budget assumes balanced approach; aggressive optimization could save additional $15K/year.
+
+### Firm Recommendation
+
+**Proceed with GCP** and the following immediate actions:
+
+1. **Week 1**: Establish GCP organization and billing account with cost alerts at 50%/75%/90% of monthly budget
+2. **Week 2**: Deploy Phase 1 MVP infrastructure ($3,055/month target)
+3. **Day 30**: Review actual vs. projected costs; adjust reserved instance commitments
+4. **Day 90**: Lock in 1-year reserved instances for 30% savings on production workloads
+
+**Decision Owner**: [Requires Assignment]
+**Approval Deadline**: Prior to Day 1 development kickoff
 
 ---
 
