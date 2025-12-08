@@ -2,7 +2,7 @@
 **Version 1.2 | December 8, 2025**
 
 ## Revision History
-- **v1.2 (Dec 8, 2025):** Added Executive Overview & Recommendation section with firm GCP recommendation, budget summary, and immediate action items.
+- **v1.2 (Dec 8, 2025):** Added Executive Overview & Recommendation section with firm Azure recommendation based on enterprise AI, M365 integration, and Document Intelligence maturity. Budget summary and immediate action items included.
 - **v1.1 (Nov 15, 2025):** Updated user count assumptions from 25 to 215 users (65 internal + 150 external). Revised Year 1 costs from $41K to $57K (GCP). Added stakeholder validation requirements.
 - **v1.0 (Nov 13, 2025):** Initial baseline cost analysis
 
@@ -12,45 +12,47 @@
 
 ### The Bottom Line
 
-**Recommended Cloud Provider: Google Cloud Platform (GCP)**
+**Recommended Cloud Provider: Microsoft Azure**
 
-After comprehensive analysis of Azure, AWS, and GCP across infrastructure, AI services, scalability, and total cost of ownership, **GCP is the clear choice for Connect 2.0** based on three decisive factors:
+After comprehensive analysis of Azure, AWS, and GCP across infrastructure, AI services, scalability, and total cost of ownership, **Azure is the strategic choice for Connect 2.0** based on three decisive factors:
 
-| Decision Factor | GCP Advantage |
-|-----------------|---------------|
-| **Cost Leadership** | 15-20% lower than Azure, 7-10% lower than AWS across all phases |
-| **Firebase Migration Path** | Direct compatibility with existing BPO infrastructure reduces migration risk |
-| **AI/ML Ecosystem** | Vertex AI and Document AI provide enterprise-grade capabilities at competitive pricing |
+| Decision Factor | Azure Advantage |
+|-----------------|-----------------|
+| **Enterprise AI Integration** | Azure OpenAI provides GPT-4 with enterprise SLA, compliance, and data residency guarantees |
+| **M365 Ecosystem** | Native integration with SharePoint (current entitlement system) simplifies migration and user adoption |
+| **Document Intelligence Maturity** | Azure Document Intelligence is the most mature offering for structured document extraction (surveys, title reports, arborist reports) |
 
 ### Budget Summary
 
 | Phase | Duration | Budget Request | Notes |
 |-------|----------|----------------|-------|
-| **MVP Development** | Days 1-180 | **$35,000** | $27.8K estimated + $7.2K contingency |
-| **Year 1 Operations** | Post-Day 180 | **$65,000** | $57.2K estimated + $7.8K contingency (215 users) |
-| **Multi-Tenant (5 clients)** | Year 2+ | **$100,000** | Offset by client revenue (~$240K) |
+| **MVP Development** | Days 1-180 | **$40,000** | $32.8K estimated + $7.2K contingency |
+| **Year 1 Operations** | Post-Day 180 | **$75,000** | $65.6K estimated + $9.4K contingency (215 users) |
+| **Multi-Tenant (5 clients)** | Year 2+ | **$115,000** | Offset by client revenue (~$240K) |
 
-**Total Year 1 Investment: $100,000** (MVP + Operations)
+**Total Year 1 Investment: $115,000** (MVP + Operations)
 
-### Why GCP Over Alternatives
+### Why Azure Over Alternatives
 
-**Versus Azure (+$8,400/year or +15%):**
-- Azure's only advantage is M365 integration—not critical for Connect 2.0 architecture
-- Azure OpenAI premium not justified for document summarization use case
-- Higher complexity in pricing and resource management
+**Versus GCP (-$8,400/year or -13%):**
+- GCP cost savings do not offset strategic value of enterprise AI and M365 integration
+- Blueprint already uses M365 (SharePoint for entitlement tracking)—Azure integration reduces migration friction
+- Azure OpenAI provides enterprise SLA, data residency, and compliance guarantees critical for financial services
+- Document Intelligence has deeper custom model training for real estate documents
 
-**Versus AWS (+$4,300/year or +8%):**
-- AWS offers broader ecosystem but at higher cost
-- OpenAI API integration is equivalent (not embedded like Azure)
-- Blueprint team has limited AWS experience vs. Firebase/GCP familiarity
+**Versus AWS (-$4,100/year or -6%):**
+- AWS lacks native OpenAI integration (requires separate API management)
+- No M365 ecosystem benefits
+- Similar enterprise maturity but without the strategic alignment to Blueprint's existing toolchain
 
 ### Risk Mitigation
 
 | Risk | Mitigation Built Into Recommendation |
 |------|-------------------------------------|
-| Vendor lock-in | GCP's containerized approach (Cloud Run, GKE) enables portability |
-| User count uncertainty | Budget includes 15% contingency; infrastructure auto-scales |
-| Multi-tenant pivot | GCP's pricing scales linearly; no architecture changes needed |
+| Higher cost vs. GCP | Premium justified by enterprise AI features, M365 integration, and reduced migration complexity |
+| Vendor lock-in | Azure's containerized approach (AKS, Container Apps) enables portability; standard PostgreSQL database |
+| User count uncertainty | Budget includes 15% contingency; Azure Autoscale handles demand spikes |
+| Multi-tenant pivot | Azure's pricing scales linearly; tenant isolation via Azure AD B2C built-in |
 
 ### Critical Assumptions Requiring Validation
 
@@ -62,12 +64,12 @@ Before finalizing, leadership must confirm:
 
 ### Firm Recommendation
 
-**Proceed with GCP** and the following immediate actions:
+**Proceed with Microsoft Azure** and the following immediate actions:
 
-1. **Week 1**: Establish GCP organization and billing account with cost alerts at 50%/75%/90% of monthly budget
-2. **Week 2**: Deploy Phase 1 MVP infrastructure ($3,055/month target)
-3. **Day 30**: Review actual vs. projected costs; adjust reserved instance commitments
-4. **Day 90**: Lock in 1-year reserved instances for 30% savings on production workloads
+1. **Week 1**: Establish Azure subscription and Cost Management alerts at 50%/75%/90% of monthly budget
+2. **Week 2**: Deploy Phase 1 MVP infrastructure ($3,600/month target)
+3. **Day 30**: Review actual vs. projected costs; evaluate Azure Reserved Instances
+4. **Day 90**: Lock in 1-year Reserved Instances for 30-40% savings on production workloads
 
 **Decision Owner**: [Requires Assignment]
 **Approval Deadline**: Prior to Day 1 development kickoff
