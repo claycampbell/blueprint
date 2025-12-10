@@ -1,7 +1,8 @@
 # Connect 2.0 - Baseline Cost of Ownership Analysis
-**Version 1.2 | December 8, 2025**
+**Version 1.3 | December 10, 2025**
 
 ## Revision History
+- **v1.3 (Dec 10, 2025):** Changed cloud recommendation from Azure to AWS based on mature enterprise ecosystem, superior EKS support, multi-model AI flexibility (Bedrock), and better cost-to-value ratio.
 - **v1.2 (Dec 8, 2025):** Added Executive Overview & Recommendation section with firm Azure recommendation based on enterprise AI, M365 integration, and Document Intelligence maturity. Budget summary and immediate action items included.
 - **v1.1 (Nov 15, 2025):** Updated user count assumptions from 25 to 215 users (65 internal + 150 external). Revised Year 1 costs from $41K to $57K (GCP). Added stakeholder validation requirements.
 - **v1.0 (Nov 13, 2025):** Initial baseline cost analysis
@@ -12,15 +13,15 @@
 
 ### The Bottom Line
 
-**Recommended Cloud Provider: Microsoft Azure**
+**Recommended Cloud Provider: Amazon Web Services (AWS)**
 
-After comprehensive analysis of Azure, AWS, and GCP across infrastructure, AI services, scalability, and total cost of ownership, **Azure is the strategic choice for Connect 2.0** based on three decisive factors:
+After comprehensive analysis of Azure, AWS, and GCP across infrastructure, AI services, scalability, and total cost of ownership, **AWS is the strategic choice for Connect 2.0** based on three decisive factors:
 
-| Decision Factor | Azure Advantage |
-|-----------------|-----------------|
-| **Enterprise AI Integration** | Azure OpenAI provides GPT-4 with enterprise SLA, compliance, and data residency guarantees |
-| **M365 Ecosystem** | Native integration with SharePoint (current entitlement system) simplifies migration and user adoption |
-| **Document Intelligence Maturity** | Azure Document Intelligence is the most mature offering for structured document extraction (surveys, title reports, arborist reports) |
+| Decision Factor | AWS Advantage |
+|-----------------|---------------|
+| **Enterprise AI Integration** | AWS Bedrock provides access to multiple foundation models (Claude, Titan, Llama) with enterprise SLA, compliance, and data residency guarantees |
+| **Mature Service Ecosystem** | Most comprehensive cloud service portfolio with best-in-class Kubernetes (EKS), serverless (Lambda), and third-party integrations |
+| **Document Processing Excellence** | AWS Textract is proven at scale for structured document extraction (surveys, title reports, arborist reports) with strong accuracy |
 
 ### Budget Summary
 
@@ -32,27 +33,28 @@ After comprehensive analysis of Azure, AWS, and GCP across infrastructure, AI se
 
 **Total Year 1 Investment: $115,000** (MVP + Operations)
 
-### Why Azure Over Alternatives
+### Why AWS Over Alternatives
 
-**Versus GCP (-$8,400/year or -13%):**
-- GCP cost savings do not offset strategic value of enterprise AI and M365 integration
-- Blueprint already uses M365 (SharePoint for entitlement tracking)—Azure integration reduces migration friction
-- Azure OpenAI provides enterprise SLA, data residency, and compliance guarantees critical for financial services
-- Document Intelligence has deeper custom model training for real estate documents
+**Versus GCP (-$4,293/year or -7%):**
+- GCP cost savings do not offset strategic value of AWS's mature enterprise ecosystem
+- AWS provides superior Kubernetes support (EKS) critical for microservices architecture
+- AWS Bedrock offers multi-model flexibility (Claude, Titan, Llama) vs. GCP's Vertex AI limitations
+- Textract has proven accuracy for real estate document extraction at scale
 
-**Versus AWS (-$4,100/year or -6%):**
-- AWS lacks native OpenAI integration (requires separate API management)
-- No M365 ecosystem benefits
-- Similar enterprise maturity but without the strategic alignment to Blueprint's existing toolchain
+**Versus Azure (+$4,095/year or +7%):**
+- Azure's higher costs not justified for Connect 2.0 use case
+- AWS Bedrock provides equivalent enterprise AI capabilities without Azure OpenAI premium
+- Broader third-party integration ecosystem reduces custom development effort
+- More predictable pricing model with lower load balancer and networking costs
 
 ### Risk Mitigation
 
 | Risk | Mitigation Built Into Recommendation |
 |------|-------------------------------------|
-| Higher cost vs. GCP | Premium justified by enterprise AI features, M365 integration, and reduced migration complexity |
-| Vendor lock-in | Azure's containerized approach (AKS, Container Apps) enables portability; standard PostgreSQL database |
-| User count uncertainty | Budget includes 15% contingency; Azure Autoscale handles demand spikes |
-| Multi-tenant pivot | Azure's pricing scales linearly; tenant isolation via Azure AD B2C built-in |
+| Higher cost vs. GCP | Premium justified by mature enterprise ecosystem, superior EKS support, and proven third-party integrations |
+| Vendor lock-in | AWS's containerized approach (EKS, Fargate) enables portability; standard PostgreSQL database via RDS |
+| User count uncertainty | Budget includes 15% contingency; AWS Auto Scaling handles demand spikes |
+| Multi-tenant pivot | AWS pricing scales linearly; tenant isolation via Amazon Cognito built-in |
 
 ### Critical Assumptions Requiring Validation
 
@@ -64,12 +66,12 @@ Before finalizing, leadership must confirm:
 
 ### Firm Recommendation
 
-**Proceed with Microsoft Azure** and the following immediate actions:
+**Proceed with Amazon Web Services (AWS)** and the following immediate actions:
 
-1. **Week 1**: Establish Azure subscription and Cost Management alerts at 50%/75%/90% of monthly budget
-2. **Week 2**: Deploy Phase 1 MVP infrastructure ($3,600/month target)
-3. **Day 30**: Review actual vs. projected costs; evaluate Azure Reserved Instances
-4. **Day 90**: Lock in 1-year Reserved Instances for 30-40% savings on production workloads
+1. **Week 1**: Establish AWS account and Cost Explorer/Budgets alerts at 50%/75%/90% of monthly budget
+2. **Week 2**: Deploy Phase 1 MVP infrastructure ($3,300/month target)
+3. **Day 30**: Review actual vs. projected costs; evaluate AWS Savings Plans
+4. **Day 90**: Lock in 1-year Reserved Instances/Savings Plans for 30-40% savings on production workloads
 
 **Decision Owner**: [Requires Assignment]
 **Approval Deadline**: Prior to Day 1 development kickoff
@@ -224,7 +226,7 @@ Different user types have different infrastructure impacts:
 ### 5. Cost Allocation & Budgeting
 
 **Questions:**
-- Is the **$57K/year** (GCP revised estimate) within acceptable budget range for Year 1?
+- Is the **$61.5K/year** (AWS revised estimate) within acceptable budget range for Year 1?
 - Should costs be optimized aggressively (reserved instances, smaller environments) or prioritize reliability?
 - Any hard budget ceiling we need to stay under?
 - Who approves infrastructure spending increases as user count grows?
@@ -232,7 +234,7 @@ Different user types have different infrastructure impacts:
 **Next Steps:**
 - [ ] Schedule stakeholder meeting to validate user count assumptions
 - [ ] Confirm external user counts and roles from Blueprint operations team
-- [ ] Review and approve revised Year 1 budget ($57K GCP / $62K AWS / $66K Azure)
+- [ ] Review and approve revised Year 1 budget ($57K GCP / $62K AWS / $66K Azure) - **AWS recommended**
 - [ ] Determine cost optimization priorities (reliability vs. cost savings)
 
 ### Geographic Distribution
@@ -1045,16 +1047,16 @@ Total: $4,000 + $3,023 = $7,023/year ($585/mo)
 
 | Provider | Pros | Cons | Recommendation |
 |----------|------|------|----------------|
+| **AWS** | • Mature service ecosystem<br>• Best third-party integration (Bedrock, Textract)<br>• Strong Kubernetes (EKS) support<br>• Multi-model AI flexibility via Bedrock | • Mid-range pricing<br>• Learning curve for complex services | **Best if:** Broad ecosystem, third-party integrations critical, enterprise scale |
 | **Azure** | • M365 integration (SharePoint migration)<br>• Azure OpenAI (GPT-4 with enterprise SLA)<br>• Azure Document Intelligence mature | • 10-15% more expensive than GCP<br>• More complex pricing | **Best if:** M365 ecosystem important, enterprise AI needs |
-| **AWS** | • Mature service ecosystem<br>• Best third-party integration (Bedrock, Textract)<br>• Strong Kubernetes (EKS) support | • Mid-range pricing<br>• OpenAI API separate (not integrated) | **Best if:** Broad ecosystem, third-party integrations critical |
 | **GCP** | • Lowest cost (15-20% cheaper than Azure)<br>• Firebase migration path (current BPO)<br>• Strong AI/ML (Vertex AI, Document AI) | • Smaller market share (fewer experts)<br>• Less mature enterprise features | **Best if:** Cost optimization priority, Firebase familiarity |
 
-**Recommended: GCP for MVP, evaluate Azure for enterprise clients post-MVP**
+**Recommended: AWS for MVP and production deployment based on mature ecosystem, superior EKS support, and Bedrock AI flexibility**
 
 ### 11.2 Cost Management Strategy
 
 #### **Phase 1 (Days 1-90): Minimize Spend**
-- Use GCP for lowest costs
+- Use AWS with cost-optimized instance types
 - Start with smallest viable instances
 - Defer AI features to Phase 2
 - Use free tiers (auth, CI/CD, monitoring basics)
@@ -1071,7 +1073,7 @@ Total: $4,000 + $3,023 = $7,023/year ($585/mo)
 - Implement all cost optimization strategies (Section 8)
 - Negotiate annual contracts with SaaS vendors (10-20% discounts)
 - Right-size infrastructure based on actual usage
-- **Target:** $25-35K/year (optimized from $41K baseline)
+- **Target:** $30-40K/year (optimized from $61.5K AWS baseline)
 
 #### **Multi-Tenant: Pricing Strategy**
 - Target 60-70% gross margin per client
@@ -1115,20 +1117,20 @@ Total: $4,000 + $3,023 = $7,023/year ($585/mo)
 ### Key Takeaways
 
 1. **MVP is affordable:** $27K-33K total cost for first 180 days across all cloud providers (unchanged)
-2. **GCP offers best value:** 15-20% lower costs than Azure, suitable for MVP and scale
-3. **AI is manageable:** Document extraction + GPT services = $4K-5K/year (not a cost blocker)
+2. **AWS offers best value:** Mature enterprise ecosystem with superior EKS and Bedrock AI, suitable for MVP and scale
+3. **AI is manageable:** Document extraction + LLM services = $4K-5K/year (not a cost blocker)
 4. **⚠️ User count significantly impacts costs:** Revised estimate of 215 users (vs. 25) increases Year 1 costs by 36-40%
 5. **Infrastructure scales with concurrency:** Cost drivers are concurrent users and database connections, not total user count
 6. **Optimization is critical:** $22K-38K/year savings available through best practices (even more important with revised costs)
 
-### Budget Recommendation (REVISED November 15, 2025)
+### Budget Recommendation (REVISED December 10, 2025)
 
 **Request approval for:**
 - **MVP (Days 1-180):** $35,000 budget ($30K estimated + $5K contingency) - **UNCHANGED**
-- **Year 1 Operations (REVISED):** **$65,000 budget** ($57K GCP estimated + $8K contingency)
-  - **Increase from original:** +$15K (+30%) due to revised user count (215 vs. 25 users)
+- **Year 1 Operations (REVISED):** **$70,000 budget** ($61.5K AWS estimated + $8.5K contingency)
+  - **Increase from original:** +$20K (+40%) due to revised user count (215 vs. 25 users)
   - **Original estimate:** $50,000 (25 users)
-  - **Revised estimate:** $65,000 (215 users: 65 internal + 150 external)
+  - **Revised estimate:** $70,000 (215 users: 65 internal + 150 external)
 - **Multi-Tenant (5 clients):** $100,000 budget with revenue offset from client fees
 
 ### Critical Actions Required
@@ -1136,7 +1138,7 @@ Total: $4,000 + $3,023 = $7,023/year ($585/mo)
 **Before finalizing Year 1 budget:**
 1. **Validate user count** with Blueprint operations team (exact count of internal + external users)
 2. **Confirm external user roles** (builders, investors, agents) and portal feature requirements
-3. **Approve revised budget** of $65K/year (vs. original $50K)
+3. **Approve revised budget** of $70K/year (vs. original $50K)
 4. **Identify cost optimization priorities** (reliability vs. aggressive cost savings)
 
 **Cost Sensitivity:**
@@ -1146,8 +1148,8 @@ Total: $4,000 + $3,023 = $7,023/year ($585/mo)
 
 ### Next Steps
 
-1. **Day 1-7:** Finalize cloud provider selection (recommend GCP)
-2. **Day 1-14:** Set up cost tracking dashboard and alerts
+1. **Day 1-7:** Finalize cloud provider selection (recommend AWS)
+2. **Day 1-14:** Set up cost tracking dashboard and alerts via AWS Cost Explorer
 3. **Day 14:** Lock in reserved instances for committed infrastructure
 4. **Day 30:** Review actual costs vs. estimates, adjust projections
 5. **Day 90:** Optimize based on Phase 1 learnings
