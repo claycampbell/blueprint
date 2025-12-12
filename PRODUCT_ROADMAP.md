@@ -133,7 +133,7 @@ Connect 2.0 transforms how you manage real estate development financing—from t
   - **Title:** Active liens, legal exceptions, ownership history
   - **Arborist:** Tree count, protected species, removal restrictions
 - **Value:** Eliminate 30-60 minutes of manual reading per document
-- **AI Technology:** Azure Document Intelligence trained on real estate documents
+- **AI Technology:** AWS Textract trained on real estate documents
 - **Improvement:** Acquisitions specialists review summaries, not 50-page PDFs
 
 **2.4 AI Document Summarization** 🤖
@@ -535,7 +535,7 @@ Connect 2.0 transforms how you manage real estate development financing—from t
 - **Training Data:** Historical outcomes (GO/PASS), zoning, price, location, agent quality
 - **Output:** Every lead gets a score (0-100) and priority ranking
 - **Business Impact:** Focus on high-probability deals first, auto-filter obvious rejections
-- **Technology:** Azure ML or similar classification model
+- **Technology:** AWS SageMaker or similar classification model
 
 #### 2. **Document Intelligence & Extraction** 🤖
 - **How It Works:** AI reads title reports, surveys, arborist reports and extracts structured data
@@ -545,13 +545,13 @@ Connect 2.0 transforms how you manage real estate development financing—from t
   - Title → Liens, legal exceptions
   - Arborist → Tree counts, removal restrictions
 - **Business Impact:** Eliminate 30-60 minutes of manual reading per document
-- **Technology:** Azure Document Intelligence (Form Recognizer)
+- **Technology:** AWS Textract
 
 #### 3. **Document Summarization** 🤖
 - **How It Works:** GPT generates 3-5 bullet point summaries of complex documents
 - **Output:** Executive summary highlighting critical issues and risks
 - **Business Impact:** Junior staff can review documents requiring senior expertise today
-- **Technology:** GPT-4 via Azure OpenAI
+- **Technology:** Claude via AWS Bedrock
 
 #### 4. **Builder Recommendation Engine** 🤖
 - **How It Works:** Recommends best-fit builders based on geography, performance history, capacity
@@ -698,7 +698,7 @@ Connect 2.0 transforms how you manage real estate development financing—from t
 We're not asking you to wait 6 months for value. Design & Entitlement module delivers measurable impact at Day 90, proving the platform before full investment.
 
 ### 2. **Proven Technology**
-We use battle-tested cloud platforms (Azure/AWS/GCP), modern frameworks, and established AI services. No experimental technology—only proven tools at scale.
+We use battle-tested cloud platforms (AWS), modern frameworks, and established AI services. No experimental technology—only proven tools at scale.
 
 ### 3. **Built for Your Business**
 Every feature mapped to real Blueprint workflows documented during workshops. This isn't generic software—it's purpose-built for construction lending.
@@ -774,7 +774,7 @@ Multi-tenant architecture built in from Day 1. When you're ready to commercializ
 ### For Product Team
 1. **Detailed backlog grooming** - Break features into user stories with acceptance criteria
 2. **Journey mapping sessions** - Deep dive on Design & Entitlement workflows (Day 1-30)
-3. **Cloud provider selection** - Finalize Azure/AWS/GCP by Day 14
+3. **Cloud provider finalized** - AWS selected (December 2025)
 4. **Infrastructure setup** - Stand up dev/staging/production environments
 
 ### For Change Management

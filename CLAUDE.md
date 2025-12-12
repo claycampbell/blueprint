@@ -104,7 +104,7 @@ The PRD is the consolidated source of truth. When updating:
 - BPO ↔ Connect 2.0: Temporary API integration Days 1-90, then BPO becomes a module
 - iPad Inspection App: Bi-directional REST API (nightly sync)
 - DocuSign/Authentisign: Outbound + webhook for e-signature
-- Azure Document Intelligence: Document extraction for surveys, title reports, arborist reports
+- AWS Textract: Document extraction for surveys, title reports, arborist reports
 
 ## Project Context
 
@@ -147,7 +147,7 @@ The PRD is the consolidated source of truth. When updating:
 ## Questions to Resolve (from PRD Appendix C)
 
 When working on implementation planning, these remain open:
-- Exact hosting platform (Azure / AWS / GCP)
+- ~~Exact hosting platform~~ → **AWS selected (December 2025)**
 - Preferred frontend framework (React vs. Vue)
 - Backend language/framework (Node.js vs. Python)
 - BPO API capabilities (or export-based integration approach)
@@ -156,6 +156,6 @@ When working on implementation planning, these remain open:
 
 ## Document Status
 
-**Last Updated**: November 5, 2025
-**Status**: Draft v1.0 - Ready for Leadership Review
+**Last Updated**: December 12, 2025
+**Status**: Draft v1.1 - AWS Selected as Cloud Provider
 **Next Milestone**: Leadership feedback → Day 14 program kickoff

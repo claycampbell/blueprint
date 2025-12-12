@@ -56,7 +56,7 @@ The Document Intelligence Base Layer provides the foundational infrastructure fo
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
 │  │ OCR         │  │ Metadata    │  │ AI          │             │
 │  │ Service     │  │ Extractor   │  │ Summarizer  │             │
-│  │ (Azure)     │  │             │  │ (GPT-4)     │             │
+│  │ (Textract)  │  │             │  │ (Bedrock)   │             │
 │  └─────────────┘  └─────────────┘  └─────────────┘             │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -186,7 +186,7 @@ The Document Intelligence Base Layer provides the foundational infrastructure fo
 
 | Task ID | Description | Story Points | Priority | Dependencies |
 |---------|-------------|--------------|----------|--------------|
-| E17-T9 | Set up Azure Document Intelligence service | 3 | P0 | Azure account |
+| E17-T9 | Set up AWS Textract service | 3 | P0 | AWS account |
 | E17-T10 | Implement OCR service wrapper | 3 | P0 | E17-T9 |
 | E17-T11 | Handle multi-page document processing | 2 | P0 | E17-T10 |
 | E17-T12 | Extract and preserve document structure | 3 | P1 | E17-T10 |
@@ -231,8 +231,8 @@ The Document Intelligence Base Layer provides the foundational infrastructure fo
 
 **Acceptance Criteria:**
 - [ ] Extract structured data based on document type schema
-- [ ] Azure Document Intelligence for form/table extraction
-- [ ] GPT-4 for unstructured text extraction
+- [ ] AWS Textract for form/table extraction
+- [ ] AWS Bedrock (Claude) for unstructured text extraction
 - [ ] Confidence scores for extracted values
 - [ ] Manual correction UI for low-confidence extractions
 
@@ -241,8 +241,8 @@ The Document Intelligence Base Layer provides the foundational infrastructure fo
 | Task ID | Description | Story Points | Priority | Dependencies |
 |---------|-------------|--------------|----------|--------------|
 | E17-T22 | Implement extraction orchestrator | 3 | P0 | E17-T10, E17-T18 |
-| E17-T23 | Azure Form Recognizer integration | 3 | P0 | E17-T9 |
-| E17-T24 | GPT-4 extraction prompts for unstructured text | 3 | P1 | OpenAI API |
+| E17-T23 | AWS Textract AnalyzeDocument integration | 3 | P0 | E17-T9 |
+| E17-T24 | AWS Bedrock extraction prompts for unstructured text | 3 | P1 | AWS Bedrock |
 | E17-T25 | Implement confidence scoring | 2 | P1 | E17-T22 |
 | E17-T26 | Store extracted data in documents.extracted_data | 2 | P0 | E17-T22, E7 |
 | E17-T27 | Build extraction review UI | 5 | P1 | E17-T26 |
@@ -269,7 +269,7 @@ The Document Intelligence Base Layer provides the foundational infrastructure fo
 
 | Task ID | Description | Story Points | Priority | Dependencies |
 |---------|-------------|--------------|----------|--------------|
-| E17-T30 | Implement summarization service (GPT-4) | 3 | P1 | E17-T13, OpenAI API |
+| E17-T30 | Implement summarization service (AWS Bedrock) | 3 | P1 | E17-T13, AWS Bedrock |
 | E17-T31 | Create document-type specific prompts | 2 | P1 | E17-T17, E17-T30 |
 | E17-T32 | Store summaries in documents table | 1 | P1 | E17-T30, E7 |
 | E17-T33 | Display summary in document viewer | 3 | P1 | E17-T32, E7 UI |
@@ -323,8 +323,8 @@ The Document Intelligence Base Layer provides the foundational infrastructure fo
 - E2 (Core Data Model) - Database schema required
 - E7 (Documents) - Document upload and storage
 - E3 (Auth) - API authentication
-- Azure Account - Document Intelligence service
-- OpenAI API - GPT-4 access for extraction/summarization
+- AWS Account - Textract service
+- AWS Bedrock - Claude access for extraction/summarization
 
 **Integration Points:**
 - **E7 (Documents):** Trigger E17 processing on document upload
@@ -506,32 +506,35 @@ List available document types.
 
 ---
 
-## Azure Document Intelligence Configuration
+## AWS Document Intelligence Configuration
 
 ### Services Used
 
 | Service | Purpose | Pricing Tier |
 |---------|---------|--------------|
-| **Azure Form Recognizer** | OCR + form field extraction | S0 (pay-per-use) |
-| **Azure Document Intelligence** | Layout analysis, table extraction | S0 |
-| **Custom Models** | Survey/Title specific extraction | Train on 50+ samples |
+| **AWS Textract** | OCR + form field extraction | Pay-per-page |
+| **AWS Textract AnalyzeDocument** | Layout analysis, table extraction | Pay-per-page |
+| **AWS Textract Queries** | Custom field extraction with natural language queries | Pay-per-query |
+| **AWS Bedrock (Claude)** | AI extraction/summarization | Pay-per-token |
 
 ### Custom Model Training
 
 For MVP, we'll use:
-1. **Pre-built models** for general document layout
-2. **Custom extraction prompts** (GPT-4) for domain-specific fields
-3. **Custom trained models** (Phase 2) once we have sufficient training data
+1. **Textract pre-built models** for general document layout
+2. **Textract Queries API** for domain-specific field extraction
+3. **AWS Bedrock (Claude)** prompts for unstructured text extraction
+4. **Custom Textract Adapters** (Phase 2) once we have sufficient training data
 
 ### Cost Estimates
 
 | Operation | Cost per Document | Monthly Volume | Monthly Cost |
 |-----------|-------------------|----------------|--------------|
-| OCR (Read API) | $0.001/page | 3,000 pages | $3 |
-| Form Analysis | $0.05/page | 500 forms | $25 |
-| GPT-4 Extraction | $0.03/doc | 500 docs | $15 |
-| GPT-4 Summary | $0.02/doc | 500 docs | $10 |
-| **Total** | | | **~$53/month** |
+| Textract DetectText | $0.0015/page | 3,000 pages | $4.50 |
+| Textract AnalyzeDocument | $0.015/page | 500 forms | $7.50 |
+| Textract Queries | $0.005/query | 2,500 queries | $12.50 |
+| Bedrock Claude Extraction | $0.02/doc | 500 docs | $10 |
+| Bedrock Claude Summary | $0.015/doc | 500 docs | $7.50 |
+| **Total** | | | **~$42/month** |
 
 ---
 
@@ -551,10 +554,10 @@ Attempt 4: 30 minutes delay (final)
 | Error Type | Retry? | Action |
 |------------|--------|--------|
 | Network timeout | Yes | Exponential backoff |
-| Azure rate limit | Yes | Respect Retry-After header |
+| AWS rate limit | Yes | Respect Retry-After header |
 | Invalid document format | No | Mark failed, notify user |
 | Extraction low confidence | No | Mark for manual review |
-| Azure service outage | Yes | Extended backoff (1 hour) |
+| AWS service outage | Yes | Extended backoff (1 hour) |
 
 ---
 
@@ -562,7 +565,7 @@ Attempt 4: 30 minutes delay (final)
 
 **Sprint 3 (Days 29-42):**
 - E17-T1 to E17-T8: Ingestion pipeline
-- E17-T9, E17-T10: Azure setup, OCR wrapper
+- E17-T9, E17-T10: AWS Textract setup, OCR wrapper
 
 **Sprint 4 (Days 43-56):**
 - E17-T11 to E17-T15: OCR completion
@@ -598,10 +601,10 @@ Attempt 4: 30 minutes delay (final)
 - [DATABASE_SCHEMA.md](../technical/DATABASE_SCHEMA.md) - Document tables
 - [EPIC_E7_DOCUMENTS.md](EPIC_E7_DOCUMENTS.md) - Document storage (pending creation)
 - [EPIC_E5_FEASIBILITY_MODULE.md](EPIC_E5_FEASIBILITY_MODULE.md) - Feasibility workflow
-- [INTEGRATION_SPECIFICATIONS.md](../technical/INTEGRATION_SPECIFICATIONS.md) - Azure integration
+- [INTEGRATION_SPECIFICATIONS.md](../technical/INTEGRATION_SPECIFICATIONS.md) - AWS integration
 
 ---
 
 **Status:** Ready for Sprint Planning
 **Priority:** HIGH - Enables E5 Feasibility automation
-**Next Steps:** Set up Azure account, create GitHub issues, assign to Sprint 3-5
+**Next Steps:** Set up AWS account, create GitHub issues, assign to Sprint 3-5
