@@ -64,8 +64,8 @@
 │  │  Integration │  │  Integration │  │  Integration │              │
 │  └──────────────┘  └──────────────┘  └──────────────┘              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │  Azure Doc   │  │     Email    │  │     SMS      │              │
-│  │Intelligence  │  │   Service    │  │   Service    │              │
+│  │  AWS         │  │   AWS SES    │  │  Twilio/     │              │
+│  │  Textract    │  │    Email     │  │   AWS SNS    │              │
 │  └──────────────┘  └──────────────┘  └──────────────┘              │
 └──────────────────────────────────────────────────────────────────────┘
                              │
@@ -116,21 +116,44 @@
 
 ## Technology Stack
 
-### Decision Matrix
+### Cloud Provider Decision: AWS (Selected December 2025)
 
-| Component | Option 1 | Option 2 | Option 3 | Recommendation |
-|-----------|----------|----------|----------|----------------|
-| **Cloud Provider** | Azure | AWS | GCP | TBD (Day 1-14) |
-| **Backend Language** | Node.js/TypeScript | Python (FastAPI) | Go | Node.js (team familiarity) |
-| **Backend Framework** | Express.js | Fastify | NestJS | Fastify (performance) |
-| **Frontend Framework** | React | Vue | Svelte | React (ecosystem) |
-| **Database** | PostgreSQL | MySQL | MongoDB | PostgreSQL (relational + JSONB) |
-| **Cache** | Redis | Memcached | — | Redis (versatility) |
-| **Object Storage** | S3 / Azure Blob | — | — | Cloud provider default |
-| **Message Queue** | RabbitMQ | AWS SQS | Redis Streams | Cloud provider managed |
-| **Search** | Elasticsearch | Algolia | Meilisearch | Elasticsearch (if needed) |
+**Selection Rationale:**
+- **Enterprise AI**: AWS Bedrock provides multi-model access (Claude, Titan, Llama) with enterprise SLA
+- **Document Processing**: AWS Textract proven at scale for real estate document extraction
+- **Service Ecosystem**: Most comprehensive Kubernetes (EKS) support
+- **Cost**: Competitive pricing ($61,530/year estimated) with reserved capacity options
 
-### Recommended Stack (Provisional)
+### AWS Services Stack
+
+| Component | AWS Service | Purpose |
+|-----------|-------------|---------|
+| **Compute** | EKS / Fargate | Container orchestration |
+| **Database** | RDS PostgreSQL | Managed relational database |
+| **Cache** | ElastiCache (Redis) | Session and data caching |
+| **Object Storage** | S3 | Document and asset storage |
+| **Message Queue** | SQS / SNS | Async messaging and pub/sub |
+| **AI/ML** | Bedrock + Textract | Document extraction and AI features |
+| **Secrets** | Secrets Manager | Credential management |
+| **Monitoring** | CloudWatch + X-Ray | Logs, metrics, tracing |
+| **CDN** | CloudFront | Static asset delivery |
+| **DNS** | Route 53 | DNS management |
+
+### Technology Decisions
+
+| Component | Selection | Rationale |
+|-----------|-----------|-----------|
+| **Cloud Provider** | AWS | Enterprise AI, service ecosystem, EKS support |
+| **Backend Language** | Node.js/TypeScript | Team familiarity, ecosystem |
+| **Backend Framework** | Fastify | Performance, plugin system |
+| **Frontend Framework** | React | Ecosystem, hiring availability |
+| **Database** | RDS PostgreSQL | Relational + JSONB support |
+| **Cache** | ElastiCache Redis | Versatility, managed service |
+| **Object Storage** | S3 | AWS native, cost-effective |
+| **Message Queue** | SQS/SNS | AWS managed, highly available |
+| **Search** | OpenSearch | AWS managed Elasticsearch |
+
+### Recommended Stack (AWS)
 
 **Backend:**
 - **Language**: Node.js 20+ with TypeScript
@@ -147,23 +170,23 @@
 - **Forms**: React Hook Form
 - **Testing**: Vitest + React Testing Library
 
-**Database & Storage:**
-- **Primary DB**: PostgreSQL 15+
-- **Cache**: Redis 7+
-- **Object Storage**: AWS S3 / Azure Blob Storage
-- **Search**: PostgreSQL Full-Text Search (start), Elasticsearch (if needed)
+**Database & Storage (AWS):**
+- **Primary DB**: RDS PostgreSQL 15+
+- **Cache**: ElastiCache Redis 7+
+- **Object Storage**: S3 with versioning
+- **Search**: PostgreSQL Full-Text Search (start), OpenSearch (if needed)
 
-**Infrastructure:**
+**Infrastructure (AWS):**
 - **Containers**: Docker
-- **Orchestration**: Kubernetes or AWS ECS/Fargate
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Datadog or Application Insights
-- **Logging**: ELK Stack or Cloud-native logging
+- **Orchestration**: EKS or Fargate
+- **CI/CD**: GitHub Actions + AWS CodePipeline
+- **Monitoring**: CloudWatch + Datadog
+- **Logging**: CloudWatch Logs + OpenSearch
 
-**External Services:**
-- **AI/ML**: Azure OpenAI, Azure Document Intelligence
-- **Email**: SendGrid or AWS SES
-- **SMS**: Twilio
+**External Services (AWS):**
+- **AI/ML**: AWS Bedrock (Claude, Titan), AWS Textract
+- **Email**: AWS SES
+- **SMS**: Twilio or AWS SNS
 - **E-Signature**: DocuSign API
 
 ---
@@ -427,71 +450,39 @@ class DocuSignAdapter {
 
 ## Infrastructure
 
-### Cloud Provider Options
+### AWS Infrastructure (Selected December 2025)
 
-#### Option 1: AWS
+#### Compute
+- **EKS (Elastic Kubernetes Service)**: Production container orchestration
+- **Fargate**: Serverless containers for background jobs
+- **Lambda**: Serverless functions for webhooks and lightweight tasks
 
-**Compute:**
-- ECS Fargate (containerized apps without managing servers)
-- Lambda (serverless functions for background tasks)
+#### Database & Storage
+- **RDS PostgreSQL**: Primary managed database with Multi-AZ failover
+- **ElastiCache Redis**: Managed cache for sessions and hot data
+- **S3**: Object storage for documents, images, and backups
 
-**Database & Storage:**
-- RDS PostgreSQL (managed database)
-- ElastiCache Redis (managed cache)
-- S3 (object storage)
+#### Networking
+- **VPC**: Isolated network with public/private subnets
+- **ALB (Application Load Balancer)**: Traffic distribution
+- **Route 53**: DNS management with health checks
+- **CloudFront**: CDN for static assets and edge caching
 
-**Networking:**
-- VPC (isolated network)
-- ALB (load balancer)
-- Route 53 (DNS)
+#### Monitoring & Observability
+- **CloudWatch**: Logs, metrics, and alarms
+- **X-Ray**: Distributed tracing for request debugging
+- **CloudWatch Logs Insights**: Log analysis and querying
 
-**Monitoring:**
-- CloudWatch (logs, metrics, alarms)
-- X-Ray (distributed tracing)
+#### AI/ML Services
+- **Bedrock**: Multi-model AI access (Claude, Titan, Llama) for document summarization
+- **Textract**: Document extraction for surveys, title reports, arborist reports
+- **Comprehend** (optional): Entity and sentiment extraction
 
-**AI/ML:**
-- Bedrock (AI models)
-- Textract (document processing)
-
-#### Option 2: Azure
-
-**Compute:**
-- Azure Container Apps or AKS (Kubernetes)
-- Azure Functions (serverless)
-
-**Database & Storage:**
-- Azure Database for PostgreSQL
-- Azure Cache for Redis
-- Azure Blob Storage
-
-**Networking:**
-- Virtual Network
-- Application Gateway
-- Azure DNS
-
-**Monitoring:**
-- Application Insights
-- Log Analytics
-
-**AI/ML:**
-- Azure OpenAI
-- Azure Document Intelligence (Form Recognizer)
-
-#### Option 3: GCP
-
-**Compute:**
-- Cloud Run (serverless containers)
-- GKE (Kubernetes)
-- Cloud Functions
-
-**Database & Storage:**
-- Cloud SQL (PostgreSQL)
-- Memorystore (Redis)
-- Cloud Storage
-
-**AI/ML:**
-- Vertex AI
-- Document AI
+#### Security
+- **Secrets Manager**: Secure credential and API key storage
+- **KMS**: Key management for encryption at rest
+- **WAF**: Web application firewall
+- **IAM**: Identity and access management
 
 ### Container Architecture
 
@@ -671,8 +662,8 @@ spec:
 
 **Encryption:**
 - **In Transit**: TLS 1.3 for all connections
-- **At Rest**: Database encryption, encrypted object storage
-- **Secrets**: AWS Secrets Manager / Azure Key Vault
+- **At Rest**: RDS encryption, S3 server-side encryption (SSE-S3/SSE-KMS)
+- **Secrets**: AWS Secrets Manager with automatic rotation
 
 **PII Handling:**
 - Minimize collection

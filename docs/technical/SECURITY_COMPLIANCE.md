@@ -85,13 +85,13 @@ Connect 2.0 follows these core security principles:
 │ Layer 5: Data Protection                           │
 │ - Encryption at rest (AES-256)                     │
 │ - Encryption in transit (TLS 1.3)                  │
-│ - Key management (Azure Key Vault / AWS KMS)       │
+│ - Key management (AWS KMS / Secrets Manager)       │
 └────────────────────────────────────────────────────┘
 ┌────────────────────────────────────────────────────┐
 │ Layer 4: Network Security                          │
 │ - VPC isolation                                    │
-│ - Security groups / Firewall rules                 │
-│ - DDoS protection (Cloudflare / AWS Shield)        │
+│ - Security groups / NACLs                          │
+│ - AWS Shield + WAF for DDoS protection             │
 └────────────────────────────────────────────────────┘
 ┌────────────────────────────────────────────────────┐
 │ Layer 3: Infrastructure Security                   │
@@ -101,9 +101,9 @@ Connect 2.0 follows these core security principles:
 └────────────────────────────────────────────────────┘
 ┌────────────────────────────────────────────────────┐
 │ Layer 2: Identity & Access Management              │
-│ - SSO (Azure AD / Okta)                            │
+│ - SSO (AWS Cognito / Okta)                         │
 │ - MFA (required for all users)                     │
-│ - Role-based access control (RBAC)                 │
+│ - IAM + Role-based access control (RBAC)           │
 └────────────────────────────────────────────────────┘
 ┌────────────────────────────────────────────────────┐
 │ Layer 1: Physical Security                         │
@@ -401,13 +401,13 @@ async function revokeAllSessions(userId: string) {
 ### 4.1 Encryption at Rest
 
 **Database Encryption:**
-- **PostgreSQL**: Transparent Data Encryption (TDE) enabled
+- **RDS PostgreSQL**: Encryption at rest enabled
 - **Algorithm**: AES-256-GCM
-- **Key Management**: Azure Key Vault or AWS KMS
+- **Key Management**: AWS KMS (customer-managed keys)
 
 **Object Storage Encryption:**
-- **S3/Azure Blob**: Server-side encryption (SSE-KMS)
-- **Documents**: Encrypted before upload (client-side encryption for extra sensitivity)
+- **S3**: Server-side encryption (SSE-KMS) with bucket-level default encryption
+- **Documents**: Client-side encryption for highly sensitive documents (SSN, financial data)
 
 **Sensitive Field Encryption:**
 ```typescript
@@ -482,18 +482,20 @@ app.use(helmet({
 **Key Storage:**
 ```typescript
 // Never store keys in code or environment variables directly
-// Use Azure Key Vault or AWS Secrets Manager
+// Use AWS Secrets Manager
 
-import { SecretClient } from '@azure/keyvault-secrets';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
-const client = new SecretClient(
-  process.env.KEY_VAULT_URL,
-  new DefaultAzureCredential()
-);
+const client = new SecretsManagerClient({
+  region: process.env.AWS_REGION || 'us-west-2'
+});
 
-async function getEncryptionKey() {
-  const secret = await client.getSecret('data-encryption-key');
-  return secret.value;
+async function getEncryptionKey(): Promise<string> {
+  const command = new GetSecretValueCommand({
+    SecretId: 'connect2/data-encryption-key'
+  });
+  const response = await client.send(command);
+  return response.SecretString || '';
 }
 ```
 

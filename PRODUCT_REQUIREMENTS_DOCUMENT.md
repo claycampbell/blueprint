@@ -187,7 +187,7 @@ Blueprint serves as the proving ground for Connect 2.0:
 **Gap 4: Document Intelligence**
 - Arborist reports, surveys, title reports manually read and summarized into "Internal Notes"
 - Key data points extracted by hand (e.g., tree restrictions, easements, zoning constraints)
-- Opportunity: **AI document extraction** using Azure Document Intelligence
+- Opportunity: **AI document extraction** using AWS Textract
 
 **Gap 5: Builder/Agent Isolation**
 - Builders can only message Blueprint in BPO, not communicate with agents or consultants
@@ -258,7 +258,7 @@ Blueprint serves as the proving ground for Connect 2.0:
 |------------|----------------|-------------|------------------------|
 | **Lead vetting** | Manual review of ~3,200 leads/year; quality varies | Hours per lead | AI pre-screening, auto-flagging issues |
 | **Feasibility packets** | Manual PDF assembly, re-entry of data | Days per deal | Template automation, data flow from BPO |
-| **Document summarization** | Manually read title, survey, arborist reports and extract key points | 30-60 min/doc | Azure Document Intelligence extraction |
+| **Document summarization** | Manually read title, survey, arborist reports and extract key points | 30-60 min/doc | AWS Textract + Bedrock extraction |
 | **Entitlement coordination** | Email/phone with 5-10 consultants per project | Ongoing churn | Workflow automation, SLA tracking |
 | **City correction cycles** | Reactive - wait for city to respond, manually track | Weeks of delay | Predictive analytics, automated follow-up |
 | **Loan creation** | Re-key BPO data into Connect | 15-30 min | Automated loan origination from BPO project |
@@ -315,12 +315,12 @@ Blueprint serves as the proving ground for Connect 2.0:
 │                                 │                                       │
 │  ┌──────────────────────────────────────────────────────────────────┐  │
 │  │                    Infrastructure & Platform                      │  │
-│  │  [Cloud Provider: Azure / AWS / GCP - to be selected Day 1-14]   │  │
-│  │  • Kubernetes/Container orchestration                             │  │
-│  │  • Database (PostgreSQL/CosmosDB/etc.)                            │  │
-│  │  • Object storage (documents, images)                             │  │
-│  │  • Message queue / Event streaming                                │  │
-│  │  • Authentication / RBAC                                          │  │
+│  │  [Cloud Provider: AWS - Selected December 2025]                   │  │
+│  │  • EKS (Kubernetes) / Fargate container orchestration             │  │
+│  │  • RDS PostgreSQL database                                        │  │
+│  │  • S3 object storage (documents, images)                          │  │
+│  │  • SQS/SNS message queue / Event streaming                        │  │
+│  │  • Cognito / Custom JWT Authentication / RBAC                     │  │
 │  └──────────────────────────────────────────────────────────────────┘  │
 │                                                                         │
 └────────────────────────────────────────────────────────────────────────┘
@@ -368,25 +368,39 @@ Blueprint serves as the proving ground for Connect 2.0:
 
 ### 3.3 Technology Stack Recommendations
 
-**To Be Finalized in First 2 Weeks (Days 1-14):**
+**Cloud Provider Decision: AWS (Selected December 2025)**
 
-#### **Cloud Provider Decision Criteria**
-| Factor | Azure | AWS | GCP |
-|--------|-------|-----|-----|
-| **AI/ML Services** | Azure OpenAI, Document Intelligence, Form Recognizer | Bedrock, Textract, Comprehend | Vertex AI, Document AI |
-| **Database Options** | CosmosDB, Azure SQL, PostgreSQL | RDS (PostgreSQL), DynamoDB, Aurora | Cloud SQL, Firestore, Spanner |
-| **Team Familiarity** | TBD | TBD | Current BPO uses Firebase |
-| **Cost** | Analyze | Analyze | Analyze |
-| **Existing Footprint** | Check M365 integration | — | Firebase/BPO migration path? |
+#### **AWS Selection Rationale**
+| Factor | Decision | Notes |
+|--------|----------|-------|
+| **Enterprise AI** | AWS Bedrock | Multi-model access (Claude, Titan, Llama) with enterprise SLA |
+| **Document Processing** | AWS Textract | Proven at scale for real estate documents (surveys, title reports) |
+| **Service Ecosystem** | Best EKS support | Most comprehensive Kubernetes support |
+| **Cost** | $61,530/year est. | Competitive pricing with reserved capacity options |
+| **Database** | RDS PostgreSQL | Managed PostgreSQL with Multi-AZ failover |
 
-**Recommended Stack (Provisional):**
+#### **AWS Services Stack**
+| Component | AWS Service | Notes |
+|-----------|-------------|-------|
+| **Compute** | EKS / Fargate | Container orchestration without server management |
+| **Database** | RDS PostgreSQL | Managed relational database with Multi-AZ |
+| **Cache** | ElastiCache (Redis) | In-memory caching for sessions and hot data |
+| **Object Storage** | S3 | Document storage with versioning and lifecycle policies |
+| **Message Queue** | SQS / SNS | Reliable async messaging and pub/sub |
+| **AI/ML** | Bedrock + Textract | Document extraction and AI-powered features |
+| **Secrets** | Secrets Manager | Secure credential and API key storage |
+| **Monitoring** | CloudWatch + X-Ray | Logs, metrics, and distributed tracing |
+| **CDN** | CloudFront | Static asset delivery and edge caching |
+| **DNS** | Route 53 | DNS management with health checks |
+
+**Recommended Stack:**
 - **Backend**: Node.js/TypeScript or Python (Django/FastAPI)
-- **Frontend**: React or Vue.js (modern SPA framework)
-- **Database**: PostgreSQL (relational) + object storage for documents
-- **API**: GraphQL or REST (evaluate based on team preference)
-- **Auth**: OAuth 2.0 / OIDC (Azure AD, Auth0, or similar)
-- **DevOps**: GitHub Actions / Azure DevOps / CircleCI
-- **Monitoring**: Application Insights / Datadog / New Relic
+- **Frontend**: React (modern SPA framework)
+- **Database**: RDS PostgreSQL + S3 for documents
+- **API**: REST (OpenAPI 3.0 specification)
+- **Auth**: OAuth 2.0 / OIDC (AWS Cognito or Auth0)
+- **DevOps**: GitHub Actions with AWS CodePipeline
+- **Monitoring**: CloudWatch + Datadog
 
 ### 3.4 Security & Compliance
 
@@ -635,7 +649,7 @@ Blueprint serves as the proving ground for Connect 2.0:
 | Feasibility record creation | As a **system**, auto-create feasibility project when lead approved | P0 | Workflow trigger |
 | Consultant ordering | As an **acquisitions specialist**, I can order reports (survey, title, arborist) in bulk or selectively | P0 | Email/API to consultants |
 | Consultant portal | As a **consultant**, I can view my assigned tasks and upload deliverables | P1 | External user access |
-| Document AI extraction | As an **acquisitions specialist**, system auto-extracts key data from reports (tree counts, easements, zoning) | P2 | Azure Document Intelligence |
+| Document AI extraction | As an **acquisitions specialist**, system auto-extracts key data from reports (tree counts, easements, zoning) | P2 | AWS Textract |
 | Document summarization | As an **acquisitions specialist**, I see AI-generated summaries of title, survey, arborist reports | P2 | GPT-based summarization |
 | Proforma builder | As an **acquisitions specialist**, I can create/edit proforma with auto-calculated ROI | P1 | Financial model |
 | Viability decision | As an **acquisitions specialist**, I can mark project GO/PASS with notes | P0 | Workflow transition |
@@ -1006,18 +1020,18 @@ REQUESTED ──► INSPECTION_SCHEDULED ──► INSPECTION_COMPLETE ──►
   3. (Optional) Accounting pushes GL data back for reporting
 
 **Integration 5: Document Intelligence (AI Services)**
-- **Direction**: Outbound (Connect 2.0 → Azure Document Intelligence / GPT)
-- **Method**: Azure SDK / OpenAI API
+- **Direction**: Outbound (Connect 2.0 → AWS Textract / AWS Bedrock)
+- **Method**: AWS SDK (boto3 / @aws-sdk)
 - **Flow**:
-  1. Document uploaded to Connect 2.0
-  2. Trigger async job: send document to Azure Document Intelligence
+  1. Document uploaded to Connect 2.0 (stored in S3)
+  2. Trigger async job: send document to AWS Textract for extraction
   3. Extract key-value pairs (e.g., "Tree count: 12", "Easement: 10ft utility")
   4. Store extracted data in `documents.extracted_data` (JSON)
-  5. (Optional) Generate summary using GPT, store in `documents.summary`
+  5. (Optional) Generate summary using AWS Bedrock (Claude), store in `documents.summary`
 
 **Integration 6: Email / SMS Notifications**
 - **Direction**: Outbound (Connect 2.0 → Email/SMS service)
-- **Method**: SendGrid / Twilio / Azure Communication Services
+- **Method**: AWS SES / Twilio / AWS SNS
 - **Flow**:
   - Event triggers notification (task assigned, document uploaded, draw approved)
   - System generates email/SMS from template
@@ -1135,8 +1149,8 @@ REQUESTED ──► INSPECTION_SCHEDULED ──► INSPECTION_COMPLETE ──►
 
 **0-30 Days: Foundation & Planning**
 - Establish governance and success metrics
-- Select hosting platform (Azure / AWS / GCP)
-- Stand up base infrastructure and DevOps
+- ~~Select hosting platform~~ AWS selected (December 2025)
+- Stand up AWS base infrastructure and DevOps
 - Define initial data model and system boundaries
 - Begin journey mapping and JTBD analysis (Design & Entitlement focus)
 - Define Blueprint Operating System framework
@@ -1244,10 +1258,10 @@ REQUESTED ──► INSPECTION_SCHEDULED ──► INSPECTION_COMPLETE ──►
 | **iPad Inspection App** | Bi-directional | REST API | Draw sets (out), Inspections (in) | Daily (nightly sync) |
 | **DocuSign / Authentisign** | Outbound + Webhook | REST API | Loan documents (out), Signed docs (in) | Per transaction |
 | **Accounting System** | Bi-directional | API or File Export | Loan balances, payments, GL data | Monthly or real-time |
-| **Azure Document Intelligence** | Outbound | Azure SDK | Documents (out), Extracted data (in) | Per document upload |
-| **GPT / OpenAI** | Outbound | OpenAI API | Documents (out), Summaries (in) | Per document upload |
-| **Email Service** | Outbound | SendGrid / SES / Azure Comm | Notifications, statements | Real-time |
-| **SMS Service** | Outbound | Twilio / Azure Comm | Alerts, notifications | Real-time |
+| **AWS Textract** | Outbound | AWS SDK | Documents (out), Extracted data (in) | Per document upload |
+| **AWS Bedrock** | Outbound | AWS SDK | Documents (out), Summaries (in) | Per document upload |
+| **Email Service** | Outbound | AWS SES | Notifications, statements | Real-time |
+| **SMS Service** | Outbound | Twilio / AWS SNS | Alerts, notifications | Real-time |
 
 ### 9.2 Internal Module Integrations
 
@@ -1274,24 +1288,24 @@ Notification Service: Alert design team
 ### 10.1 High-Priority AI Use Cases (Post-MVP)
 
 **1. Document Intelligence & Extraction**
-- **Technology**: Azure Document Intelligence (Form Recognizer)
+- **Technology**: AWS Textract (AnalyzeDocument API)
 - **Input**: Title reports, surveys, arborist reports (PDFs)
 - **Output**: Structured JSON with key-value pairs
   - Survey: Lot size, easements, setbacks, encroachments
   - Title: Liens, exceptions, legal description
   - Arborist: Tree count, protected species, removal restrictions
 - **Value**: Eliminate 30-60 min/document of manual review
-- **Complexity**: Medium (requires training custom models on Blueprint documents)
+- **Complexity**: Medium (requires Textract custom queries or adapter training)
 
 **2. Document Summarization**
-- **Technology**: GPT-4 (Azure OpenAI or OpenAI API)
+- **Technology**: AWS Bedrock (Claude, Llama, or Titan models)
 - **Input**: Long documents (title reports, entitlement applications)
 - **Output**: Executive summary (3-5 bullet points)
 - **Value**: Faster review, highlights for non-experts
 - **Complexity**: Low (prompt engineering, no training needed)
 
 **3. Lead Scoring & Prioritization**
-- **Technology**: ML classification model (scikit-learn, XGBoost, or Azure ML)
+- **Technology**: ML classification model (scikit-learn, XGBoost, or AWS SageMaker)
 - **Input**: Lead attributes (address, price, agent, zoning, market, photos)
 - **Output**: Viability score (0-100), Priority (High/Medium/Low)
 - **Training Data**: Historical leads (3,200/year) with outcomes (GO/PASS)
@@ -1402,7 +1416,7 @@ Notification Service: Alert design team
 - iPad inspection app API documented and accessible
 - DocuSign / Authentisign API credentials and onboarding
 - Accounting system integration method determined (API vs. file export)
-- Azure / AWS / GCP decision by Day 14 unlocks infrastructure setup
+- ~~Azure / AWS / GCP decision by Day 14~~ AWS selected (December 2025) ✅
 
 ### Appendix D: Risks & Mitigations
 
@@ -1422,14 +1436,18 @@ Notification Service: Alert design team
 
 **Immediate Actions (Next 2 Weeks):**
 1. **Review & Validate**: Blueprint/Datapage leadership reviews this PRD, provides feedback
-2. **Cloud Provider Decision**: Evaluate Azure/AWS/GCP, select by Day 14
+2. ~~**Cloud Provider Decision**~~: AWS selected (December 2025)
 3. **Kick-Off Workshop**: Align on MVP scope, success criteria, team roles
-4. **Infrastructure Setup**: Spin up cloud environment, DevOps pipeline
+4. **AWS Infrastructure Setup**: Spin up AWS environment (EKS, RDS, S3), configure CI/CD pipeline
 5. **Detailed Backlog Grooming**: Break down MVP features into user stories with acceptance criteria
 6. **Journey Mapping Sessions**: Begin with Design & Entitlement team (Day 1-30 focus)
 
-**Questions to Resolve:**
-- Exact hosting platform and database choice?
+**Questions Resolved:**
+- ✅ **Cloud Provider**: AWS selected (December 2025)
+- ✅ **Database**: RDS PostgreSQL
+- ✅ **AI Services**: AWS Textract + Bedrock
+
+**Questions Still Open:**
 - Preferred frontend framework (React vs. Vue)?
 - Backend language/framework (Node.js vs. Python)?
 - Current BPO API capabilities (or need for export-based temporary integration)?
