@@ -43,10 +43,10 @@
 | **CI/CD** | GitHub Actions | Automated build, test, deploy |
 | **IaC** | Terraform | Infrastructure provisioning |
 | **Containers** | Docker | Application packaging |
-| **Orchestration** | Kubernetes (EKS/AKS) | Container management |
-| **Monitoring** | Datadog / New Relic | Application performance monitoring |
-| **Logging** | CloudWatch / Application Insights | Centralized logging |
-| **Secrets** | AWS Secrets Manager / Azure Key Vault | Secret management |
+| **Orchestration** | AWS EKS | Container management |
+| **Monitoring** | CloudWatch + Datadog | Application performance monitoring |
+| **Logging** | CloudWatch Logs | Centralized logging |
+| **Secrets** | AWS Secrets Manager | Secret management |
 
 ### 1.3 Deployment Frequency
 
@@ -79,7 +79,7 @@
                     ↓ deploy
 ┌─────────────────────────────────────────────────┐
 │ Development Environment                         │
-│ - AWS/Azure Dev Account                         │
+│ - AWS Dev Account (us-west-2)                   │
 │ - Latest code from develop branch               │
 │ - Synthetic test data                           │
 │ - Accessible to engineering team                │
@@ -87,7 +87,7 @@
                     ↓ promote
 ┌─────────────────────────────────────────────────┐
 │ Staging Environment                             │
-│ - AWS/Azure Staging Account                     │
+│ - AWS Staging Account (us-west-2)               │
 │ - Pre-production testing                        │
 │ - Sanitized production-like data               │
 │ - UAT testing environment                       │
@@ -95,7 +95,7 @@
                     ↓ promote (manual approval)
 ┌─────────────────────────────────────────────────┐
 │ Production Environment                          │
-│ - AWS/Azure Production Account                  │
+│ - AWS Production Account (us-west-2)            │
 │ - Live user traffic                             │
 │ - High availability (multi-AZ)                  │
 │ - 99.5% uptime SLA                              │
@@ -1242,9 +1242,10 @@ logger.error('Database connection failed', {
 ```
 
 **Log Aggregation:**
-- Use CloudWatch Logs (AWS) or Application Insights (Azure)
+- Use CloudWatch Logs with Log Insights for querying
 - Set retention period: 30 days for production, 7 days for dev
 - Enable log exports to S3 for long-term archival
+- Configure OpenSearch dashboards for visualization
 
 ---
 

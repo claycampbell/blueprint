@@ -41,8 +41,8 @@ Connect 2.0 follows an **API-first, loosely-coupled integration approach**:
 **Phase 1 (Days 1-90): Design & Entitlement Pilot**
 - BPO integration via temporary REST API
 - DocuSign/Authentisign for e-signatures
-- Azure Document Intelligence for document extraction
-- Email/SMS services for notifications
+- AWS Textract for document extraction
+- AWS SES / Twilio for notifications
 
 **Phase 2 (Days 91-180): Full Platform Rebuild**
 - BPO functionality absorbed into Connect 2.0 (integration deprecated)
@@ -750,117 +750,145 @@ async function prepareLoanDocumentsForSigning(loanId: string) {
 
 ---
 
-## 5. Azure Document Intelligence Integration
+## 5. AWS Textract Integration
 
 ### 5.1 Overview
 
 **Purpose:** Extract structured data from uploaded documents (surveys, title reports, arborist reports, permits)
 **Timeline:** Days 1-180 (all phases)
-**Pattern:** Asynchronous job submission + polling or webhook
-**Direction:** Connect 2.0 → Azure AI → Connect 2.0
+**Pattern:** Asynchronous job submission + polling or SNS notification
+**Direction:** Connect 2.0 → AWS Textract → Connect 2.0
+**AWS Region:** us-west-2 (primary)
 
 ### 5.2 Integration Architecture
 
 ```
 ┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-│  User        │         │ Connect 2.0  │         │   Azure      │
-│  Uploads     │         │              │         │   Document   │
-│  Document    │         │              │         │   Intelligence│
+│  User        │         │ Connect 2.0  │         │    AWS       │
+│  Uploads     │         │              │         │   Textract   │
+│  Document    │         │              │         │              │
 │              │         │              │         │              │
 │ 1. Upload    │────────→│ 2. Store     │────────→│ 3. Analyze   │
-│    Survey    │         │    S3/Blob   │         │    Document  │
+│    Survey    │         │    in S3     │         │    Document  │
 │              │         │              │         │              │
 │              │         │ 5. Display   │←────────│ 4. Extract   │
-│              │         │    Extracted │         │    Data      │
+│              │         │    Extracted │  (SNS)  │    Data      │
 │              │         │    Fields    │         │              │
 └──────────────┘         └──────────────┘         └──────────────┘
 ```
 
 ### 5.3 Supported Document Types
 
-| Document Type | Use Case | Key Fields Extracted |
-|---------------|----------|---------------------|
-| **Survey** | Property boundaries, easements | Lot size, setbacks, easements, flood zone |
-| **Title Report** | Ownership verification | Owner name, liens, encumbrances, legal description |
-| **Arborist Report** | Tree preservation requirements | Tree count, protected species, removal permits needed |
-| **Permit Application** | Entitlement tracking | Permit type, application date, jurisdiction, fees |
-| **Inspection Report** | Draw verification | Completion percentage, deficiencies, approvals |
+| Document Type | Use Case | Key Fields Extracted | Textract Feature |
+|---------------|----------|---------------------|------------------|
+| **Survey** | Property boundaries, easements | Lot size, setbacks, easements, flood zone | AnalyzeDocument + Queries |
+| **Title Report** | Ownership verification | Owner name, liens, encumbrances, legal description | AnalyzeDocument + Tables |
+| **Arborist Report** | Tree preservation requirements | Tree count, protected species, removal permits needed | AnalyzeDocument + Queries |
+| **Permit Application** | Entitlement tracking | Permit type, application date, jurisdiction, fees | AnalyzeDocument + Forms |
+| **Inspection Report** | Draw verification | Completion percentage, deficiencies, approvals | AnalyzeDocument + Tables |
 
-### 5.4 API Integration
+### 5.4 AWS Textract API Integration
 
-#### 5.4.1 Submit Document for Analysis
+#### 5.4.1 Start Async Document Analysis
 
 ```http
-POST https://{endpoint}.cognitiveservices.azure.com/formrecognizer/documentModels/blueprint-survey:analyze?api-version=2023-07-31
-Ocp-Apim-Subscription-Key: {azure_subscription_key}
-Content-Type: application/json
+POST https://textract.us-west-2.amazonaws.com/
+Content-Type: application/x-amz-json-1.1
+X-Amz-Target: Textract.StartDocumentAnalysis
+Authorization: AWS4-HMAC-SHA256 ...
 ```
 
 **Request:**
 ```json
 {
-  "urlSource": "https://blueprintstorage.blob.core.windows.net/documents/survey_123.pdf"
+  "DocumentLocation": {
+    "S3Object": {
+      "Bucket": "blueprint-documents",
+      "Name": "projects/proj_123/survey_123.pdf"
+    }
+  },
+  "FeatureTypes": ["TABLES", "FORMS", "QUERIES"],
+  "QueriesConfig": {
+    "Queries": [
+      { "Text": "What is the parcel number?" },
+      { "Text": "What is the lot size in square feet?" },
+      { "Text": "What is the flood zone designation?" },
+      { "Text": "What are the setback requirements?" },
+      { "Text": "What easements exist on the property?" }
+    ]
+  },
+  "NotificationChannel": {
+    "SNSTopicArn": "arn:aws:sns:us-west-2:123456789012:textract-results",
+    "RoleArn": "arn:aws:iam::123456789012:role/TextractServiceRole"
+  },
+  "OutputConfig": {
+    "S3Bucket": "blueprint-textract-results",
+    "S3Prefix": "results/"
+  }
 }
 ```
 
-**Response (Job Created):**
+**Response (Job Started):**
 ```json
 {
-  "operationId": "op_abc123",
-  "status": "running",
-  "createdDateTime": "2025-11-05T10:00:00Z"
+  "JobId": "abc123def456"
 }
 ```
 
-#### 5.4.2 Poll for Results
+#### 5.4.2 Get Document Analysis Results
 
 ```http
-GET https://{endpoint}.cognitiveservices.azure.com/formrecognizer/operations/{operationId}?api-version=2023-07-31
-Ocp-Apim-Subscription-Key: {azure_subscription_key}
+POST https://textract.us-west-2.amazonaws.com/
+Content-Type: application/x-amz-json-1.1
+X-Amz-Target: Textract.GetDocumentAnalysis
+Authorization: AWS4-HMAC-SHA256 ...
+```
+
+**Request:**
+```json
+{
+  "JobId": "abc123def456",
+  "MaxResults": 1000
+}
 ```
 
 **Response (Completed):**
 ```json
 {
-  "status": "succeeded",
-  "createdDateTime": "2025-11-05T10:00:00Z",
-  "lastUpdatedDateTime": "2025-11-05T10:00:45Z",
-  "analyzeResult": {
-    "documents": [
-      {
-        "docType": "blueprint-survey",
-        "fields": {
-          "parcel_number": {
-            "type": "string",
-            "value": "1234567890",
-            "confidence": 0.98
-          },
-          "lot_size_sqft": {
-            "type": "number",
-            "value": 7500,
-            "confidence": 0.95
-          },
-          "flood_zone": {
-            "type": "string",
-            "value": "X (Minimal Flood Hazard)",
-            "confidence": 0.92
-          },
-          "front_setback_ft": {
-            "type": "number",
-            "value": 20,
-            "confidence": 0.88
-          },
-          "easements": {
-            "type": "array",
-            "value": [
-              "10' utility easement - north boundary",
-              "5' drainage easement - south boundary"
-            ],
-            "confidence": 0.85
-          }
-        }
-      }
-    ]
+  "JobStatus": "SUCCEEDED",
+  "Blocks": [
+    {
+      "BlockType": "QUERY_RESULT",
+      "Query": {
+        "Text": "What is the parcel number?"
+      },
+      "Text": "1234567890",
+      "Confidence": 98.5
+    },
+    {
+      "BlockType": "QUERY_RESULT",
+      "Query": {
+        "Text": "What is the lot size in square feet?"
+      },
+      "Text": "7,500 sq ft",
+      "Confidence": 95.2
+    },
+    {
+      "BlockType": "QUERY_RESULT",
+      "Query": {
+        "Text": "What is the flood zone designation?"
+      },
+      "Text": "Zone X (Minimal Flood Hazard)",
+      "Confidence": 92.1
+    },
+    {
+      "BlockType": "TABLE",
+      "Relationships": [...],
+      "Cells": [...]
+    }
+  ],
+  "DocumentMetadata": {
+    "Pages": 3
   }
 }
 ```
@@ -868,157 +896,269 @@ Ocp-Apim-Subscription-Key: {azure_subscription_key}
 ### 5.5 Implementation
 
 ```typescript
-// Service class for Azure Document Intelligence
-class DocumentIntelligenceService {
-  private client: DocumentAnalysisClient;
+import { TextractClient, StartDocumentAnalysisCommand, GetDocumentAnalysisCommand } from '@aws-sdk/client-textract';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+// Service class for AWS Textract
+class TextractService {
+  private textract: TextractClient;
+  private s3: S3Client;
 
   constructor() {
-    this.client = new DocumentAnalysisClient(
-      process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT,
-      new AzureKeyCredential(process.env.AZURE_DOCUMENT_INTELLIGENCE_KEY)
-    );
+    this.textract = new TextractClient({
+      region: process.env.AWS_REGION || 'us-west-2',
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+      }
+    });
+    this.s3 = new S3Client({
+      region: process.env.AWS_REGION || 'us-west-2'
+    });
   }
 
-  async analyzeDocument(documentUrl: string, documentType: string): Promise<ExtractedData> {
-    // 1. Determine which custom model to use
-    const modelId = this.getModelForDocumentType(documentType);
+  async analyzeDocument(s3Bucket: string, s3Key: string, documentType: string): Promise<ExtractedData> {
+    // 1. Get queries for this document type
+    const queries = this.getQueriesForDocumentType(documentType);
 
-    // 2. Submit analysis job
-    const poller = await this.client.beginAnalyzeDocumentFromUrl(modelId, documentUrl);
-
-    // 3. Wait for completion (with timeout)
-    const result = await poller.pollUntilDone({
-      updateIntervalInMs: 5000,
-      timeout: 120000 // 2 minutes
+    // 2. Start async analysis job
+    const startCommand = new StartDocumentAnalysisCommand({
+      DocumentLocation: {
+        S3Object: {
+          Bucket: s3Bucket,
+          Name: s3Key
+        }
+      },
+      FeatureTypes: ['TABLES', 'FORMS', 'QUERIES'],
+      QueriesConfig: {
+        Queries: queries.map(q => ({ Text: q }))
+      },
+      NotificationChannel: {
+        SNSTopicArn: process.env.TEXTRACT_SNS_TOPIC_ARN,
+        RoleArn: process.env.TEXTRACT_SERVICE_ROLE_ARN
+      }
     });
 
-    // 4. Extract fields
-    const extractedData = this.mapFieldsToSchema(result, documentType);
+    const startResponse = await this.textract.send(startCommand);
+    const jobId = startResponse.JobId;
 
-    // 5. Store in database
-    await db.documents.update(documentId, {
-      extraction_status: 'COMPLETED',
-      extracted_data: extractedData,
-      extraction_confidence: this.calculateAverageConfidence(result)
-    });
+    // 3. Poll for completion (or use SNS notification)
+    const result = await this.waitForJobCompletion(jobId);
+
+    // 4. Extract fields from result
+    const extractedData = this.mapTextractResultToSchema(result, documentType);
 
     return extractedData;
   }
 
-  private getModelForDocumentType(type: string): string {
-    const modelMap = {
-      'SURVEY': 'blueprint-survey',
-      'TITLE_REPORT': 'blueprint-title-report',
-      'ARBORIST_REPORT': 'blueprint-arborist-report',
-      'PERMIT_APPLICATION': 'blueprint-permit',
-      'INSPECTION_REPORT': 'blueprint-inspection'
-    };
+  private async waitForJobCompletion(jobId: string, maxAttempts = 30): Promise<any> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const getCommand = new GetDocumentAnalysisCommand({
+        JobId: jobId,
+        MaxResults: 1000
+      });
 
-    return modelMap[type] || 'prebuilt-document'; // Fallback to generic model
+      const response = await this.textract.send(getCommand);
+
+      if (response.JobStatus === 'SUCCEEDED') {
+        return response;
+      } else if (response.JobStatus === 'FAILED') {
+        throw new Error(`Textract job failed: ${response.StatusMessage}`);
+      }
+
+      // Wait 5 seconds before next poll
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+
+    throw new Error('Textract job timed out');
   }
 
-  private mapFieldsToSchema(result: AnalyzeResult, documentType: string): any {
-    // Map Azure AI fields to our database schema
-    const doc = result.documents[0];
+  private getQueriesForDocumentType(type: string): string[] {
+    const queryMap: Record<string, string[]> = {
+      'SURVEY': [
+        'What is the parcel number?',
+        'What is the lot size in square feet?',
+        'What is the flood zone designation?',
+        'What are the front setback requirements?',
+        'What are the side setback requirements?',
+        'What easements exist on the property?'
+      ],
+      'TITLE_REPORT': [
+        'Who is the current owner?',
+        'What is the legal description?',
+        'What liens exist on the property?',
+        'What are the title exceptions?',
+        'What is the vesting date?'
+      ],
+      'ARBORIST_REPORT': [
+        'How many trees are on the property?',
+        'Are there any protected species?',
+        'What trees require removal permits?',
+        'What is the tree preservation requirement?'
+      ],
+      'PERMIT_APPLICATION': [
+        'What is the permit type?',
+        'What is the application date?',
+        'What jurisdiction is this for?',
+        'What are the permit fees?'
+      ],
+      'INSPECTION_REPORT': [
+        'What is the completion percentage?',
+        'What deficiencies were noted?',
+        'Was the inspection approved?'
+      ]
+    };
+
+    return queryMap[type] || [];
+  }
+
+  private mapTextractResultToSchema(result: any, documentType: string): any {
+    const queryResults: Record<string, { value: string; confidence: number }> = {};
+
+    // Extract query results
+    for (const block of result.Blocks || []) {
+      if (block.BlockType === 'QUERY_RESULT' && block.Query?.Text) {
+        queryResults[block.Query.Text] = {
+          value: block.Text || '',
+          confidence: block.Confidence || 0
+        };
+      }
+    }
 
     if (documentType === 'SURVEY') {
       return {
-        parcel_number: doc.fields.parcel_number?.value,
-        lot_size_sqft: doc.fields.lot_size_sqft?.value,
-        flood_zone: doc.fields.flood_zone?.value,
+        parcel_number: queryResults['What is the parcel number?']?.value,
+        lot_size_sqft: this.parseNumber(queryResults['What is the lot size in square feet?']?.value),
+        flood_zone: queryResults['What is the flood zone designation?']?.value,
         setbacks: {
-          front: doc.fields.front_setback_ft?.value,
-          rear: doc.fields.rear_setback_ft?.value,
-          side: doc.fields.side_setback_ft?.value
+          front: this.parseNumber(queryResults['What are the front setback requirements?']?.value),
+          side: this.parseNumber(queryResults['What are the side setback requirements?']?.value)
         },
-        easements: doc.fields.easements?.value || []
+        easements: this.parseEasements(queryResults['What easements exist on the property?']?.value),
+        confidence: this.calculateAverageConfidence(queryResults)
       };
     }
 
     // Similar mappings for other document types...
+    return queryResults;
   }
 
-  private calculateAverageConfidence(result: AnalyzeResult): number {
-    const fields = Object.values(result.documents[0].fields);
-    const confidences = fields.map(f => f.confidence || 0);
+  private parseNumber(value: string | undefined): number | null {
+    if (!value) return null;
+    const match = value.match(/[\d,]+/);
+    return match ? parseInt(match[0].replace(/,/g, ''), 10) : null;
+  }
+
+  private parseEasements(value: string | undefined): string[] {
+    if (!value) return [];
+    return value.split(/[;,]/).map(e => e.trim()).filter(e => e.length > 0);
+  }
+
+  private calculateAverageConfidence(results: Record<string, { confidence: number }>): number {
+    const confidences = Object.values(results).map(r => r.confidence);
+    if (confidences.length === 0) return 0;
     return confidences.reduce((sum, c) => sum + c, 0) / confidences.length;
   }
 }
 ```
 
-### 5.6 Async Processing Workflow
+### 5.6 Async Processing Workflow with SQS
 
 **Queue-Based Processing:**
 ```typescript
+import { SQSClient, SendMessageCommand, ReceiveMessageCommand, DeleteMessageCommand } from '@aws-sdk/client-sqs';
+
 // When user uploads document
 async function handleDocumentUpload(file: File, projectId: string, documentType: string) {
-  // 1. Upload to blob storage
-  const storageUrl = await storage.upload(`projects/${projectId}/${file.name}`, file);
+  // 1. Upload to S3
+  const s3Key = `projects/${projectId}/${file.name}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: process.env.S3_DOCUMENTS_BUCKET,
+    Key: s3Key,
+    Body: file.buffer,
+    ContentType: file.mimetype
+  }));
 
   // 2. Create document record
   const document = await db.documents.create({
     project_id: projectId,
     type: documentType,
-    storage_url: storageUrl,
+    s3_bucket: process.env.S3_DOCUMENTS_BUCKET,
+    s3_key: s3Key,
     extraction_status: 'PENDING'
   });
 
-  // 3. Queue for extraction
-  await queue.publish('document.extract', {
-    document_id: document.id,
-    storage_url: storageUrl,
-    document_type: documentType
-  });
+  // 3. Queue for extraction via SQS
+  const sqs = new SQSClient({ region: process.env.AWS_REGION });
+  await sqs.send(new SendMessageCommand({
+    QueueUrl: process.env.TEXTRACT_QUEUE_URL,
+    MessageBody: JSON.stringify({
+      document_id: document.id,
+      s3_bucket: process.env.S3_DOCUMENTS_BUCKET,
+      s3_key: s3Key,
+      document_type: documentType
+    })
+  }));
 
   return document;
 }
 
-// Background worker
-async function processDocumentExtractionQueue() {
-  const job = await queue.consume('document.extract');
+// Lambda handler for SNS notification when Textract completes
+export async function handleTextractComplete(event: SNSEvent) {
+  for (const record of event.Records) {
+    const message = JSON.parse(record.Sns.Message);
 
-  try {
-    const result = await documentIntelligence.analyzeDocument(
-      job.storage_url,
-      job.document_type
-    );
+    if (message.Status === 'SUCCEEDED') {
+      const jobId = message.JobId;
 
-    await db.documents.update(job.document_id, {
-      extraction_status: 'COMPLETED',
-      extracted_data: result
-    });
+      // Fetch results
+      const textractService = new TextractService();
+      const result = await textractService.getJobResults(jobId);
 
-    // Notify user via websocket
-    await websocket.emit(`document.${job.document_id}.extracted`, result);
+      // Find document by job ID (stored when job started)
+      const document = await db.documents.findByTextractJobId(jobId);
 
-  } catch (error) {
-    await db.documents.update(job.document_id, {
-      extraction_status: 'FAILED',
-      extraction_error: error.message
-    });
+      // Update document with extracted data
+      await db.documents.update(document.id, {
+        extraction_status: 'COMPLETED',
+        extracted_data: result,
+        extraction_confidence: result.confidence
+      });
 
-    // Retry logic
-    if (job.attempt < 3) {
-      await queue.publish('document.extract', { ...job, attempt: job.attempt + 1 });
+      // Notify user via WebSocket
+      await websocket.emit(`document.${document.id}.extracted`, result);
+    } else if (message.Status === 'FAILED') {
+      // Handle failure
+      const document = await db.documents.findByTextractJobId(message.JobId);
+      await db.documents.update(document.id, {
+        extraction_status: 'FAILED',
+        extraction_error: message.StatusMessage
+      });
     }
   }
 }
 ```
 
-### 5.7 Custom Model Training
+### 5.7 Textract Custom Queries and Adapters
 
-**Training Data Requirements:**
-- **Minimum samples**: 15 documents per type (50+ recommended)
-- **Format**: PDF (scanned or native)
-- **Annotations**: Label key fields in at least 5 samples
-- **Variations**: Include different formats, layouts, quality levels
+**Query Optimization:**
+- Use specific, targeted queries for better accuracy
+- Test queries against sample documents before production
+- Monitor confidence scores and adjust queries as needed
 
-**Training Process:**
-1. Upload training documents to Azure Blob Storage
-2. Use Document Intelligence Studio to label fields
-3. Train custom model via API or Studio
-4. Evaluate model accuracy (target: >90% confidence)
-5. Deploy model to production endpoint
+**Custom Adapter Training (for complex documents):**
+1. Upload 20+ sample documents to S3
+2. Use Amazon Textract Console to create a Custom Adapter
+3. Label key fields in training documents
+4. Train adapter (typically 1-2 hours)
+5. Evaluate accuracy on held-out test set (target: >90%)
+6. Deploy adapter to production
+
+**Cost Optimization:**
+- Use AnalyzeDocument for single-page documents (synchronous, lower cost)
+- Use StartDocumentAnalysis for multi-page documents (async, batched)
+- Cache extraction results to avoid re-processing
+- Use S3 Intelligent Tiering for document storage
 
 ---
 
@@ -1614,26 +1754,38 @@ async function getProjectData(projectId: string) {
 ### 11.1 API Key Management
 
 **Storage:**
-- Store API keys in Azure Key Vault or AWS Secrets Manager
-- Rotate keys every 90 days
+- Store API keys in AWS Secrets Manager
+- Enable automatic rotation (every 90 days)
 - Use separate keys for dev/staging/production
+- Use IAM roles for service-to-service authentication where possible
 
 **Access Pattern:**
 ```typescript
-class SecretsManager {
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+
+class AWSSecretsManager {
+  private client: SecretsManagerClient;
   private cache = new Map<string, { value: string; expires: Date }>();
 
-  async getSecret(name: string): Promise<string> {
-    const cached = this.cache.get(name);
+  constructor() {
+    this.client = new SecretsManagerClient({
+      region: process.env.AWS_REGION || 'us-west-2'
+    });
+  }
+
+  async getSecret(secretName: string): Promise<string> {
+    const cached = this.cache.get(secretName);
 
     if (cached && cached.expires > new Date()) {
       return cached.value;
     }
 
-    const secret = await keyVault.getSecret(name);
+    const command = new GetSecretValueCommand({ SecretId: secretName });
+    const response = await this.client.send(command);
+    const secret = response.SecretString || '';
 
     // Cache for 5 minutes
-    this.cache.set(name, {
+    this.cache.set(secretName, {
       value: secret,
       expires: new Date(Date.now() + 5 * 60 * 1000)
     });
@@ -1755,13 +1907,16 @@ async function syncProjectToBPO(projectId: string) {
 
 ## Appendix B: Open Questions
 
+**Resolved:**
+- ✅ **Document Intelligence**: AWS Textract selected (December 2025) with custom queries
+
 **To be resolved during implementation:**
 
 1. **BPO API Capabilities**: Does BPO have a REST API, or do we need batch export/import?
 2. **iPad App API Documentation**: Is API documentation available for the existing inspection app?
 3. **Accounting Platform**: Which accounting system will be used (QuickBooks, Xero, NetSuite)?
 4. **E-Signature Provider**: DocuSign or Authentisign (or both)?
-5. **Azure Document Intelligence Models**: Do custom models need to be trained, or can we use prebuilt models?
+5. **AWS Textract Adapters**: Do custom adapters need to be trained, or can we use prebuilt queries?
 
 ---
 
