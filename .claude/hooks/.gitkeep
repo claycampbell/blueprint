@@ -1,0 +1,3 @@
+# Team hook scripts go in this directory
+# Hooks run automatically at specific lifecycle points
+# See .claude/README.md for examples

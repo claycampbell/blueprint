@@ -1,0 +1,3 @@
+# Team slash commands go in this directory
+# Each command is a Markdown file with YAML frontmatter
+# See .claude/README.md for examples

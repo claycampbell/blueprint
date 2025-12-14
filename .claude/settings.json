@@ -1,0 +1,26 @@
+{
+  "model": "sonnet",
+  "enabledPlugins": {
+    "pr-review-toolkit@claude-code-plugins": true,
+    "feature-dev@claude-code-plugins": true,
+    "devkit@devkit-marketplace": true,
+    "superpowers@superpowers-marketplace": true
+  },
+  "alwaysThinkingEnabled": true,
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm run:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash(gh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

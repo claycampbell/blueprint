@@ -144,18 +144,306 @@ The PRD is the consolidated source of truth. When updating:
 - **Client Zero**: First implementation of a platform (Blueprint for Connect 2.0)
 - **Frontier Firm**: Company designed to embed data, AI, and structured decision-making from day one
 
-## Questions to Resolve (from PRD Appendix C)
+## Jira Integration & Project Tracking
 
-When working on implementation planning, these remain open:
-- Exact hosting platform (Azure / AWS / GCP)
-- Preferred frontend framework (React vs. Vue)
-- Backend language/framework (Node.js vs. Python)
+**Project Board**: [DP01 - Datapage](https://vividcg.atlassian.net/jira/software/c/projects/DP01/boards/1254)
+**Atlassian Cloud**: vividcg.atlassian.net
+**Integration**: Atlassian MCP server (read/write access)
+
+### Project Structure
+
+The DP01 board organizes work into three parallel tracks aligned with the project charter:
+
+**Track 1: Market Research & Growth Strategy**
+- Epic: DP01-55 (Market Research)
+- Epic: DP01-63 (Growth Strategy)
+- Focus: Commercial platform strategy and go-to-market planning
+
+**Track 2: Blueprint Transformation & Operating System**
+- Epic: DP01-42 (Process Documentation)
+- Epic: DP01-48 (Workflow Automation)
+- Focus: Frontier firm transformation and operational excellence
+
+**Track 3: Connect 2.0 Platform Development** ⭐ Primary technical track
+- Epic: DP01-21 (Infrastructure Setup)
+- Epic: DP01-22 (Core API Development)
+- Epic: DP01-23 (Authentication & Authorization)
+- Epic: DP01-30 (Task Management)
+- Epic: DP01-35 (Feasibility Module)
+- Epic: DP01-40 (DevOps & CI/CD)
+
+### Using the Atlassian MCP Integration
+
+When working with Jira issues in this repository:
+
+**1. Searching for Issues**:
+```
+Use the `mcp__atlassian__search` tool with natural language queries:
+- "authentication issues in DP01"
+- "database migration tasks"
+- "issues assigned to me"
+```
+
+**2. Fetching Issue Details**:
+```
+Use `mcp__atlassian__getJiraIssue` with issue key (e.g., "DP01-15")
+Returns full details: description, status, assignee, comments, etc.
+```
+
+**3. Creating Issues**:
+```
+Use `mcp__atlassian__createJiraIssue` when:
+- User requests new tasks be tracked in Jira
+- Implementation work uncovers new technical debt
+- Integration gaps are discovered
+Always ask user before creating issues
+```
+
+**4. Updating Issues**:
+```
+Use `mcp__atlassian__editJiraIssue` to:
+- Update status (In Progress, Done, etc.)
+- Add implementation notes
+- Link documentation references
+Always confirm with user before updating
+```
+
+**5. Adding Comments**:
+```
+Use `mcp__atlassian__addCommentToJiraIssue` to:
+- Document technical decisions
+- Link to code commits
+- Report blockers or dependencies
+```
+
+### Alignment: Documentation ↔ Jira Issues
+
+Key alignment between this repository's documentation and existing Jira issues:
+
+| Documentation | Jira Issues | Alignment |
+|---------------|-------------|-----------|
+| [scripts/init-db.sql](scripts/init-db.sql) | DP01-15 to DP01-20 | Database schema matches migration tasks |
+| [TECHNOLOGY_STACK_DECISION.md](TECHNOLOGY_STACK_DECISION.md) | DP01-23 to DP01-29 | Node.js + React aligns with auth framework selection |
+| [docker-compose.yml](docker-compose.yml) | DP01-40, DP01-41 | LocalStack setup implements DevOps infrastructure |
+| [LOCAL_DEVELOPMENT_PLAN.md](LOCAL_DEVELOPMENT_PLAN.md) | DP01-40 | Comprehensive local dev environment |
+| [examples/nodejs-api/](examples/nodejs-api/) | DP01-22 | Working API demonstrates core patterns |
+| PRD Section 6 (Task Management) | DP01-30 to DP01-34 | Task data model and workflows |
+| PRD Section 5 (Feasibility) | DP01-35 to DP01-39 | Feasibility module requirements |
+| [docs/planning/LOCALSTACK_HEPHAESTUS_ONBOARDING.md](docs/planning/LOCALSTACK_HEPHAESTUS_ONBOARDING.md) | DP01-65 to DP01-73 | Developer onboarding exercise (repeatable) |
+
+### Developer Onboarding with Epic DP01-65
+
+**Primary Onboarding Exercise:** Epic DP01-65 (LocalStack Development Environment) serves as the hands-on introduction for all new developers.
+
+**How It Works:**
+1. **First Developer**: Implements LocalStack environment with Claude Code assistance, creates canonical version merged to `main`
+2. **Subsequent Developers**: Complete same exercise on feature branches (learning only, not merged)
+3. **Reset Between Developers**: Use `scripts/reset-onboarding.sh` to clean up for next developer
+4. **Duration**: 3-5 hours self-paced exercise
+
+**Key Documents:**
+- [LOCALSTACK_HEPHAESTUS_ONBOARDING.md](docs/planning/LOCALSTACK_HEPHAESTUS_ONBOARDING.md) - Complete onboarding guide
+- [HEPHAESTUS_EXECUTION_FRAMEWORK.md](docs/planning/HEPHAESTUS_EXECUTION_FRAMEWORK.md) - Methodology overview
+- [scripts/reset-onboarding.sh](scripts/reset-onboarding.sh) - Cleanup script for subsequent developers
+
+**Learning Outcomes:**
+- Master Claude Code pair programming
+- Understand Hephaestus ticket-driven workflow
+- Learn Connect 2.0 tech stack hands-on
+- Establish development best practices
+
+### Keeping CLAUDE.md in Sync
+
+**This file (CLAUDE.md) is automatically kept in sync across all developers via Git:**
+
+1. **Automatic Sync**: All developers pull the latest version when they start:
+   ```bash
+   git checkout main
+   git pull origin main  # Gets latest CLAUDE.md
+   git checkout -b <name>/feature-branch
+   ```
+
+2. **GitHub Action**: `.github/workflows/claude-md-sync-check.yml` automatically checks PRs to ensure CLAUDE.md is in sync with main
+
+3. **Improving CLAUDE.md**: If you discover something during development that should be added:
+   - Create a **separate PR** for CLAUDE.md improvements
+   - Use branch naming: `docs/improve-claude-md`
+   - These can be merged immediately (don't wait for feature completion)
+
+4. **Never Modified During Onboarding**: The LocalStack onboarding exercise (DP01-65) never modifies CLAUDE.md - it's reset-proof
+
+**CLAUDE.md is the single source of truth for AI assistant behavior across the entire project.**
+
+## Claude Code Configuration Sharing
+
+**This project uses shared Claude Code configurations to ensure consistent AI-assisted development across all team members.**
+
+### Configuration Files in Git
+
+All Claude Code configurations are stored in the [`.claude/`](.claude/) directory and committed to the repository:
+
+```
+.claude/
+├── settings.json              # Team-shared settings (IN GIT)
+├── settings.local.json        # Personal overrides (AUTO-IGNORED by Git)
+├── commands/                  # Team slash commands (IN GIT)
+├── skills/                    # Team agent skills (IN GIT)
+├── hooks/                     # Hook scripts (IN GIT)
+└── README.md                  # Configuration documentation
+```
+
+**Complete documentation:** See [.claude/README.md](.claude/README.md) for detailed configuration guide.
+
+### Team-Shared vs. Personal Settings
+
+| File | Shared via Git? | Purpose |
+|------|-----------------|---------|
+| **`.claude/settings.json`** | ✅ YES | Team defaults: model, plugins, permissions |
+| **`.claude/settings.local.json`** | ❌ NO | Personal overrides for your machine |
+| **`.claude/commands/`** | ✅ YES | Custom slash commands for the team |
+| **`.claude/skills/`** | ✅ YES | Shared agent skills and capabilities |
+| **`.claude/hooks/`** | ✅ YES | Automated scripts for lifecycle events |
+| **`.mcp.json`** (root) | ✅ YES | MCP server configurations |
+
+### Current Team Configuration
+
+**Default Model:** Claude 3.5 Sonnet
+
+**Enabled Plugins:**
+- `pr-review-toolkit@claude-code-plugins` - Comprehensive PR review agents
+- `feature-dev@claude-code-plugins` - Guided feature development workflow
+- `devkit@devkit-marketplace` - Developer utilities and skills
+- `superpowers@superpowers-marketplace` - Advanced coding capabilities
+
+**Standard Permissions** (auto-approved tools):
+- Git operations: `git add`, `git commit`, `git push`, `gh` CLI
+- NPM commands: `npm run *`
+- Docker commands: `docker`, `docker-compose`
+- File operations: `Read`, `Write`, `Edit`, `Glob`, `Grep`
+
+### Sharing New Configurations
+
+When you create a new slash command, skill, or hook:
+
+1. **Create in `.claude/` directory** (not `~/.claude/`)
+   ```bash
+   # Example: New slash command
+   .claude/commands/deploy/check.md
+
+   # Example: New skill
+   .claude/skills/api-validator/SKILL.md
+   ```
+
+2. **Test locally first** - Verify it works on your machine
+
+3. **Commit to Git**:
+   ```bash
+   git add .claude/commands/deploy/check.md
+   git commit -m "feat: Add deployment readiness check command"
+   ```
+
+4. **Create PR** with description of what it does
+
+5. **Teammates get it automatically** with `git pull`
+
+### Personal Customizations
+
+If you need **machine-specific settings** (not shared with team):
+
+1. Create `.claude/settings.local.json` in the project root
+2. Add your personal overrides (this file is auto-ignored by git)
+3. Example:
+   ```json
+   {
+     "permissions": {
+       "allow": [
+         "Bash(custom-script:*)"
+       ]
+     }
+   }
+   ```
+
+**Configuration precedence:** Local settings override team settings.
+
+### Onboarding New Developers
+
+When a new developer joins:
+
+1. **Clone repository** - Gets `.claude/settings.json` automatically
+2. **Review** [.claude/README.md](.claude/README.md) - Understand configuration system
+3. **Install plugins** - Listed in `settings.json`
+4. **Optional:** Create `.claude/settings.local.json` for personal preferences
+5. **Start onboarding** - Complete Epic DP01-65 (LocalStack exercise)
+
+### MCP Server Configuration
+
+MCP (Model Context Protocol) servers are configured in `.mcp.json` at the project root.
+
+**Current MCP Servers:**
+- **Atlassian MCP** - Jira/Confluence integration (configured at user level)
+
+**Adding Project-Level MCP Servers:**
+```json
+{
+  "mcpServers": {
+    "server-name": {
+      "command": "npx",
+      "args": ["@anthropic/mcp-server-name"],
+      "env": {
+        "API_KEY": "${API_KEY}"
+      }
+    }
+  }
+}
+```
+
+**Note:** Use environment variable references (`${VAR_NAME}`) for secrets. Never commit actual API keys.
+
+### Additional Resources
+
+- **Claude Code Official Docs:** https://code.claude.com/docs/
+- **Settings & Permissions:** https://code.claude.com/docs/en/settings.md
+- **Custom Slash Commands:** https://code.claude.com/docs/en/slash-commands.md
+- **Agent Skills:** https://code.claude.com/docs/en/skills.md
+- **MCP Integration:** https://code.claude.com/docs/en/mcp.md
+
+### Common Jira Queries for This Project
+
+When working with the DP01 board, these queries are frequently useful:
+
+- **Track 3 (Platform Development)**: `project = DP01 AND labels = "Track-3-Platform"`
+- **Current Sprint**: `project = DP01 AND sprint in openSprints()`
+- **Database Work**: `project = DP01 AND (labels = "database" OR summary ~ "migration")`
+- **Authentication**: `project = DP01 AND epic = DP01-23`
+- **Blocked Items**: `project = DP01 AND status = Blocked`
+- **Ready for Dev**: `project = DP01 AND status = "Ready for Development"`
+
+### Issue Tracking Best Practices
+
+When implementing features from the PRD:
+
+1. **Check Jira First**: Search for existing issues before creating new ones
+2. **Link Documentation**: Reference PRD sections and local files in issue descriptions
+3. **Update Status**: Move issues through workflow as implementation progresses
+4. **Add Technical Notes**: Document decisions, blockers, and dependencies in comments
+5. **Link Commits**: Reference issue keys in commit messages (e.g., `DP01-22: Implement S3 service`)
+
+### Technical Decisions Now Resolved
+
+~~When working on implementation planning, these remain open:~~
+- ✅ **Hosting platform**: AWS ($61,530/year Year 1) - See [COST_OF_OWNERSHIP.md](COST_OF_OWNERSHIP.md)
+- ✅ **Frontend framework**: React + TypeScript - See [TECHNOLOGY_STACK_DECISION.md](TECHNOLOGY_STACK_DECISION.md)
+- ✅ **Backend framework**: Node.js + TypeScript + Express - See [TECHNOLOGY_STACK_DECISION.md](TECHNOLOGY_STACK_DECISION.md)
+- ✅ **Local Development**: LocalStack + Docker Compose ($95K/year savings) - See [LOCAL_DEVELOPMENT_PLAN.md](LOCAL_DEVELOPMENT_PLAN.md)
+
+**Still Open**:
 - BPO API capabilities (or export-based integration approach)
 - iPad inspection app API documentation availability
 - Accounting system details (platform, integration method)
 
 ## Document Status
 
-**Last Updated**: November 5, 2025
-**Status**: Draft v1.0 - Ready for Leadership Review
-**Next Milestone**: Leadership feedback → Day 14 program kickoff
+**Last Updated**: December 14, 2025
+**Status**: Active Development Documentation
+**Jira Project**: DP01 - Datapage
+**Next Milestone**: Day 30 Architecture Review
