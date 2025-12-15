@@ -80,6 +80,73 @@ The PRD is the consolidated source of truth. When updating:
    - Preserve the MVP phasing structure (Days 1-90, 91-180)
 5. **Mark decisions** - When open questions are resolved (e.g., cloud provider choice), update the relevant section and note the decision
 
+### Time Tracking While Working
+
+**IMPORTANT:** Track time in Everhour for all work performed on DP01 tasks. This provides accurate project metrics and supports billing/planning.
+
+**When to Log Time:**
+- **After completing a task or significant work block** - Log time for the work just completed
+- **At natural breakpoints** - End of coding session, after documentation, completing a feature
+- **Before context switching** - Moving to a different task or taking a break
+- **Daily or per-session** - Minimum once per work session, ideally as work progresses
+
+**How to Log Time Using Everhour Integration:**
+
+```python
+# Quick time logging example
+from everhour_integration import add_time_to_task
+
+# Log 2 hours on a Jira issue
+add_time_to_task(
+    task_id="DP01-74",  # Jira issue key
+    hours=2.5,
+    comment="LocalStack setup and Docker configuration"
+)
+```
+
+**Using the Scripts:**
+- **Manual logging:** Use Everhour web interface or browser extension
+- **Bulk logging:** Use [scripts/populate-time-entries.py](scripts/populate-time-entries.py) for historical entries
+- **Verification:** Use [scripts/verify-time-entries.py](scripts/verify-time-entries.py) to check logged time
+
+**Time Tracking Best Practices:**
+1. **Log actual hours worked** - Be honest about time spent (not estimates)
+2. **Include meaningful comments** - Describe what was accomplished (max 1000 chars for Jira sync)
+3. **Use correct Jira issue keys** - Match task IDs to actual work (e.g., "DP01-74")
+4. **Log same day** - Track time on the day work was performed for accurate reporting
+5. **Track all activities** - Include research, documentation, meetings, coding, debugging, testing
+
+**What Counts as Billable Time:**
+- Active coding and implementation
+- Code review and testing
+- Documentation writing
+- Research and technical design
+- Debugging and troubleshooting
+- Team collaboration on project work
+- Learning required for project tasks
+
+**What NOT to Track:**
+- General learning unrelated to current project
+- Personal breaks and lunch
+- Non-project administrative tasks
+- Time between active work sessions
+
+**Integration with Jira:**
+- Time logged in Everhour automatically syncs to Jira work logs (one-way sync)
+- Comments are preserved (up to 1000 characters)
+- Time appears in both Everhour and Jira interfaces
+- Historical data before integration is NOT synced
+
+**Available Tools:**
+- **Everhour Skill:** [@everhour-integration](.claude/skills/everhour-integration/SKILL.md) - Complete API integration
+- **Test Scripts:** [scripts/test-everhour-api.py](scripts/test-everhour-api.py) - Verify API access
+- **Documentation:** [docs/planning/EVERHOUR_API_INTEGRATION_GUIDE.md](docs/planning/EVERHOUR_API_INTEGRATION_GUIDE.md) - Full API reference
+
+**DP01 Project Details:**
+- **Project ID:** `jr:6091-12165` (DP01 - Datapage Phase 1)
+- **Total Tasks:** 147 tasks currently tracked
+- **API Token:** Stored in `EVERHOUR_API_TOKEN` environment variable
+
 ### Critical Information in the PRD
 
 **Current System Architecture** (Section 2.2-2.3):
