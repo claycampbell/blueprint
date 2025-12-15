@@ -413,6 +413,19 @@ MCP (Model Context Protocol) servers are configured in `.mcp.json` at the projec
 - Used to create 74 tasks from Epic Tasking Guide (DP01-74 to DP01-147)
 - Invoke with: `@jira-automation` or use the skill directly
 
+**Everhour Integration** - [.claude/skills/everhour-integration/SKILL.md](.claude/skills/everhour-integration/SKILL.md)
+- Complete time tracking integration via Everhour REST API v1
+- **Time Entries:** Get, add, update, delete time on tasks and Jira issues
+- **Projects & Tasks:** List projects, get project tasks, get task details
+- **Timers:** Start, stop, and get running timers
+- **Estimates:** Set and delete task estimates
+- **Jira Integration:** Direct access to Jira issue time via issue keys (e.g., "DP01-74")
+- **Reporting:** Daily time reports, project summaries, budget tracking
+- One-way sync: Everhour → Jira work logs (historical data not synced)
+- API Token: Get from Everhour → Settings → My Profile
+- DP01 Project ID: `jr:6091-12165` (147 tasks tracked)
+- Invoke with: `@everhour-integration` or use the skill directly
+
 ### Additional Resources
 
 - **Claude Code Official Docs:** https://code.claude.com/docs/
