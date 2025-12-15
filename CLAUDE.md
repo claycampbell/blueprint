@@ -399,6 +399,20 @@ MCP (Model Context Protocol) servers are configured in `.mcp.json` at the projec
 
 **Note:** Use environment variable references (`${VAR_NAME}`) for secrets. Never commit actual API keys.
 
+### Project Skills
+
+**Jira Automation** - [.claude/skills/jira-automation/SKILL.md](.claude/skills/jira-automation/SKILL.md)
+- Complete Jira automation toolkit using REST API (equivalent to MCP capabilities)
+- **Issue Management:** Create, update, search, get, delete issues
+- **Workflow:** Transition issues, get available transitions
+- **Collaboration:** Add comments, mention users
+- **Agile:** Create sprints, link to epics, manage boards
+- **Relationships:** Link issues (blocks, relates, duplicates)
+- **Time Tracking:** Add work logs
+- Includes JQL query examples and Claude Code integration patterns
+- Used to create 74 tasks from Epic Tasking Guide (DP01-74 to DP01-147)
+- Invoke with: `@jira-automation` or use the skill directly
+
 ### Additional Resources
 
 - **Claude Code Official Docs:** https://code.claude.com/docs/
