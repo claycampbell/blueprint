@@ -80,6 +80,128 @@ The PRD is the consolidated source of truth. When updating:
    - Preserve the MVP phasing structure (Days 1-90, 91-180)
 5. **Mark decisions** - When open questions are resolved (e.g., cloud provider choice), update the relevant section and note the decision
 
+### Git Workflow and Pull Requests
+
+**IMPORTANT:** All code changes must be committed to feature branches and merged via pull requests. Never commit directly to `main`.
+
+**Branch Naming Convention:**
+- Format: `<name>/<feature-description>`
+- Examples:
+  - `clay/localstack-environment-setup`
+  - `senior-dev/authentication-jwt-setup`
+  - `docs/improve-claude-md`
+
+**Standard Development Workflow:**
+
+1. **Start from main branch:**
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Create feature branch:**
+   ```bash
+   git checkout -b <name>/<feature-description>
+   ```
+
+3. **Make changes and commit regularly:**
+   ```bash
+   git add <files>
+   git commit -m "descriptive commit message"
+   ```
+
+4. **Commit message format:**
+   ```
+   <type>: <subject> (<jira-ticket>)
+
+   <body explaining what and why>
+
+   Closes: <jira-tickets>
+   Related: <related-tickets>
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   ```
+
+   **Types:** feat, fix, docs, refactor, test, chore
+
+5. **Push branch to remote:**
+   ```bash
+   git push -u origin <branch-name>
+   ```
+
+6. **Create pull request:**
+   - Use GitHub CLI: `gh pr create --title "..." --body "..."`
+   - Or use GitHub web interface
+   - Include Jira ticket references in PR description
+   - Tag relevant reviewers
+
+7. **After PR approval, merge to main:**
+   - Use "Squash and merge" for clean history
+   - Delete feature branch after merge
+
+**What to Commit:**
+- ✅ Source code changes (scripts, examples, configs)
+- ✅ Documentation updates (markdown files, guides)
+- ✅ Configuration files (docker-compose.yml, init scripts)
+- ✅ Infrastructure as code (Terraform, CloudFormation)
+- ❌ `.env` files (use `.env.example` instead)
+- ❌ `localstack-data/` or other volume directories
+- ❌ Personal IDE settings (`.claude/settings.local.json`)
+- ❌ Sensitive credentials or API tokens
+
+**When Completing Jira Tasks:**
+1. Complete the work on your feature branch
+2. Run validation/tests to confirm everything works
+3. Commit all changes with descriptive messages
+4. Mark Jira task as DONE with detailed completion comment
+5. Push branch and create PR
+6. Tag reviewer (or self-merge if authorized)
+7. Merge PR after approval
+8. Delete feature branch
+
+**Example Complete Workflow:**
+```bash
+# Start new feature
+git checkout main && git pull origin main
+git checkout -b clay/localstack-environment-setup
+
+# Make changes (DP01-148, DP01-149 completed)
+git add docker-compose.yml scripts/localstack-init.sh
+git commit -m "feat: Complete LocalStack environment setup (DP01-148, DP01-149)
+
+Implements comprehensive local development environment...
+
+Closes: DP01-148, DP01-149
+Related: DP01-65
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# Push and create PR
+git push -u origin clay/localstack-environment-setup
+gh pr create --title "LocalStack Environment Setup" --body "Completes DP01-148 and DP01-149..."
+
+# After approval, merge via GitHub UI or CLI
+gh pr merge --squash --delete-branch
+```
+
+**PR Review Checklist:**
+- [ ] All Jira tasks referenced are actually complete
+- [ ] Code follows project conventions (see TECHNOLOGY_STACK_DECISION.md)
+- [ ] No sensitive data committed (.env, API keys, passwords)
+- [ ] Documentation updated if needed
+- [ ] Tests pass (when test suite exists)
+- [ ] Docker containers build and start successfully
+- [ ] No merge conflicts with main
+
+**CLAUDE.md Updates:**
+- If you improve CLAUDE.md itself, create a separate PR just for that
+- Branch naming: `docs/improve-claude-md`
+- Can be merged immediately (don't wait for feature completion)
+- Keep CLAUDE.md in sync across all developers via Git
+
 ### Time Tracking While Working
 
 **IMPORTANT:** Track time in Everhour for all work performed on DP01 tasks. This provides accurate project metrics and supports billing/planning.
