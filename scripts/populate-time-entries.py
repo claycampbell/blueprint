@@ -29,10 +29,12 @@ def get_project_tasks(project_id):
 
 def add_time_to_task(task_id, hours, date, comment=""):
     """Add time entry to a task."""
-    time_ms = int(hours * 3600000)
+    # Convert hours to seconds (NOT milliseconds!)
+    # Despite API docs saying milliseconds, Everhour actually expects seconds
+    time_seconds = int(hours * 3600)
 
     payload = {
-        "time": time_ms,
+        "time": time_seconds,
         "date": date
     }
 

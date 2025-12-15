@@ -77,7 +77,8 @@ def main():
 
     for date in sorted(by_date.keys()):
         day_entries = by_date[date]
-        day_total = sum(e.get('time', 0) for e in day_entries) / 3600000
+        # Everhour stores time in SECONDS, not milliseconds
+        day_total = sum(e.get('time', 0) for e in day_entries) / 3600
         total_hours += day_total
 
         day_name = datetime.strptime(date, "%Y-%m-%d").strftime("%A")
@@ -86,7 +87,8 @@ def main():
         print("-" * 80)
 
         for entry in day_entries:
-            hours = entry.get('time', 0) / 3600000
+            # Everhour stores time in SECONDS, not milliseconds
+            hours = entry.get('time', 0) / 3600
             task_id = entry.get('task')
             comment = entry.get('comment', 'No comment')
 
