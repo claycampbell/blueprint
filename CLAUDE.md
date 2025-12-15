@@ -657,6 +657,30 @@ When implementing features from the PRD:
 - iPad inspection app API documentation availability
 - Accounting system details (platform, integration method)
 
+## Code Quality and Pre-Commit Hooks
+
+**IMPORTANT:** All code changes are automatically checked for quality before commits. These checks are **enforced by Claude Code** and run automatically.
+
+### Automated Pre-Commit Checks
+
+Every `git commit` command automatically triggers:
+
+1. **Ruff Linter** - Fast Python linter (auto-fixes issues)
+2. **Ruff Formatter** - Code formatting (100 char lines)
+3. **MyPy** - Type checking (warnings only)
+4. **Pytest** - Automated tests ⚠️ **BLOCKS COMMIT IF TESTS FAIL**
+
+**Configuration:** Pre-commit hook runs via `.claude/settings.json` → hooks → PreToolUse
+
+**Manual testing before commit:**
+```bash
+.claude/hooks/pre-commit.sh        # Run all checks
+python -m pytest tests/ -v         # Run tests only
+ruff check . --fix                 # Lint only
+```
+
+**Full Documentation:** [docs/development/PRE_COMMIT_HOOKS.md](docs/development/PRE_COMMIT_HOOKS.md)
+
 ## Document Status
 
 **Last Updated**: December 14, 2025

@@ -1,0 +1,119 @@
+# Pre-commit hooks configuration for Connect 2.0
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        description: Remove trailing whitespace from all files
+
+      - id: end-of-file-fixer
+        name: Fix end of files
+        description: Ensure files end with a newline
+
+      - id: check-yaml
+        name: Check YAML syntax
+        description: Validate YAML file syntax
+        args: ['--unsafe']  # Allow custom YAML tags
+
+      - id: check-json
+        name: Check JSON syntax
+        description: Validate JSON file syntax
+
+      - id: check-added-large-files
+        name: Check for large files
+        description: Prevent large files from being committed
+        args: ['--maxkb=1000']
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+        description: Prevent files with merge conflict markers
+
+      - id: check-case-conflict
+        name: Check for case conflicts
+        description: Prevent case-insensitive filename conflicts
+
+      - id: mixed-line-ending
+        name: Check line endings
+        description: Ensure consistent line endings (LF)
+        args: ['--fix=lf']
+
+      - id: detect-private-key
+        name: Detect private keys
+        description: Prevent committing private keys
+
+  # Python code formatting with Ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.9
+    hooks:
+      - id: ruff
+        name: Ruff linter
+        description: Fast Python linter (replaces flake8, isort, etc.)
+        args: [--fix, --exit-non-zero-on-fix]
+
+      - id: ruff-format
+        name: Ruff formatter
+        description: Fast Python formatter (replaces black)
+
+  # Python type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        name: Type check with mypy
+        description: Static type checking for Python
+        additional_dependencies: [types-requests]
+        args: [--ignore-missing-imports, --no-strict-optional]
+
+  # Python tests with pytest
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: Run pytest
+        description: Run Python unit tests
+        entry: pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+        args: [
+          'scripts/',
+          '--tb=short',
+          '--maxfail=1',
+          '-v'
+        ]
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        name: Security check with bandit
+        description: Find common security issues in Python
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        name: Markdown linter
+        description: Check markdown formatting
+        args: ['--fix', '--disable', 'MD013', 'MD033', 'MD041']
+
+  # Shell script validation
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        name: Shell script check
+        description: Static analysis for shell scripts
+
+# Global configuration
+default_stages: [commit]
+fail_fast: false

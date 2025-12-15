@@ -7,12 +7,30 @@
     "superpowers@superpowers-marketplace": true
   },
   "alwaysThinkingEnabled": true,
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-commit.sh",
+            "statusMessage": "Running pre-commit checks (Ruff, pytest)..."
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(git:*)",
       "Bash(npm run:*)",
       "Bash(docker:*)",
       "Bash(docker-compose:*)",
+      "Bash(python:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(pip:*)",
       "Read",
       "Write",
       "Edit",
