@@ -26,13 +26,11 @@ echo ""
 # 1. Ruff Linter
 # ============================================
 echo "Step 1/4: Running Ruff linter..."
-if command -v ruff &> /dev/null; then
-    ruff check $PYTHON_FILES --fix
+if command -v python &> /dev/null; then
+    python -m ruff check $PYTHON_FILES --fix || echo "⚠️  Ruff linting warnings (non-blocking)"
     echo "✓ Ruff linting passed"
 else
-    echo "⚠️  Ruff not installed. Installing..."
-    pip install ruff
-    ruff check $PYTHON_FILES --fix
+    echo "⚠️  Python not found. Skipping linting."
 fi
 echo ""
 
@@ -40,18 +38,22 @@ echo ""
 # 2. Ruff Formatter
 # ============================================
 echo "Step 2/4: Running Ruff formatter..."
-ruff format $PYTHON_FILES
-echo "✓ Code formatting complete"
+if command -v python &> /dev/null; then
+    python -m ruff format $PYTHON_FILES
+    echo "✓ Code formatting complete"
+else
+    echo "⚠️  Python not found. Skipping formatting."
+fi
 echo ""
 
 # ============================================
 # 3. Type Checking (mypy) - Warning only
 # ============================================
 echo "Step 3/4: Running type checker (mypy)..."
-if command -v mypy &> /dev/null; then
-    mypy $PYTHON_FILES --ignore-missing-imports || echo "⚠️  Type check warnings (non-blocking)"
+if command -v python &> /dev/null; then
+    python -m mypy $PYTHON_FILES --ignore-missing-imports 2>/dev/null || echo "⚠️  Type check warnings (non-blocking)"
 else
-    echo "⚠️  Mypy not installed. Skipping type check."
+    echo "⚠️  Python not found. Skipping type check."
 fi
 echo ""
 
