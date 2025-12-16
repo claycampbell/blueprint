@@ -80,6 +80,195 @@ The PRD is the consolidated source of truth. When updating:
    - Preserve the MVP phasing structure (Days 1-90, 91-180)
 5. **Mark decisions** - When open questions are resolved (e.g., cloud provider choice), update the relevant section and note the decision
 
+### Git Workflow and Pull Requests
+
+**IMPORTANT:** All code changes must be committed to feature branches and merged via pull requests. Never commit directly to `main`.
+
+**Branch Naming Convention:**
+- Format: `<name>/<feature-description>`
+- Examples:
+  - `clay/localstack-environment-setup`
+  - `senior-dev/authentication-jwt-setup`
+  - `docs/improve-claude-md`
+
+**Standard Development Workflow:**
+
+1. **Start from main branch:**
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+
+2. **Create feature branch:**
+   ```bash
+   git checkout -b <name>/<feature-description>
+   ```
+
+3. **Make changes and commit regularly:**
+   ```bash
+   git add <files>
+   git commit -m "descriptive commit message"
+   ```
+
+4. **Commit message format:**
+   ```
+   <type>: <subject> (<jira-ticket>)
+
+   <body explaining what and why>
+
+   Closes: <jira-tickets>
+   Related: <related-tickets>
+
+   🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+   Co-Authored-By: Claude <noreply@anthropic.com>
+   ```
+
+   **Types:** feat, fix, docs, refactor, test, chore
+
+5. **Push branch to remote:**
+   ```bash
+   git push -u origin <branch-name>
+   ```
+
+6. **Create pull request:**
+   - Use GitHub CLI: `gh pr create --title "..." --body "..."`
+   - Or use GitHub web interface
+   - Include Jira ticket references in PR description
+   - Tag relevant reviewers
+
+7. **After PR approval, merge to main:**
+   - Use "Squash and merge" for clean history
+   - Delete feature branch after merge
+
+**What to Commit:**
+- ✅ Source code changes (scripts, examples, configs)
+- ✅ Documentation updates (markdown files, guides)
+- ✅ Configuration files (docker-compose.yml, init scripts)
+- ✅ Infrastructure as code (Terraform, CloudFormation)
+- ❌ `.env` files (use `.env.example` instead)
+- ❌ `localstack-data/` or other volume directories
+- ❌ Personal IDE settings (`.claude/settings.local.json`)
+- ❌ Sensitive credentials or API tokens
+
+**When Completing Jira Tasks:**
+1. Complete the work on your feature branch
+2. Run validation/tests to confirm everything works
+3. Commit all changes with descriptive messages
+4. Mark Jira task as DONE with detailed completion comment
+5. Push branch and create PR
+6. Tag reviewer (or self-merge if authorized)
+7. Merge PR after approval
+8. Delete feature branch
+
+**Example Complete Workflow:**
+```bash
+# Start new feature
+git checkout main && git pull origin main
+git checkout -b clay/localstack-environment-setup
+
+# Make changes (DP01-148, DP01-149 completed)
+git add docker-compose.yml scripts/localstack-init.sh
+git commit -m "feat: Complete LocalStack environment setup (DP01-148, DP01-149)
+
+Implements comprehensive local development environment...
+
+Closes: DP01-148, DP01-149
+Related: DP01-65
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+# Push and create PR
+git push -u origin clay/localstack-environment-setup
+gh pr create --title "LocalStack Environment Setup" --body "Completes DP01-148 and DP01-149..."
+
+# After approval, merge via GitHub UI or CLI
+gh pr merge --squash --delete-branch
+```
+
+**PR Review Checklist:**
+- [ ] All Jira tasks referenced are actually complete
+- [ ] Code follows project conventions (see TECHNOLOGY_STACK_DECISION.md)
+- [ ] No sensitive data committed (.env, API keys, passwords)
+- [ ] Documentation updated if needed
+- [ ] Tests pass (when test suite exists)
+- [ ] Docker containers build and start successfully
+- [ ] No merge conflicts with main
+
+**CLAUDE.md Updates:**
+- If you improve CLAUDE.md itself, create a separate PR just for that
+- Branch naming: `docs/improve-claude-md`
+- Can be merged immediately (don't wait for feature completion)
+- Keep CLAUDE.md in sync across all developers via Git
+
+### Time Tracking While Working
+
+**IMPORTANT:** Track time in Everhour for all work performed on DP01 tasks. This provides accurate project metrics and supports billing/planning.
+
+**When to Log Time:**
+- **After completing a task or significant work block** - Log time for the work just completed
+- **At natural breakpoints** - End of coding session, after documentation, completing a feature
+- **Before context switching** - Moving to a different task or taking a break
+- **Daily or per-session** - Minimum once per work session, ideally as work progresses
+
+**How to Log Time Using Everhour Integration:**
+
+```python
+# Quick time logging example
+from everhour_integration import add_time_to_task
+
+# Log 2 hours on a Jira issue
+add_time_to_task(
+    task_id="DP01-74",  # Jira issue key
+    hours=2.5,
+    comment="LocalStack setup and Docker configuration"
+)
+```
+
+**Using the Scripts:**
+- **Manual logging:** Use Everhour web interface or browser extension
+- **Bulk logging:** Use [scripts/populate-time-entries.py](scripts/populate-time-entries.py) for historical entries
+- **Verification:** Use [scripts/verify-time-entries.py](scripts/verify-time-entries.py) to check logged time
+
+**Time Tracking Best Practices:**
+1. **Log actual hours worked** - Be honest about time spent (not estimates)
+2. **Include meaningful comments** - Describe what was accomplished (max 1000 chars for Jira sync)
+3. **Use correct Jira issue keys** - Match task IDs to actual work (e.g., "DP01-74")
+4. **Log same day** - Track time on the day work was performed for accurate reporting
+5. **Track all activities** - Include research, documentation, meetings, coding, debugging, testing
+
+**What Counts as Billable Time:**
+- Active coding and implementation
+- Code review and testing
+- Documentation writing
+- Research and technical design
+- Debugging and troubleshooting
+- Team collaboration on project work
+- Learning required for project tasks
+
+**What NOT to Track:**
+- General learning unrelated to current project
+- Personal breaks and lunch
+- Non-project administrative tasks
+- Time between active work sessions
+
+**Integration with Jira:**
+- Time logged in Everhour automatically syncs to Jira work logs (one-way sync)
+- Comments are preserved (up to 1000 characters)
+- Time appears in both Everhour and Jira interfaces
+- Historical data before integration is NOT synced
+
+**Available Tools:**
+- **Everhour Skill:** [@everhour-integration](.claude/skills/everhour-integration/SKILL.md) - Complete API integration
+- **Test Scripts:** [scripts/test-everhour-api.py](scripts/test-everhour-api.py) - Verify API access
+- **Documentation:** [docs/planning/EVERHOUR_API_INTEGRATION_GUIDE.md](docs/planning/EVERHOUR_API_INTEGRATION_GUIDE.md) - Full API reference
+
+**DP01 Project Details:**
+- **Project ID:** `jr:6091-12165` (DP01 - Datapage Phase 1)
+- **Total Tasks:** 147 tasks currently tracked
+- **API Token:** Stored in `EVERHOUR_API_TOKEN` environment variable
+
 ### Critical Information in the PRD
 
 **Current System Architecture** (Section 2.2-2.3):
@@ -399,6 +588,33 @@ MCP (Model Context Protocol) servers are configured in `.mcp.json` at the projec
 
 **Note:** Use environment variable references (`${VAR_NAME}`) for secrets. Never commit actual API keys.
 
+### Project Skills
+
+**Jira Automation** - [.claude/skills/jira-automation/SKILL.md](.claude/skills/jira-automation/SKILL.md)
+- Complete Jira automation toolkit using REST API (equivalent to MCP capabilities)
+- **Issue Management:** Create, update, search, get, delete issues
+- **Workflow:** Transition issues, get available transitions
+- **Collaboration:** Add comments, mention users
+- **Agile:** Create sprints, link to epics, manage boards
+- **Relationships:** Link issues (blocks, relates, duplicates)
+- **Time Tracking:** Add work logs
+- Includes JQL query examples and Claude Code integration patterns
+- Used to create 74 tasks from Epic Tasking Guide (DP01-74 to DP01-147)
+- Invoke with: `@jira-automation` or use the skill directly
+
+**Everhour Integration** - [.claude/skills/everhour-integration/SKILL.md](.claude/skills/everhour-integration/SKILL.md)
+- Complete time tracking integration via Everhour REST API v1
+- **Time Entries:** Get, add, update, delete time on tasks and Jira issues
+- **Projects & Tasks:** List projects, get project tasks, get task details
+- **Timers:** Start, stop, and get running timers
+- **Estimates:** Set and delete task estimates
+- **Jira Integration:** Direct access to Jira issue time via issue keys (e.g., "DP01-74")
+- **Reporting:** Daily time reports, project summaries, budget tracking
+- One-way sync: Everhour → Jira work logs (historical data not synced)
+- API Token: Get from Everhour → Settings → My Profile
+- DP01 Project ID: `jr:6091-12165` (147 tasks tracked)
+- Invoke with: `@everhour-integration` or use the skill directly
+
 ### Additional Resources
 
 - **Claude Code Official Docs:** https://code.claude.com/docs/
@@ -440,6 +656,30 @@ When implementing features from the PRD:
 - BPO API capabilities (or export-based integration approach)
 - iPad inspection app API documentation availability
 - Accounting system details (platform, integration method)
+
+## Code Quality and Pre-Commit Hooks
+
+**IMPORTANT:** All code changes are automatically checked for quality before commits. These checks are **enforced by Claude Code** and run automatically.
+
+### Automated Pre-Commit Checks
+
+Every `git commit` command automatically triggers:
+
+1. **Ruff Linter** - Fast Python linter (auto-fixes issues)
+2. **Ruff Formatter** - Code formatting (100 char lines)
+3. **MyPy** - Type checking (warnings only)
+4. **Pytest** - Automated tests ⚠️ **BLOCKS COMMIT IF TESTS FAIL**
+
+**Configuration:** Pre-commit hook runs via `.claude/settings.json` → hooks → PreToolUse
+
+**Manual testing before commit:**
+```bash
+.claude/hooks/pre-commit.sh        # Run all checks
+python -m pytest tests/ -v         # Run tests only
+ruff check . --fix                 # Lint only
+```
+
+**Full Documentation:** [docs/development/PRE_COMMIT_HOOKS.md](docs/development/PRE_COMMIT_HOOKS.md)
 
 ## Document Status
 

@@ -1,150 +1,189 @@
-# Connect 2.0 API - Sample Implementation
+# Connect 2.0 Platform API
 
-This is a **sample Node.js API** demonstrating LocalStack integration for the Connect 2.0 platform.
+Node.js + TypeScript + Express API for the Connect 2.0 platform, demonstrating integration with LocalStack (AWS services) and PostgreSQL.
 
-## Features Demonstrated
+## Technology Stack
 
-✅ **AWS S3 Integration** - Document upload/download with LocalStack
-✅ **SQS Queue Processing** - Async message handling
-✅ **PostgreSQL Database** - Complete CRUD operations
-✅ **RESTful API Design** - Project and document management
-✅ **File Upload** - Multer + S3 storage
-✅ **Pre-signed URLs** - Secure document access
+- **Runtime:** Node.js 18+ with TypeScript 5.3
+- **Framework:** Express.js 4.18
+- **Database:** PostgreSQL 15 (via pg client)
+- **AWS Services:** S3, SQS (via AWS SDK v3)
+- **Local Development:** LocalStack for AWS service emulation
 
-## Quick Start
+## Prerequisites
 
-### 1. Install Dependencies
+Before running this API, ensure you have:
 
-```bash
-cd examples/nodejs-api
-npm install
-```
+1. **Node.js 18+** and **npm 9+** installed
+2. **Docker and Docker Compose** running (for LocalStack and PostgreSQL)
+3. **LocalStack services** started via `docker-compose up -d`
 
-### 2. Start Infrastructure
+## Installation
 
-From the project root:
-```bash
-docker-compose up -d
-```
+1. **Install dependencies:**
+   ```bash
+   cd examples/nodejs-api
+   npm install
+   ```
 
-### 3. Configure Environment
+2. **Configure environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env if needed (defaults work with docker-compose setup)
+   ```
 
-Create `.env` file:
-```bash
-NODE_ENV=development
-PORT=3000
+3. **Verify LocalStack and PostgreSQL are running:**
+   ```bash
+   docker ps
+   # Should show containers: localstack-main, postgres
+   ```
 
-# Database
-DATABASE_URL=postgresql://connect_user:connect_dev_password@localhost:5432/connect2_dev
+## Running the API
 
-# AWS LocalStack
-AWS_ENDPOINT_URL=http://localhost:4566
-AWS_REGION=us-west-2
-AWS_ACCESS_KEY_ID=test
-AWS_SECRET_ACCESS_KEY=test
-S3_BUCKET_NAME=connect2-documents-dev
-DOCUMENT_QUEUE_URL=http://localhost:4566/000000000000/connect2-document-processing
-```
-
-### 4. Run the API
+### Development Mode (with hot reload)
 
 ```bash
 npm run dev
 ```
 
-API will start on http://localhost:3000
+The API will start on `http://localhost:3000` with automatic reloading on file changes.
 
-## API Endpoints
-
-### Projects
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/v1/projects` | List all projects |
-| `GET` | `/api/v1/projects/:id` | Get project by ID |
-| `POST` | `/api/v1/projects` | Create new project |
-| `PATCH` | `/api/v1/projects/:id` | Update project |
-| `POST` | `/api/v1/projects/:id/transition` | Change project status |
-
-### Documents
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/v1/projects/:id/documents` | Upload document (multipart/form-data) |
-| `GET` | `/api/v1/projects/:id/documents` | List project documents |
-| `GET` | `/api/v1/projects/:id/documents/:docId/download` | Get download URL |
-
-## Usage Examples
-
-### Create a Project
+### Production Build
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/projects \
-  -H "Content-Type: application/json" \
-  -d '{
-    "address": "456 Test Ave",
-    "city": "Seattle",
-    "state": "WA",
-    "zip": "98103",
-    "purchasePrice": 600000,
-    "listPrice": 650000
-  }'
+npm run build
+npm start
 ```
 
-### Upload a Document
+## Testing Endpoints
+
+### Health Check
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/projects/<PROJECT_ID>/documents \
-  -F "file=@/path/to/document.pdf" \
-  -F "type=SURVEY" \
-  -F "description=Property survey"
+curl http://localhost:3000/health
 ```
 
-### List Projects
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-12-15T10:30:00.000Z",
+  "services": {
+    "database": "connected",
+    "s3": "connected",
+    "sqs": "connected"
+  }
+}
+```
 
+### Projects API
+
+**List all projects:**
 ```bash
 curl http://localhost:3000/api/v1/projects
 ```
 
-### Transition Project Status
-
+**Get project by ID:**
 ```bash
-curl -X POST http://localhost:3000/api/v1/projects/<PROJECT_ID>/transition \
+curl http://localhost:3000/api/v1/projects/1
+```
+
+**Create a new project:**
+```bash
+curl -X POST http://localhost:3000/api/v1/projects \
   -H "Content-Type: application/json" \
   -d '{
-    "status": "FEASIBILITY",
-    "notes": "Moving to feasibility based on initial review"
+    "project_name": "Westside Townhomes",
+    "address": "123 Main St, Seattle, WA 98101",
+    "market_id": 1,
+    "project_type": "townhome",
+    "total_units": 12,
+    "status": "lead"
   }'
 ```
 
-## Testing LocalStack Integration
-
-### Verify S3 Upload
-
-After uploading a document via API:
-
+**Update a project:**
 ```bash
-# List S3 buckets
-awslocal s3 ls
-
-# List files in documents bucket
-awslocal s3 ls s3://connect2-documents-dev/documents/
-
-# Download a file
-awslocal s3 cp s3://connect2-documents-dev/documents/<key> ./downloaded-file.pdf
+curl -X PUT http://localhost:3000/api/v1/projects/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "status": "feasibility",
+    "total_units": 15
+  }'
 ```
 
-### Check Queue Messages
-
+**Delete a project:**
 ```bash
-# Get queue stats
-awslocal sqs get-queue-attributes \
-  --queue-url http://localhost:4566/000000000000/connect2-document-processing \
-  --attribute-names ApproximateNumberOfMessages
+curl -X DELETE http://localhost:3000/api/v1/projects/1
+```
 
-# Receive messages
-awslocal sqs receive-message \
-  --queue-url http://localhost:4566/000000000000/connect2-document-processing
+### Documents API (S3 Integration)
+
+**Upload a document:**
+```bash
+curl -X POST http://localhost:3000/api/v1/documents/upload \
+  -F "file=@/path/to/document.pdf" \
+  -F "project_id=1" \
+  -F "document_type=survey"
+```
+
+**Get presigned download URL:**
+```bash
+curl http://localhost:3000/api/v1/documents/1/download
+```
+
+Expected response:
+```json
+{
+  "url": "http://localhost:4566/connect-documents/documents/...",
+  "expires_in": 3600
+}
+```
+
+### Tasks API (SQS Integration)
+
+**Create a task (sends SQS notification):**
+```bash
+curl -X POST http://localhost:3000/api/v1/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project_id": 1,
+    "title": "Review preliminary title report",
+    "description": "Check for liens and encumbrances",
+    "assigned_to": "john.smith@example.com",
+    "due_date": "2025-12-20",
+    "priority": "high"
+  }'
+```
+
+## LocalStack Integration Notes
+
+### S3 Configuration
+
+The API uses **path-style S3 URLs** for LocalStack compatibility:
+- LocalStack: `http://localhost:4566/bucket-name/key`
+- AWS: `https://bucket-name.s3.amazonaws.com/key`
+
+Set `S3_FORCE_PATH_STYLE=true` in `.env` for local development.
+
+### SQS Configuration
+
+Queue URL format for LocalStack:
+```
+http://localhost:4566/000000000000/queue-name
+```
+
+The account ID `000000000000` is LocalStack's default.
+
+### Endpoint Configuration
+
+All AWS SDK clients use the `AWS_ENDPOINT_URL` environment variable:
+```javascript
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  endpoint: process.env.AWS_ENDPOINT_URL, // http://localhost:4566
+  forcePathStyle: true
+});
 ```
 
 ## Project Structure
@@ -152,125 +191,123 @@ awslocal sqs receive-message \
 ```
 examples/nodejs-api/
 ├── src/
+│   ├── index.ts              # Application entry point
 │   ├── config/
-│   │   ├── aws.js              # AWS SDK configuration
-│   │   └── database.js         # PostgreSQL connection
-│   ├── services/
-│   │   ├── s3Service.js        # S3 document operations
-│   │   └── queueService.js     # SQS message handling
+│   │   ├── database.ts       # PostgreSQL connection
+│   │   ├── aws.ts            # AWS SDK clients (S3, SQS)
+│   │   └── env.ts            # Environment variable validation
 │   ├── routes/
-│   │   └── projectRoutes.js    # Project API endpoints
-│   └── index.js                # Express app entry point
+│   │   ├── projects.ts       # Project CRUD endpoints
+│   │   ├── documents.ts      # Document upload/download (S3)
+│   │   ├── tasks.ts          # Task management (SQS)
+│   │   └── health.ts         # Health check endpoint
+│   ├── models/
+│   │   ├── Project.ts        # Project data model
+│   │   ├── Document.ts       # Document data model
+│   │   └── Task.ts           # Task data model
+│   ├── services/
+│   │   ├── s3.service.ts     # S3 operations wrapper
+│   │   ├── sqs.service.ts    # SQS operations wrapper
+│   │   └── db.service.ts     # Database query helpers
+│   └── middleware/
+│       ├── errorHandler.ts   # Global error handling
+│       └── validation.ts     # Request validation
 ├── package.json
+├── tsconfig.json
+├── .env.example
+├── .gitignore
 └── README.md
 ```
 
-## Key Code Highlights
+## Database Schema
 
-### AWS SDK Configuration
+The API expects the following PostgreSQL tables (see `../../scripts/init-db.sql`):
 
-See `src/config/aws.js` - automatically detects LocalStack vs real AWS:
-
-```javascript
-const isLocal = !!process.env.AWS_ENDPOINT_URL;
-
-if (isLocal) {
-  config.endpoint = process.env.AWS_ENDPOINT_URL;
-  config.forcePathStyle = true; // Required for LocalStack S3
-}
-```
-
-### S3 Document Upload
-
-See `src/services/s3Service.js`:
-
-```javascript
-export async function uploadDocument(fileBuffer, fileName, metadata) {
-  const command = new PutObjectCommand({
-    Bucket: BUCKET_NAME,
-    Key: key,
-    Body: fileBuffer,
-    Metadata: metadata,
-  });
-
-  await s3Client.send(command);
-}
-```
-
-### Queue Processing
-
-See `src/services/queueService.js`:
-
-```javascript
-export async function processQueue(handler) {
-  // Long polling for messages
-  const command = new ReceiveMessageCommand({
-    QueueUrl: QUEUE_URL,
-    WaitTimeSeconds: 20,
-  });
-
-  // Process and delete on success
-}
-```
+- `markets` - Geographic markets (Seattle, Phoenix)
+- `projects` - Development projects
+- `contacts` - Builder/borrower contacts
+- `loans` - Construction loans
+- `documents` - Document metadata (files stored in S3)
+- `tasks` - Task tracking
+- `comments` - Comments on projects/tasks
 
 ## Environment Variables Reference
 
-| Variable | Description | Example |
+| Variable | Description | Default |
 |----------|-------------|---------|
-| `NODE_ENV` | Environment | `development` |
 | `PORT` | API server port | `3000` |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/db` |
-| `AWS_ENDPOINT_URL` | LocalStack endpoint (local only) | `http://localhost:4566` |
-| `AWS_REGION` | AWS region | `us-west-2` |
-| `AWS_ACCESS_KEY_ID` | AWS credentials (use "test" for LocalStack) | `test` |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials (use "test" for LocalStack) | `test` |
-| `S3_BUCKET_NAME` | S3 bucket for documents | `connect2-documents-dev` |
-| `DOCUMENT_QUEUE_URL` | SQS queue URL | `http://localhost:4566/000000000000/connect2-document-processing` |
-
-## Production Deployment
-
-To deploy to real AWS, simply remove the LocalStack-specific environment variables:
-
-```bash
-# Remove these for production:
-# AWS_ENDPOINT_URL=...
-
-# Use real AWS credentials:
-AWS_ACCESS_KEY_ID=<your-aws-key>
-AWS_SECRET_ACCESS_KEY=<your-aws-secret>
-AWS_REGION=us-west-2
-
-# Use real S3 bucket:
-S3_BUCKET_NAME=connect2-documents-prod
-
-# Use real SQS queue URL:
-DOCUMENT_QUEUE_URL=https://sqs.us-west-2.amazonaws.com/...
-```
-
-The code works identically with zero changes!
+| `NODE_ENV` | Environment mode | `development` |
+| `DB_HOST` | PostgreSQL host | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `connect_db` |
+| `DB_USER` | Database user | `connect_user` |
+| `DB_PASSWORD` | Database password | `connect_password` |
+| `AWS_REGION` | AWS region | `us-east-1` |
+| `AWS_ACCESS_KEY_ID` | AWS access key | `test` |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret key | `test` |
+| `AWS_ENDPOINT_URL` | LocalStack endpoint | `http://localhost:4566` |
+| `S3_BUCKET_NAME` | S3 bucket for documents | `connect-documents` |
+| `S3_FORCE_PATH_STYLE` | Use path-style S3 URLs | `true` |
+| `SQS_QUEUE_URL` | SQS queue for notifications | `http://localhost:4566/000000000000/connect-notifications` |
 
 ## Next Steps
 
-1. **Add Authentication** - Implement JWT auth middleware
-2. **Add Validation** - Use Joi for request validation
-3. **Add Tests** - Write unit and integration tests
-4. **Add More Endpoints** - Loans, draws, tasks, etc.
-5. **Add Worker Process** - Separate worker for queue processing
-6. **Add Error Handling** - Centralized error middleware
+After setting up the API:
 
-## Resources
+1. **Implement authentication** (DP01-23) - Add JWT-based auth middleware
+2. **Add comprehensive error handling** - Standardize API error responses
+3. **Write unit tests** - Use Jest or Mocha for testing
+4. **Add API documentation** - Use Swagger/OpenAPI spec
+5. **Implement logging** - Use Winston or Pino for structured logs
+6. **Add request validation** - Use Joi or Zod schemas
+7. **Deploy to AWS** - Replace LocalStack with real AWS services
 
-- [AWS SDK for JavaScript v3](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/)
-- [LocalStack Documentation](https://docs.localstack.cloud/)
-- [Express.js Guide](https://expressjs.com/en/guide/routing.html)
-- [Node.js PostgreSQL Tutorial](https://node-postgres.com/)
+## Troubleshooting
 
----
+**Port already in use:**
+```bash
+# Change PORT in .env to a different value (e.g., 3001)
+PORT=3001 npm run dev
+```
 
-**This is example code for demonstration purposes. Production code should include:**
-- Comprehensive error handling
-- Input validation
-- Authentication & authorization
-- Rate limiting
-- Logging & monitoring
-- Security best practices
+**Cannot connect to PostgreSQL:**
+```bash
+# Verify PostgreSQL is running
+docker ps | grep postgres
+
+# Check connection details match docker-compose.yml
+cat .env | grep DB_
+```
+
+**Cannot connect to LocalStack:**
+```bash
+# Verify LocalStack is running
+docker ps | grep localstack
+
+# Check LocalStack logs
+docker logs localstack-main
+
+# Test S3 connectivity
+aws --endpoint-url=http://localhost:4566 s3 ls
+```
+
+**TypeScript compilation errors:**
+```bash
+# Clean build and reinstall
+rm -rf node_modules dist
+npm install
+npm run build
+```
+
+## Related Documentation
+
+- **Project Charter:** [../../Datapage Platform Program — Project Charter.txt](../../Datapage%20Platform%20Program%20—%20Project%20Charter.txt)
+- **Product Requirements:** [../../PRODUCT_REQUIREMENTS_DOCUMENT.md](../../PRODUCT_REQUIREMENTS_DOCUMENT.md)
+- **Technology Stack:** [../../TECHNOLOGY_STACK_DECISION.md](../../TECHNOLOGY_STACK_DECISION.md)
+- **Database Schema:** [../../scripts/init-db.sql](../../scripts/init-db.sql)
+- **LocalStack Setup:** [../../LOCAL_DEVELOPMENT_PLAN.md](../../LOCAL_DEVELOPMENT_PLAN.md)
+- **Jira Epic:** [DP01-22 (Core API Development)](https://vividcg.atlassian.net/browse/DP01-22)
+
+## License
+
+UNLICENSED - Internal use only for Datapage Platform development.
