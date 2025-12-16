@@ -1,0 +1,176 @@
+version: '3.8'
+
+services:
+  # LocalStack - AWS Service Emulation
+  localstack:
+    container_name: connect2-localstack
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"            # LocalStack Gateway (all services)
+      - "4510-4559:4510-4559"  # External services port range
+    environment:
+      - SERVICES=s3,sqs,sns,secretsmanager,iam,cloudwatch,logs,events
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY:-}  # Only if using Pro
+    volumes:
+      - "./localstack-data:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./scripts/localstack-init.sh:/etc/localstack/init/ready.d/init.sh"
+    networks:
+      - connect2-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # PostgreSQL - Primary Database
+  postgres:
+    container_name: connect2-postgres
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=connect2_dev
+      - POSTGRES_USER=connect_user
+      - POSTGRES_PASSWORD=connect_dev_password
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U connect_user -d connect2_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - connect2-network
+
+  # Redis - Cache Layer
+  redis:
+    container_name: connect2-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - connect2-network
+
+  # Application Backend API (Node.js example)
+  # Uncomment and adjust when you have backend code
+  # api:
+  #   container_name: connect2-api
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://connect_user:connect_dev_password@postgres:5432/connect2_dev
+  #     - REDIS_URL=redis://redis:6379
+  #     - AWS_ENDPOINT_URL=http://localstack:4566
+  #     - AWS_ACCESS_KEY_ID=test
+  #     - AWS_SECRET_ACCESS_KEY=test
+  #     - AWS_REGION=us-west-2
+  #     - S3_BUCKET_NAME=connect2-documents-dev
+  #     - LOG_LEVEL=debug
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     localstack:
+  #       condition: service_healthy
+  #   networks:
+  #     - connect2-network
+  #   command: npm run dev
+
+  # Background Worker (Optional - for async tasks)
+  # worker:
+  #   container_name: connect2-worker
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.dev
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgresql://connect_user:connect_dev_password@postgres:5432/connect2_dev
+  #     - REDIS_URL=redis://redis:6379
+  #     - AWS_ENDPOINT_URL=http://localstack:4566
+  #     - AWS_ACCESS_KEY_ID=test
+  #     - AWS_SECRET_ACCESS_KEY=test
+  #     - AWS_REGION=us-west-2
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     localstack:
+  #       condition: service_healthy
+  #   networks:
+  #     - connect2-network
+  #   command: npm run worker
+
+  # Frontend (React example - optional for full-stack dev)
+  # frontend:
+  #   container_name: connect2-frontend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "3001:3001"
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:3000/api
+  #     - NODE_ENV=development
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - connect2-network
+  #   command: npm start
+
+  # pgAdmin - Database Management UI (Optional)
+  pgadmin:
+    container_name: connect2-pgadmin
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@connect2.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - connect2-network
+    profiles:
+      - tools  # Only start with: docker-compose --profile tools up
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+networks:
+  connect2-network:
+    driver: bridge

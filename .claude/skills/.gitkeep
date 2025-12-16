@@ -1,0 +1,3 @@
+# Team agent skills go in this directory
+# Each skill is a subdirectory with a SKILL.md file
+# See .claude/README.md for examples
