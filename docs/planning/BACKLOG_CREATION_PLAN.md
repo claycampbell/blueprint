@@ -67,7 +67,7 @@ Based on the PRD and technical documents, organize backlog into these epics:
 | **E10** | **Servicing Module** | Draw management, inspections, payments | Days 91-180 |
 | **E11** | **Contact Management** | Agents, builders, consultants, borrowers | Days 1-90 |
 | **E12** | **BPO Integration** | Temporary API integration with legacy BPO | Days 1-90 |
-| **E13** | **External Integrations** | DocuSign, Azure AI, email, SMS | Days 1-90 |
+| **E13** | **External Integrations** | DocuSign, AWS AI (Textract, Bedrock), email, SMS | Days 1-90 |
 | **E14** | **Analytics & Reporting** | Dashboards, metrics, exports | Days 91-180 |
 | **E15** | **DevOps & Infrastructure** | CI/CD, monitoring, deployment | Ongoing |
 
@@ -182,7 +182,7 @@ Use Fibonacci sequence for relative sizing:
 | Task ID | Description | Technical Document Reference | Story Points | Priority | Dependencies |
 |---------|-------------|----------------------------|--------------|----------|--------------|
 | E7-T1 | Create `documents` table | DATABASE_SCHEMA.md lines 573-614 | 3 | P0 | E2 |
-| E7-T2 | Set up cloud object storage (S3/Azure Blob) | SYSTEM_ARCHITECTURE.md lines 429-495 | 5 | P0 | E15 (Infra) |
+| E7-T2 | Set up cloud object storage (S3) | SYSTEM_ARCHITECTURE.md lines 429-495 | 5 | P0 | E15 (Infra) |
 | E7-T3 | Implement POST `/documents` (multipart upload) | API_SPECIFICATION.md lines 779-808 | 5 | P0 | E7-T1, E7-T2 |
 | E7-T4 | Implement GET `/documents/{id}` API | API_SPECIFICATION.md lines 810-842 | 2 | P0 | E7-T1 |
 | E7-T5 | Implement GET `/documents/{id}/download` (signed URL) | API_SPECIFICATION.md lines 844-849 | 3 | P0 | E7-T2 |
@@ -198,7 +198,7 @@ Use Fibonacci sequence for relative sizing:
 
 ---
 
-#### Feature: AI Document Extraction (Azure Document Intelligence)
+#### Feature: AI Document Extraction (AWS Textract)
 
 **User Story E7-US2:** As a user, when I upload a survey/title report, the system should automatically extract key data so I don't have to manually enter it.
 
@@ -206,7 +206,7 @@ Use Fibonacci sequence for relative sizing:
 
 | Task ID | Description | Technical Document Reference | Story Points | Priority | Dependencies |
 |---------|-------------|----------------------------|--------------|----------|--------------|
-| E7-T13 | Set up Azure Document Intelligence service | INTEGRATION_SPECIFICATIONS.md section 5 | 3 | P1 | E15 (Infra) |
+| E7-T13 | Set up AWS Textract service | INTEGRATION_SPECIFICATIONS.md section 5 | 3 | P1 | E15 (Infra) |
 | E7-T14 | Create document processing queue (async job) | SYSTEM_ARCHITECTURE.md lines 99-101 | 5 | P1 | E15 |
 | E7-T15 | Implement survey extraction logic | Integration spec | 8 | P1 | E7-T13 |
 | E7-T16 | Implement title report extraction | Integration spec | 8 | P1 | E7-T13 |
@@ -215,7 +215,7 @@ Use Fibonacci sequence for relative sizing:
 | E7-T19 | Build UI to display extracted data | Frontend | 5 | P1 | E7-T17 |
 | E7-T20 | Allow user to edit/correct extracted data | Frontend + API | 5 | P2 | E7-T19 |
 | E7-T21 | Unit tests for extraction service | TESTING_STRATEGY.md | 3 | P1 | E7-T15 |
-| E7-T22 | Integration test with mock Azure AI | TESTING_STRATEGY.md | 3 | P1 | E7-T15 |
+| E7-T22 | Integration test with mock AWS Textract | TESTING_STRATEGY.md | 3 | P1 | E7-T15 |
 
 **Total Estimated Points:** 46 points (~9 weeks, can be done in parallel with E7-US1)
 
@@ -353,7 +353,7 @@ Use Fibonacci sequence for relative sizing:
 |---------|-------------|----------------------------|--------------|----------|--------------|
 | E1-T1 | **Tech Stack Decision:** Backend language (Node.js/Python/Go) | SYSTEM_ARCHITECTURE.md lines 120-141 | — | P0 | Leadership |
 | E1-T2 | **Tech Stack Decision:** Frontend framework (React/Vue) | SYSTEM_ARCHITECTURE.md lines 142-149 | — | P0 | Leadership |
-| E1-T3 | **Tech Stack Decision:** Cloud provider (AWS/Azure/GCP) | SYSTEM_ARCHITECTURE.md lines 432-495 | — | P0 | Leadership |
+| E1-T3 | **Tech Stack Decision:** Cloud provider (AWS selected Dec 2025) | SYSTEM_ARCHITECTURE.md lines 432-495 | — | P0 | Leadership |
 | E1-T4 | Set up GitHub repository structure (monorepo or multi-repo) | DEVELOPMENT_GUIDE.md | 2 | P0 | E1-T1, E1-T2 |
 | E1-T5 | Initialize backend project (Fastify + TypeScript) | SYSTEM_ARCHITECTURE.md lines 135-141 | 3 | P0 | E1-T1, E1-T4 |
 | E1-T6 | Initialize frontend project (React + Vite) | SYSTEM_ARCHITECTURE.md lines 142-149 | 3 | P0 | E1-T2, E1-T4 |
@@ -423,7 +423,7 @@ Use Fibonacci sequence for relative sizing:
 | E15-T7 | Set up log aggregation (ELK or cloud logging) | SYSTEM_ARCHITECTURE.md line 161 | 5 | P1 | E15-T3 |
 | E15-T8 | Configure alerting for critical failures | DEPLOYMENT_DEVOPS.md | 3 | P1 | E15-T6 |
 | E15-T9 | Implement health check endpoint (`/health`) | SYSTEM_ARCHITECTURE.md lines 801-809 | 2 | P0 | E1-T5 |
-| E15-T10 | Set up Redis cache (ElastiCache/Azure Cache) | SYSTEM_ARCHITECTURE.md lines 463-465 | 5 | P1 | E1-T3 |
+| E15-T10 | Set up Redis cache (ElastiCache) | SYSTEM_ARCHITECTURE.md lines 463-465 | 5 | P1 | E1-T3 |
 | E15-T11 | Implement infrastructure as code (Terraform/CloudFormation) | DEPLOYMENT_DEVOPS.md | 8 | P2 | E1-T3 |
 | E15-T12 | Document deployment runbook | DEPLOYMENT_DEVOPS.md | 3 | P1 | E15-T4 |
 
@@ -696,7 +696,7 @@ For each epic:
 | Epic | PRD Section | API Spec Sections | Database Tables | Integration Specs |
 |------|-------------|-------------------|-----------------|-------------------|
 | E6 (Entitlement) | Section 5.3 | Implicit (projects sub-resource) | entitlement, permit_corrections, plan_library | Section 9 (internal) |
-| E7 (Documents) | Section 5.6 | Lines 779-849 | documents | Section 5 (Azure AI) |
+| E7 (Documents) | Section 5.6 | Lines 779-849 | documents | Section 5 (AWS Textract) |
 | E9 (Lending) | Section 5.7 | Lines 486-635 | loans, loan_guarantors | Section 8 (Accounting) |
 | E10 (Servicing) | Section 5.8 | Lines 638-710 | loan_draws, inspections | Section 3 (iPad) |
 | E12 (BPO) | Section 2.2 | N/A (external system) | projects (mapping) | Section 2 |
