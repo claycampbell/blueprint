@@ -194,14 +194,23 @@ scripts/*-temp.py
 ```
 
 **When Completing Jira Tasks:**
+
+⚠️ **CRITICAL RULE:** Never mark a Jira task as "Done" until the PR has been reviewed, approved, and merged. Work is not complete until it's in the main branch.
+
+**Correct Workflow:**
 1. Complete the work on your feature branch
 2. Run validation/tests to confirm everything works
 3. Commit all changes with descriptive messages
-4. Mark Jira task as DONE with detailed completion comment
-5. Push branch and create PR
-6. Tag reviewer (or self-merge if authorized)
-7. Merge PR after approval
-8. Delete feature branch
+4. Push branch and create PR
+5. Hand off to reviewer using `scripts/handoff-for-review.py` (transitions to "Code Review", assigns reviewer)
+6. **After PR is approved and merged**, use `scripts/complete-review.py --approve` (transitions to "Done")
+7. Delete feature branch
+
+**Wrong Workflow (DO NOT DO THIS):**
+- ❌ Marking tasks "Done" before creating PR
+- ❌ Marking tasks "Done" before code review
+- ❌ Marking tasks "Done" before merge to main
+- ❌ Self-assigning code review tasks (assign to reviewer instead)
 
 **Example Complete Workflow:**
 ```bash
@@ -225,8 +234,16 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 git push -u origin clay/localstack-environment-setup
 gh pr create --title "LocalStack Environment Setup" --body "Completes DP01-148 and DP01-149..."
 
-# After approval, merge via GitHub UI or CLI
-gh pr merge --squash --delete-branch
+# Hand off to reviewer (transitions to "Code Review", assigns reviewer)
+python scripts/handoff-for-review.py DP01-148 \
+  --reviewer "Elrond Sheppard" \
+  --pr-url "https://github.com/org/repo/pull/123"
+
+# ⏳ Wait for review...
+
+# After reviewer approves and merges
+# (Reviewer runs: scripts/complete-review.py DP01-148 --approve)
+# This transitions tasks to "Done" status
 ```
 
 **PR Review Checklist:**

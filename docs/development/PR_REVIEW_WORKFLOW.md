@@ -2,12 +2,23 @@
 
 This document describes the complete workflow for handing off work between engineers during the PR review process.
 
+## ⚠️ CRITICAL RULE: When to Mark Tasks "Done"
+
+**Never mark a Jira task as "Done" until:**
+1. ✅ Code is committed and pushed
+2. ✅ PR is created and linked
+3. ✅ PR has been reviewed by another engineer
+4. ✅ PR has been approved
+5. ✅ PR has been merged to main branch
+
+**Work is not complete until it's merged to main and reviewed.**
+
 ## Overview
 
 The DP01 project uses a standard Jira workflow with these key states:
 - **In Progress** - Developer actively coding
-- **Code Review** - PR created, awaiting review
-- **Done** - PR approved and merged
+- **Code Review** - PR created, awaiting review (assigned to reviewer)
+- **Done** - PR approved, reviewed, and merged to main
 - **Reopened** - Changes requested, returned to author
 
 ## Workflow Diagram
