@@ -50,3 +50,17 @@ Thumbs.db
 *.tmp
 *.temp
 nul
+
+# LocalStack data (runtime state)
+localstack-data/
+
+# Time tracking reports (temporary/generated)
+TIME_ESTIMATES_REPORT.md
+TIME_ESTIMATES_SPREADSHEET.csv
+scripts/time-logged-tasks-summary.txt
+
+# Planning documents (temporary)
+docs/planning/TIME_ESTIMATION_METHODOLOGY.md
+
+# Claude Code personal settings
+.claude/settings.local.json
