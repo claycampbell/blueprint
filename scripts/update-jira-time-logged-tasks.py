@@ -3,6 +3,8 @@ Update Jira tasks that we logged time to in Everhour.
 Mark tasks as In Progress or Done based on the time logged.
 """
 
+import os
+import sys
 import requests
 from requests.auth import HTTPBasicAuth
 import sys
@@ -13,7 +15,12 @@ JIRA_API_URL = f"{JIRA_BASE_URL}/rest/api/3"
 PROJECT_KEY = "DP01"
 
 # Everhour configuration
-EVERHOUR_API_TOKEN = "a25e-e33f-b2662e-3c5019-6f6073e6"
+EVERHOUR_API_TOKEN = os.getenv("EVERHOUR_API_TOKEN")
+
+if not EVERHOUR_API_TOKEN:
+    print("[ERROR] EVERHOUR_API_TOKEN environment variable must be set")
+    print("        Generate token at: https://everhour.com/app/settings/my-profile")
+    sys.exit(1)
 EVERHOUR_BASE_URL = "https://api.everhour.com"
 DP01_PROJECT_ID = "jr:6091-12165"
 
