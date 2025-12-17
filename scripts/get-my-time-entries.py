@@ -3,13 +3,20 @@ Get time entries for the current user.
 Uses the user's own time endpoint which doesn't require admin permissions.
 """
 
+import os
+import sys
 import requests
 import json
 from datetime import datetime, timedelta
 from collections import defaultdict
 
 # API Configuration
-EVERHOUR_API_TOKEN = "a25e-e33f-b2662e-3c5019-6f6073e6"
+EVERHOUR_API_TOKEN = os.getenv("EVERHOUR_API_TOKEN")
+
+if not EVERHOUR_API_TOKEN:
+    print("[ERROR] EVERHOUR_API_TOKEN environment variable must be set")
+    print("        Generate token at: https://everhour.com/app/settings/my-profile")
+    sys.exit(1)
 BASE_URL = "https://api.everhour.com"
 
 def get_current_user():

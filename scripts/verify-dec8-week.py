@@ -1,5 +1,5 @@
 """
-Verify time entries for the week of November 24, 2025.
+Verify time entries for the week of December 8, 2025.
 """
 
 import os
@@ -54,14 +54,14 @@ def get_task_details(task_id):
     return response.json()
 
 def main():
-    """Verify time entries for November 24-28, 2025."""
+    """Verify time entries for December 8-12, 2025."""
 
-    print("Verifying time entries for week of November 24, 2025")
+    print("Verifying time entries for week of December 8, 2025")
     print("=" * 80)
 
     # Get time entries for the week
-    start_date = "2025-11-24"
-    end_date = "2025-11-28"
+    start_date = "2025-12-08"
+    end_date = "2025-12-12"
 
     print(f"\nFetching time entries from {start_date} to {end_date}...\n")
 
@@ -96,7 +96,14 @@ def main():
         for entry in day_entries:
             # Everhour stores time in SECONDS, not milliseconds
             hours = entry.get('time', 0) / 3600
-            task_id = entry.get('task')
+
+            # Extract task ID
+            task_data = entry.get('task')
+            if isinstance(task_data, dict):
+                task_id = task_data.get('id')
+            else:
+                task_id = task_data
+
             comment = entry.get('comment', 'No comment')
 
             # Try to get task name

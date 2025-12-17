@@ -1,12 +1,11 @@
 """
-Populate time entries for a specific week.
-This script adds realistic time entries across multiple tasks.
+Populate time entries for the week of December 8, 2025.
 """
 
 import os
 import sys
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # API Configuration
 EVERHOUR_API_TOKEN = os.getenv("EVERHOUR_API_TOKEN")
@@ -37,7 +36,6 @@ def get_project_tasks(project_id):
 def add_time_to_task(task_id, hours, date, comment=""):
     """Add time entry to a task."""
     # Convert hours to seconds (NOT milliseconds!)
-    # Despite API docs saying milliseconds, Everhour actually expects seconds
     time_seconds = int(hours * 3600)
 
     payload = {
@@ -57,14 +55,10 @@ def add_time_to_task(task_id, hours, date, comment=""):
     return response.json()
 
 def main():
-    """Populate 20 hours for the week of November 24, 2025."""
+    """Populate 20 hours for the week of December 8, 2025."""
 
-    print("Populating time entries for week of November 24, 2025")
+    print("Populating time entries for week of December 8, 2025")
     print("=" * 60)
-
-    # Week dates: November 24-30, 2025 (Monday-Sunday)
-    # We'll use Monday-Friday for 20 hours
-    week_start = datetime(2025, 11, 24)  # Monday
 
     # Get all DP01 tasks
     print(f"\nFetching tasks from DP01 project...")
@@ -72,11 +66,11 @@ def main():
     print(f"Found {len(tasks)} tasks")
 
     # Filter for tasks that are in progress or recently worked on
-    # We'll use tasks with names containing key work areas
     target_keywords = [
         "infrastructure", "setup", "docker", "localstack",
         "database", "api", "authentication", "backend",
-        "frontend", "framework", "repository", "planning"
+        "frontend", "framework", "repository", "planning",
+        "testing", "deployment", "documentation"
     ]
 
     relevant_tasks = []
@@ -87,7 +81,6 @@ def main():
 
     print(f"\nFound {len(relevant_tasks)} relevant tasks")
 
-    # If we don't have enough tasks, use the first available ones
     if len(relevant_tasks) < 5:
         relevant_tasks = tasks[:10]
 
@@ -96,49 +89,49 @@ def main():
     for i, task in enumerate(relevant_tasks[:10], 1):
         print(f"  {i}. {task.get('name')[:60]}...")
 
-    # Time distribution for the week (Monday-Friday, 20 hours total)
-    # Realistic daily distribution: 3, 4, 5, 4, 4 hours
+    # Time distribution for week of Dec 8-12 (Monday-Friday)
+    # Realistic daily distribution: 4, 3, 5, 4, 4 hours
     time_entries = [
         {
-            "date": "2025-11-24",  # Monday
+            "date": "2025-12-08",  # Monday
+            "hours": 4,
+            "tasks": [
+                {"task_idx": 0, "hours": 2, "comment": "API security review and hardening"},
+                {"task_idx": 1, "hours": 2, "comment": "User authentication flow testing"},
+            ]
+        },
+        {
+            "date": "2025-12-09",  # Tuesday
             "hours": 3,
             "tasks": [
-                {"task_idx": 0, "hours": 1.5, "comment": "Initial project setup and planning"},
-                {"task_idx": 1, "hours": 1.5, "comment": "Docker environment configuration"},
+                {"task_idx": 2, "hours": 2, "comment": "Database indexing optimization"},
+                {"task_idx": 3, "hours": 1, "comment": "API documentation review"},
             ]
         },
         {
-            "date": "2025-11-25",  # Tuesday
-            "hours": 4,
-            "tasks": [
-                {"task_idx": 2, "hours": 2, "comment": "Database schema design and documentation"},
-                {"task_idx": 3, "hours": 2, "comment": "API framework selection and evaluation"},
-            ]
-        },
-        {
-            "date": "2025-11-26",  # Wednesday
+            "date": "2025-12-10",  # Wednesday
             "hours": 5,
             "tasks": [
-                {"task_idx": 4, "hours": 2.5, "comment": "LocalStack integration and testing"},
-                {"task_idx": 5, "hours": 1.5, "comment": "Authentication system design"},
-                {"task_idx": 0, "hours": 1, "comment": "Project documentation updates"},
+                {"task_idx": 4, "hours": 2.5, "comment": "Integration testing suite development"},
+                {"task_idx": 5, "hours": 1.5, "comment": "CI/CD pipeline troubleshooting"},
+                {"task_idx": 1, "hours": 1, "comment": "Authentication middleware updates"},
             ]
         },
         {
-            "date": "2025-11-27",  # Thursday (Thanksgiving - US holiday, light work)
+            "date": "2025-12-11",  # Thursday
             "hours": 4,
             "tasks": [
-                {"task_idx": 1, "hours": 2, "comment": "Repository structure and Git setup"},
-                {"task_idx": 6, "hours": 2, "comment": "Development environment documentation"},
+                {"task_idx": 6, "hours": 2, "comment": "Frontend state management implementation"},
+                {"task_idx": 0, "hours": 2, "comment": "API rate limiting configuration"},
             ]
         },
         {
-            "date": "2025-11-28",  # Friday (day after Thanksgiving)
+            "date": "2025-12-12",  # Friday
             "hours": 4,
             "tasks": [
-                {"task_idx": 7, "hours": 2, "comment": "Backend framework implementation"},
-                {"task_idx": 8, "hours": 1.5, "comment": "Frontend framework evaluation"},
-                {"task_idx": 2, "hours": 0.5, "comment": "Database migration scripts"},
+                {"task_idx": 7, "hours": 2, "comment": "End-to-end testing scenarios"},
+                {"task_idx": 8, "hours": 1, "comment": "Production deployment checklist"},
+                {"task_idx": 2, "hours": 1, "comment": "Database backup strategy implementation"},
             ]
         }
     ]
@@ -153,7 +146,7 @@ def main():
     # Show summary
     print(f"\n{'='*60}")
     print("Ready to populate time entries:")
-    print(f"  Week: November 24-28, 2025")
+    print(f"  Week: December 8-12, 2025")
     print(f"  Total: {total_hours} hours")
     print(f"  Days: {len(time_entries)} days")
     print(f"  Entries: {sum(len(day['tasks']) for day in time_entries)} individual entries")

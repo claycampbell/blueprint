@@ -2,12 +2,19 @@
 Test script for Everhour API connection and basic operations.
 """
 
+import os
+import sys
 import requests
 import json
 from datetime import datetime, timedelta
 
 # API Configuration
-EVERHOUR_API_TOKEN = "a25e-e33f-b2662e-3c5019-6f6073e6"
+EVERHOUR_API_TOKEN = os.getenv("EVERHOUR_API_TOKEN")
+
+if not EVERHOUR_API_TOKEN:
+    print("[ERROR] EVERHOUR_API_TOKEN environment variable must be set")
+    print("        Generate token at: https://everhour.com/app/settings/my-profile")
+    sys.exit(1)
 BASE_URL = "https://api.everhour.com"
 
 class EverhourClient:
