@@ -146,10 +146,40 @@ The PRD is the consolidated source of truth. When updating:
 - ✅ Documentation updates (markdown files, guides)
 - ✅ Configuration files (docker-compose.yml, init scripts)
 - ✅ Infrastructure as code (Terraform, CloudFormation)
+- ✅ Reusable automation scripts (get-sprint-tasks.py, transition-tasks.py)
 - ❌ `.env` files (use `.env.example` instead)
 - ❌ `localstack-data/` or other volume directories
 - ❌ Personal IDE settings (`.claude/settings.local.json`)
 - ❌ Sensitive credentials or API tokens
+- ❌ Temporary/one-off scripts (see Cleanup Rule below)
+
+**Cleanup Rule: Temporary Scripts**
+
+One-off scripts created for specific tasks should be **deleted after use**, not committed:
+
+**Temporary Scripts (DELETE):**
+- Bulk Jira ticket creation scripts (e.g., `create-dp01-22-tasks.py`)
+- One-time data migration/transformation scripts
+- Ad-hoc testing/debugging scripts
+- Scripts with hardcoded values for a specific task
+
+**Reusable Scripts (KEEP):**
+- Scripts that are part of ongoing workflow (e.g., `get-available-track3-tasks.py`)
+- Scripts documented in README or project docs
+- Scripts that accept parameters and can be reused
+
+**Cleanup Process:**
+1. After task completion, review created files
+2. Delete temporary scripts: `rm scripts/temp-script.py`
+3. If pattern-based, ensure .gitignore excludes them (e.g., `scripts/create-*.py`)
+4. Commit cleanup as part of PR or separate cleanup commit
+
+**Current .gitignore patterns for temp scripts:**
+```
+scripts/temp-*.py
+scripts/create-*.py
+scripts/*-temp.py
+```
 
 **When Completing Jira Tasks:**
 1. Complete the work on your feature branch
