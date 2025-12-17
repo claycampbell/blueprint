@@ -53,11 +53,8 @@ export class Task extends BaseEntity {
    */
   @ManyToOne('User', 'assigned_tasks', { nullable: true })
   @JoinColumn({ name: 'assigned_to' })
-  assigned_to?: User;
-
-  @Column({ name: 'assigned_to', type: 'uuid', nullable: true })
   @Index('idx_tasks_assigned_to')
-  assigned_to_id?: string;
+  assigned_to?: User;
 
   /**
    * External contact (consultant) assigned to this task.
@@ -68,20 +65,14 @@ export class Task extends BaseEntity {
   @JoinColumn({ name: 'assigned_contact' })
   assigned_contact?: Contact;
 
-  @Column({ name: 'assigned_contact', type: 'uuid', nullable: true })
-  assigned_contact_id?: string;
-
   /**
    * Project this task is associated with.
    * Nullable to support loan-only or standalone tasks.
    */
   @ManyToOne('Project', 'tasks', { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
-  project?: Project;
-
-  @Column({ name: 'project_id', type: 'uuid', nullable: true })
   @Index('idx_tasks_project_id')
-  project_id?: string;
+  project?: Project;
 
   /**
    * Loan this task is associated with.
@@ -89,11 +80,8 @@ export class Task extends BaseEntity {
    */
   @ManyToOne('Loan', { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'loan_id' })
-  loan?: Loan;
-
-  @Column({ name: 'loan_id', type: 'uuid', nullable: true })
   @Index('idx_tasks_loan_id')
-  loan_id?: string;
+  loan?: Loan;
 
   /**
    * Task due date.
@@ -129,7 +117,4 @@ export class Task extends BaseEntity {
   @ManyToOne('User', 'created_tasks', { nullable: true })
   @JoinColumn({ name: 'created_by' })
   created_by?: any; // Will be typed as User once that entity is created
-
-  @Column({ name: 'created_by', type: 'uuid', nullable: true })
-  created_by_id?: string;
 }

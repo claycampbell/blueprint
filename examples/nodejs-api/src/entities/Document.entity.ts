@@ -33,11 +33,8 @@ export class Document extends BaseEntity {
    */
   @ManyToOne('Project', 'documents', { nullable: true })
   @JoinColumn({ name: 'project_id' })
-  project?: Project;
-
-  @Column({ name: 'project_id', type: 'uuid', nullable: true })
   @Index('idx_documents_project_id')
-  project_id?: string;
+  project?: Project;
 
   /**
    * Optional loan this document belongs to.
@@ -45,11 +42,8 @@ export class Document extends BaseEntity {
    */
   @ManyToOne('Loan', { nullable: true })
   @JoinColumn({ name: 'loan_id' })
-  loan?: Loan;
-
-  @Column({ name: 'loan_id', type: 'uuid', nullable: true })
   @Index('idx_documents_loan_id')
-  loan_id?: string;
+  loan?: Loan;
 
   /**
    * Optional consultant task this document was delivered for.
@@ -58,9 +52,6 @@ export class Document extends BaseEntity {
   @ManyToOne('ConsultantTask', { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'consultant_task_id' })
   consultant_task?: ConsultantTask;
-
-  @Column({ name: 'consultant_task_id', type: 'uuid', nullable: true })
-  consultant_task_id?: string;
 
   /**
    * Document type classification.
@@ -146,9 +137,6 @@ export class Document extends BaseEntity {
   @ManyToOne('User', { nullable: true })
   @JoinColumn({ name: 'uploaded_by' })
   uploaded_by?: User;
-
-  @Column({ name: 'uploaded_by', type: 'uuid', nullable: true })
-  uploaded_by_id?: string;
 
   /**
    * Timestamp when the document was uploaded.

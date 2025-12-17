@@ -136,14 +136,6 @@ export class Contact extends BaseEntity {
   created_by?: User;
 
   /**
-   * UUID of the user who created this contact (foreign key).
-   * Stored separately from the relation for efficient queries.
-   */
-  @Column({ type: 'uuid', nullable: true, name: 'created_by' })
-  @IsOptional()
-  created_by_id?: string;
-
-  /**
    * Get contact's full name.
    * @returns Full name, company name, or email if name not set
    */

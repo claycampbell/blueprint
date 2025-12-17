@@ -134,7 +134,7 @@ export class Loan extends BaseEntity {
    * Cascade delete: deleting a loan deletes all its draws.
    */
   @OneToMany(() => Draw, draw => draw.loan, { cascade: true })
-  draws: Draw[] = [];
+  draws!: Draw[];
 
   /**
    * Collection of guarantors for this loan.
@@ -147,7 +147,7 @@ export class Loan extends BaseEntity {
     joinColumn: { name: 'loan_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'contact_id', referencedColumnName: 'id' }
   })
-  guarantors: Contact[] = [];
+  guarantors!: Contact[];
 
   /**
    * Custom validation: Ensure loan amount is positive if provided.
