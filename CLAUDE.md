@@ -137,9 +137,21 @@ The PRD is the consolidated source of truth. When updating:
    - Include Jira ticket references in PR description
    - Tag relevant reviewers
 
-7. **After PR approval, merge to main:**
+7. **Hand off for code review:**
+   ```bash
+   python scripts/handoff-for-review.py DP01-XXX \
+     --reviewer "Elrond Sheppard" \
+     --pr-url "https://github.com/org/repo/pull/123"
+   ```
+   - Automatically transitions Jira issue to "Code Review" status
+   - Assigns issue to reviewer
+   - Links PR to Jira issue
+   - See [PR Review Workflow](docs/development/PR_REVIEW_WORKFLOW.md) for complete process
+
+8. **After PR approval, merge to main:**
    - Use "Squash and merge" for clean history
    - Delete feature branch after merge
+   - Use `scripts/complete-review.py --approve` to update Jira
 
 **What to Commit:**
 - ✅ Source code changes (scripts, examples, configs)
@@ -164,7 +176,7 @@ One-off scripts created for specific tasks should be **deleted after use**, not 
 - Scripts with hardcoded values for a specific task
 
 **Reusable Scripts (KEEP):**
-- Scripts that are part of ongoing workflow (e.g., `get-available-track3-tasks.py`)
+- Scripts that are part of ongoing workflow (e.g., `get-available-track3-tasks.py`, `handoff-for-review.py`, `complete-review.py`)
 - Scripts documented in README or project docs
 - Scripts that accept parameters and can be reused
 
