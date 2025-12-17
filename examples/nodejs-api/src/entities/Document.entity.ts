@@ -3,6 +3,8 @@ import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { IsNotEmpty, IsEnum, IsOptional, IsString, IsNumber, IsObject } from 'class-validator';
 import { BaseEntity } from './BaseEntity';
 import { DocumentType } from '../types/enums';
+// Use string-based relations to avoid circular dependency issues at runtime
+// TypeScript types are imported separately for type checking only
 import type { Project } from './Project.entity';
 import type { Loan } from './Loan.entity';
 import type { ConsultantTask } from './ConsultantTask.entity';
@@ -29,7 +31,7 @@ export class Document extends BaseEntity {
    * Optional project this document belongs to.
    * Nullable to support documents uploaded before project assignment.
    */
-  @ManyToOne(() => Project, project => project.documents, { nullable: true })
+  @ManyToOne('Project', 'documents', { nullable: true })
   @JoinColumn({ name: 'project_id' })
   project?: Project;
 
@@ -41,7 +43,7 @@ export class Document extends BaseEntity {
    * Optional loan this document belongs to.
    * Nullable to support documents uploaded before loan creation.
    */
-  @ManyToOne(() => Loan, { nullable: true })
+  @ManyToOne('Loan', { nullable: true })
   @JoinColumn({ name: 'loan_id' })
   loan?: Loan;
 
@@ -53,7 +55,7 @@ export class Document extends BaseEntity {
    * Optional consultant task this document was delivered for.
    * Used when consultants upload deliverables (surveys, arborist reports, etc.)
    */
-  @ManyToOne(() => ConsultantTask, { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne('ConsultantTask', { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'consultant_task_id' })
   consultant_task?: ConsultantTask;
 
@@ -141,7 +143,7 @@ export class Document extends BaseEntity {
   /**
    * User who uploaded the document.
    */
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne('User', { nullable: true })
   @JoinColumn({ name: 'uploaded_by' })
   uploaded_by?: User;
 

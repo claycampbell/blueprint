@@ -82,7 +82,7 @@ Check your database connection and network connectivity.
 });
 
 // Test the connection on startup
-pool.query('SELECT NOW()', (err, res) => {
+pool.query('SELECT NOW()', (err: Error & { code?: string }, res) => {
   if (err) {
     const errorId = generateErrorId('DB_STARTUP');
 

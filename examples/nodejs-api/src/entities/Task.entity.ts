@@ -3,6 +3,8 @@ import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { IsNotEmpty, IsEnum, IsOptional, IsString, IsDateString } from 'class-validator';
 import { BaseEntity } from './BaseEntity';
 import { TaskStatus, TaskPriority } from '../types/enums';
+// Use string-based relations to avoid circular dependency issues at runtime
+// TypeScript types are imported separately for type checking only
 import type { User } from './User.entity';
 import type { Contact } from './Contact.entity';
 import type { Project } from './Project.entity';
@@ -49,7 +51,7 @@ export class Task extends BaseEntity {
    * Internal team member assigned to this task.
    * Nullable to support unassigned tasks or consultant-assigned tasks.
    */
-  @ManyToOne(() => User, user => user.assigned_tasks, { nullable: true })
+  @ManyToOne('User', 'assigned_tasks', { nullable: true })
   @JoinColumn({ name: 'assigned_to' })
   assigned_to?: User;
 
@@ -62,7 +64,7 @@ export class Task extends BaseEntity {
    * Nullable to support internal-only tasks.
    * Used when tasks are delegated to external parties.
    */
-  @ManyToOne(() => Contact, { nullable: true })
+  @ManyToOne('Contact', { nullable: true })
   @JoinColumn({ name: 'assigned_contact' })
   assigned_contact?: Contact;
 
@@ -73,7 +75,7 @@ export class Task extends BaseEntity {
    * Project this task is associated with.
    * Nullable to support loan-only or standalone tasks.
    */
-  @ManyToOne(() => Project, project => project.tasks, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne('Project', 'tasks', { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
   project?: Project;
 
@@ -85,7 +87,7 @@ export class Task extends BaseEntity {
    * Loan this task is associated with.
    * Nullable to support project-only or standalone tasks.
    */
-  @ManyToOne(() => Loan, { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne('Loan', { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'loan_id' })
   loan?: Loan;
 
