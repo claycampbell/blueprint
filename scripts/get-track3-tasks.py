@@ -35,7 +35,7 @@ def search_issues(auth, jql, max_results=100):
     }
 
     response = requests.post(
-        f"{JIRA_API_URL}/search/jql",
+        f"{JIRA_API_URL}/search",
         auth=auth,
         headers={"Content-Type": "application/json"},
         json=payload
