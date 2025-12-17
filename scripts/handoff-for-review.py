@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Hand off a Jira issue to another engineer for PR review.
 
@@ -16,6 +17,11 @@ import argparse
 import os
 import sys
 from pathlib import Path
+
+# Fix Windows console encoding for emojis
+if sys.platform == "win32":
+    import codecs
+    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 # Add project root to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
