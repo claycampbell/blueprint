@@ -36,6 +36,7 @@ load_dotenv()
 # Import after environment is loaded
 from jira_automation import (
     get_issue,
+    get_user_account_id,
     transition_issue,
     update_issue,
     add_comment,
@@ -123,8 +124,10 @@ def request_changes(
 
     # 4. Reassign to original author
     print(f"\n3️⃣  Reassigning {issue_key} to {assignee}...")
+    # Get account ID from display name or email
+    account_id = get_user_account_id(assignee)
     update_issue(
-        issue_key=issue_key, fields={"assignee": {"name": assignee}}
+        issue_key=issue_key, fields={"assignee": {"accountId": account_id}}
     )
     print(f"   ✅ Assigned to {assignee}")
 

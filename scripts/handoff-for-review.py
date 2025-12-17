@@ -34,6 +34,7 @@ load_dotenv()
 # Import after environment is loaded
 from jira_automation import (
     get_issue,
+    get_user_account_id,
     transition_issue,
     update_issue,
     create_remote_issue_link,
@@ -86,8 +87,10 @@ def handoff_for_review(
 
     # 3. Reassign to reviewer
     print(f"\n3️⃣  Reassigning {issue_key} to {reviewer}...")
+    # Get account ID from display name or email
+    account_id = get_user_account_id(reviewer)
     update_issue(
-        issue_key=issue_key, fields={"assignee": {"name": reviewer}}  # Use display name
+        issue_key=issue_key, fields={"assignee": {"accountId": account_id}}
     )
     print(f"   ✅ Assigned to {reviewer}")
 

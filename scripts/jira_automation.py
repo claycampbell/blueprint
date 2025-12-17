@@ -65,6 +65,45 @@ def transition_issue(issue_key: str, transition_id: str | int, comment: str | No
     response.raise_for_status()
 
 
+def search_users(query: str) -> list[dict[str, Any]]:
+    """
+    Search for Jira users by name or email.
+
+    Args:
+        query: Search query (name or email)
+
+    Returns:
+        List of user objects with accountId, displayName, etc.
+    """
+    url = f"{JIRA_API_URL}/user/search"
+    params = {"query": query}
+    response = requests.get(url, params=params, auth=get_jira_auth())
+    response.raise_for_status()
+    return response.json()
+
+
+def get_user_account_id(name_or_email: str) -> str:
+    """
+    Get Jira user account ID from display name or email.
+
+    Args:
+        name_or_email: User's display name or email
+
+    Returns:
+        Account ID string
+
+    Raises:
+        ValueError: If user not found
+    """
+    users = search_users(name_or_email)
+
+    if not users:
+        raise ValueError(f"User not found: {name_or_email}")
+
+    # Return first match
+    return users[0]["accountId"]
+
+
 def update_issue(issue_key: str, fields: dict[str, Any]) -> None:
     """
     Update Jira issue fields.
