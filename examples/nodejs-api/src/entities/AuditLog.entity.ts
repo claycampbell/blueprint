@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index, BeforeInsert, BeforeUpdate, BeforeRemove } from 'typeorm';
 import { IsNotEmpty, IsEnum, IsOptional, IsString, IsUUID, IsObject, IsIP } from 'class-validator';
 import { BaseEntity } from './BaseEntity';
 import { AuditAction } from '../types/enums';
@@ -120,4 +120,49 @@ export class AuditLog extends BaseEntity {
    */
   @Index('idx_audit_log_created_at')
   declare created_at: Date;
+
+  /**
+   * Prevent updates to audit log entries.
+   * Audit logs are immutable by design - they provide a tamper-proof record.
+   */
+  @BeforeUpdate()
+  preventUpdates() {
+    throw new Error('Audit logs are immutable and cannot be updated');
+  }
+
+  /**
+   * Prevent deletion of audit logs before retention period expires.
+   * Retention period: 7 years (2555 days) for compliance.
+   */
+  @BeforeRemove()
+  preventDeletion() {
+    const retentionDays = 2555; // 7 years
+    const retentionDate = new Date();
+    retentionDate.setDate(retentionDate.getDate() - retentionDays);
+
+    if (this.created_at > retentionDate) {
+      throw new Error('Audit logs cannot be deleted before retention period expires (7 years)');
+    }
+  }
+
+  /**
+   * Validate consistency between action type and old/new values.
+   * - INSERT: old_values must be null
+   * - DELETE: new_values must be null
+   * - UPDATE: both old_values and new_values must be present
+   */
+  @BeforeInsert()
+  validateActionValues() {
+    if (this.action === AuditAction.INSERT && this.old_values !== null && this.old_values !== undefined) {
+      throw new Error('INSERT action should have null old_values');
+    }
+    if (this.action === AuditAction.DELETE && this.new_values !== null && this.new_values !== undefined) {
+      throw new Error('DELETE action should have null new_values');
+    }
+    if (this.action === AuditAction.UPDATE) {
+      if (!this.old_values || !this.new_values) {
+        throw new Error('UPDATE action requires both old_values and new_values');
+      }
+    }
+  }
 }

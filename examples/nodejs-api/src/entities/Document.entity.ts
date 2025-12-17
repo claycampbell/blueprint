@@ -3,6 +3,10 @@ import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { IsNotEmpty, IsEnum, IsOptional, IsString, IsNumber, IsObject } from 'class-validator';
 import { BaseEntity } from './BaseEntity';
 import { DocumentType } from '../types/enums';
+import type { Project } from './Project.entity';
+import type { Loan } from './Loan.entity';
+import type { ConsultantTask } from './ConsultantTask.entity';
+import type { User } from './User.entity';
 
 /**
  * Document entity for all project and loan documents.
@@ -25,9 +29,9 @@ export class Document extends BaseEntity {
    * Optional project this document belongs to.
    * Nullable to support documents uploaded before project assignment.
    */
-  @ManyToOne('Project', 'documents', { nullable: true })
+  @ManyToOne(() => Project, project => project.documents, { nullable: true })
   @JoinColumn({ name: 'project_id' })
-  project?: any; // Will be typed as Project once that entity is created
+  project?: Project;
 
   @Column({ name: 'project_id', type: 'uuid', nullable: true })
   @Index('idx_documents_project_id')
@@ -37,9 +41,9 @@ export class Document extends BaseEntity {
    * Optional loan this document belongs to.
    * Nullable to support documents uploaded before loan creation.
    */
-  @ManyToOne('Loan', 'documents', { nullable: true })
+  @ManyToOne(() => Loan, { nullable: true })
   @JoinColumn({ name: 'loan_id' })
-  loan?: any; // Will be typed as Loan once that entity is created
+  loan?: Loan;
 
   @Column({ name: 'loan_id', type: 'uuid', nullable: true })
   @Index('idx_documents_loan_id')
@@ -49,9 +53,9 @@ export class Document extends BaseEntity {
    * Optional consultant task this document was delivered for.
    * Used when consultants upload deliverables (surveys, arborist reports, etc.)
    */
-  @ManyToOne('ConsultantTask', 'documents', { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => ConsultantTask, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'consultant_task_id' })
-  consultant_task?: any; // Will be typed as ConsultantTask once that entity is created
+  consultant_task?: ConsultantTask;
 
   @Column({ name: 'consultant_task_id', type: 'uuid', nullable: true })
   consultant_task_id?: string;
@@ -137,9 +141,9 @@ export class Document extends BaseEntity {
   /**
    * User who uploaded the document.
    */
-  @ManyToOne('User', 'uploaded_documents', { nullable: true })
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'uploaded_by' })
-  uploaded_by?: any; // Will be typed as User once that entity is created
+  uploaded_by?: User;
 
   @Column({ name: 'uploaded_by', type: 'uuid', nullable: true })
   uploaded_by_id?: string;

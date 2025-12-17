@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Entity, Column, ManyToOne, OneToMany, ManyToMany, JoinTable, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, ManyToMany, JoinTable, JoinColumn, Index, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { BaseEntity } from './BaseEntity';
 import { LoanStatus } from '../types/enums';
 import { Project } from './Project.entity';
@@ -184,5 +184,20 @@ export class Loan extends BaseEntity {
   getRemainingBalance(): number {
     if (!this.loan_amount) return 0;
     return this.loan_amount - this.getTotalDrawnAmount();
+  }
+
+  /**
+   * Execute validation before insert.
+   * Ensures loan data integrity when creating new loans.
+   */
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateBeforeSave() {
+    if (!this.validateLoanAmount()) {
+      throw new Error('Loan amount must be greater than 0');
+    }
+    if (!this.validateInterestRate()) {
+      throw new Error('Interest rate must be between 0 and 1 (e.g., 0.0950 for 9.5%)');
+    }
   }
 }

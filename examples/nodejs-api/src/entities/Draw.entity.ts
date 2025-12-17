@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Entity, Column, ManyToOne, JoinColumn, Index, Unique } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index, Unique, BeforeInsert, BeforeUpdate } from 'typeorm';
 import { BaseEntity } from './BaseEntity';
 import { DrawStatus } from '../types/enums';
 import { Loan } from './Loan.entity';
@@ -172,5 +172,23 @@ export class Draw extends BaseEntity {
       return this.requested_amount - this.approved_amount;
     }
     return null;
+  }
+
+  /**
+   * Execute validation before insert or update.
+   * Ensures draw data integrity when creating or updating draws.
+   */
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateBeforeSave() {
+    if (!this.validateRequestedAmount()) {
+      throw new Error('Requested amount must be greater than 0');
+    }
+    if (!this.validateApprovedAmount()) {
+      throw new Error('Approved amount must be greater than 0');
+    }
+    if (!this.validateApprovedVsRequested()) {
+      throw new Error('Approved amount cannot exceed requested amount');
+    }
   }
 }

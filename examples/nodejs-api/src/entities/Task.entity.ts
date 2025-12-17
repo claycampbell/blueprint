@@ -3,6 +3,10 @@ import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { IsNotEmpty, IsEnum, IsOptional, IsString, IsDateString } from 'class-validator';
 import { BaseEntity } from './BaseEntity';
 import { TaskStatus, TaskPriority } from '../types/enums';
+import type { User } from './User.entity';
+import type { Contact } from './Contact.entity';
+import type { Project } from './Project.entity';
+import type { Loan } from './Loan.entity';
 
 /**
  * Task entity for workflow management.
@@ -45,9 +49,9 @@ export class Task extends BaseEntity {
    * Internal team member assigned to this task.
    * Nullable to support unassigned tasks or consultant-assigned tasks.
    */
-  @ManyToOne('User', 'assigned_tasks', { nullable: true })
+  @ManyToOne(() => User, user => user.assigned_tasks, { nullable: true })
   @JoinColumn({ name: 'assigned_to' })
-  assigned_to?: any; // Will be typed as User once that entity is created
+  assigned_to?: User;
 
   @Column({ name: 'assigned_to', type: 'uuid', nullable: true })
   @Index('idx_tasks_assigned_to')
@@ -58,9 +62,9 @@ export class Task extends BaseEntity {
    * Nullable to support internal-only tasks.
    * Used when tasks are delegated to external parties.
    */
-  @ManyToOne('Contact', 'assigned_tasks', { nullable: true })
+  @ManyToOne(() => Contact, { nullable: true })
   @JoinColumn({ name: 'assigned_contact' })
-  assigned_contact?: any; // Will be typed as Contact once that entity is created
+  assigned_contact?: Contact;
 
   @Column({ name: 'assigned_contact', type: 'uuid', nullable: true })
   assigned_contact_id?: string;
@@ -69,9 +73,9 @@ export class Task extends BaseEntity {
    * Project this task is associated with.
    * Nullable to support loan-only or standalone tasks.
    */
-  @ManyToOne('Project', 'tasks', { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Project, project => project.tasks, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'project_id' })
-  project?: any; // Will be typed as Project once that entity is created
+  project?: Project;
 
   @Column({ name: 'project_id', type: 'uuid', nullable: true })
   @Index('idx_tasks_project_id')
@@ -81,9 +85,9 @@ export class Task extends BaseEntity {
    * Loan this task is associated with.
    * Nullable to support project-only or standalone tasks.
    */
-  @ManyToOne('Loan', 'tasks', { nullable: true, onDelete: 'CASCADE' })
+  @ManyToOne(() => Loan, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'loan_id' })
-  loan?: any; // Will be typed as Loan once that entity is created
+  loan?: Loan;
 
   @Column({ name: 'loan_id', type: 'uuid', nullable: true })
   @Index('idx_tasks_loan_id')
