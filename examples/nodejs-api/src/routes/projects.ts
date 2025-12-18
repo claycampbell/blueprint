@@ -1,15 +1,29 @@
 /**
  * Project API Routes (TypeScript)
- * RESTful endpoints for project management with S3 document integration
+ * RESTful endpoints for project management with repository pattern and DTO validation
  *
- * Implements standard REST patterns with proper error handling and status codes
+ * Implements standard REST patterns with proper error handling and status codes.
+ * Uses ProjectService for business logic and DTOs for validation.
  */
 
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
-import { uploadDocument, getDocumentSignedUrl } from '../services/s3Service.js';
-import { sendToQueue } from '../services/queueService.js';
-import { query } from '../config/database.js';
+import { uploadDocument, getPresignedUrl } from '../services/s3.service';
+import { sendMessage } from '../services/sqs.service';
+import { query } from '../config/database';
+import { projectService } from '../services/ProjectService';
+import {
+  validateBody,
+  validateQuery,
+} from '../middleware/validation.middleware';
+import {
+  CreateProjectDTO,
+  UpdateProjectDTO,
+  TransitionProjectDTO,
+  UpdateProjectStatusDTO,
+  ProjectQueryDTO,
+} from '../dtos/project.dto';
+import { NotFoundException, ValidationException } from '../exceptions/index';
 
 const router = express.Router();
 
@@ -43,41 +57,16 @@ const upload = multer({
  * GET /api/v1/projects
  * List all projects with pagination and filtering
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', validateQuery(ProjectQueryDTO), async (req: Request, res: Response) => {
   try {
-    const {
-      status,
-      city,
-      limit = '50',
-      offset = '0',
-    } = req.query;
+    const queryParams = (req as any).dto as ProjectQueryDTO;
 
-    let queryText = 'SELECT * FROM connect2.projects WHERE 1=1';
-    const params: any[] = [];
-
-    if (status && typeof status === 'string') {
-      params.push(status);
-      queryText += ` AND status = $${params.length}`;
-    }
-
-    if (city && typeof city === 'string') {
-      params.push(city);
-      queryText += ` AND city = $${params.length}`;
-    }
-
-    queryText += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
-    params.push(parseInt(limit as string, 10), parseInt(offset as string, 10));
-
-    const result = await query(queryText, params);
+    const result = await projectService.listProjects(queryParams);
 
     res.json({
       success: true,
-      data: {
-        projects: result.rows,
-        count: result.rows.length,
-        limit: parseInt(limit as string, 10),
-        offset: parseInt(offset as string, 10),
-      },
+      data: result.items,
+      pagination: result.meta,
     });
   } catch (error) {
     console.error('Error listing projects:', error);
@@ -96,23 +85,20 @@ router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const result = await query(
-      'SELECT * FROM connect2.projects WHERE id = $1',
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found',
-      });
-    }
+    const project = await projectService.getProjectById(id);
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data: project,
     });
   } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     console.error('Error fetching project:', error);
     res.status(500).json({
       success: false,
@@ -122,42 +108,84 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/v1/projects
- * Create a new project
+ * GET /api/v1/projects/:id/feasibility
+ * Get project feasibility record
  */
-router.post('/', async (req: Request, res: Response) => {
+router.get('/:id/feasibility', async (req: Request, res: Response) => {
   try {
-    const {
-      address,
-      city,
-      state,
-      zip,
-      purchasePrice,
-      listPrice,
-      submittedBy,
-      assignedTo,
-    } = req.body;
+    const { id } = req.params;
 
-    // Validate required fields
-    if (!address || !city || !state) {
-      return res.status(400).json({
+    const feasibility = await projectService.getProjectFeasibility(id);
+
+    if (!feasibility) {
+      return res.status(404).json({
         success: false,
-        error: 'Missing required fields: address, city, state',
+        error: 'Feasibility record not found for this project',
       });
     }
 
-    // Generate project number
-    const projectNumber = `PROJ-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+    res.json({
+      success: true,
+      data: feasibility,
+    });
+  } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
 
-    const result = await query(
-      `INSERT INTO connect2.projects
-       (project_number, address, city, state, zip, purchase_price, list_price, submitted_by, assigned_to)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING *`,
-      [projectNumber, address, city, state, zip, purchasePrice, listPrice, submittedBy, assignedTo]
-    );
+    console.error('Error fetching feasibility:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch feasibility',
+    });
+  }
+});
 
-    const project = result.rows[0];
+/**
+ * GET /api/v1/projects/:id/entitlements
+ * Get project entitlements (permit documents)
+ */
+router.get('/:id/entitlements', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const entitlements = await projectService.getProjectEntitlements(id);
+
+    res.json({
+      success: true,
+      data: {
+        entitlements,
+        count: entitlements.length,
+      },
+    });
+  } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
+    console.error('Error fetching entitlements:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch entitlements',
+    });
+  }
+});
+
+/**
+ * POST /api/v1/projects
+ * Create a new project
+ */
+router.post('/', validateBody(CreateProjectDTO), async (req: Request, res: Response) => {
+  try {
+    const createDTO = (req as any).dto as CreateProjectDTO;
+
+    const project = await projectService.createProject(createDTO);
 
     console.log('✅ Project created:', project.id);
 
@@ -178,54 +206,27 @@ router.post('/', async (req: Request, res: Response) => {
  * PATCH /api/v1/projects/:id
  * Update project details
  */
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', validateBody(UpdateProjectDTO), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updateDTO = (req as any).dto as UpdateProjectDTO;
 
-    // Build dynamic UPDATE query
-    const allowedFields = ['status', 'purchase_price', 'list_price', 'assigned_to', 'assigned_builder', 'internal_notes'];
-    const setClause: string[] = [];
-    const params: any[] = [];
-
-    Object.keys(updates).forEach((key) => {
-      if (allowedFields.includes(key)) {
-        params.push(updates[key]);
-        setClause.push(`${key} = $${params.length}`);
-      }
-    });
-
-    if (setClause.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'No valid fields to update',
-      });
-    }
-
-    params.push(id);
-    const queryText = `
-      UPDATE connect2.projects
-      SET ${setClause.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $${params.length}
-      RETURNING *
-    `;
-
-    const result = await query(queryText, params);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found',
-      });
-    }
+    const project = await projectService.updateProject(id, updateDTO);
 
     console.log('✅ Project updated:', id);
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data: project,
     });
   } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     console.error('Error updating project:', error);
     res.status(500).json({
       success: false,
@@ -238,50 +239,83 @@ router.patch('/:id', async (req: Request, res: Response) => {
  * POST /api/v1/projects/:id/transition
  * Transition project status (LEAD → FEASIBILITY → GO, etc.)
  */
-router.post('/:id/transition', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { status, notes } = req.body;
+router.post(
+  '/:id/transition',
+  validateBody(TransitionProjectDTO),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const transitionDTO = (req as any).dto as TransitionProjectDTO;
 
-    const validStatuses = ['LEAD', 'FEASIBILITY', 'GO', 'PASS', 'CLOSED'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
+      const project = await projectService.transitionStatus(id, transitionDTO);
+
+      console.log(`✅ Project ${id} transitioned to: ${transitionDTO.status}`);
+
+      res.json({
+        success: true,
+        data: project,
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return res.status(404).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      if (error instanceof ValidationException) {
+        return res.status(400).json({
+          success: false,
+          error: error.message,
+          details: (error as any).details,
+        });
+      }
+
+      console.error('Error transitioning project:', error);
+      res.status(500).json({
         success: false,
-        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+        error: 'Failed to transition project',
       });
     }
-
-    const result = await query(
-      `UPDATE connect2.projects
-       SET status = $1, internal_notes = COALESCE(internal_notes, '') || $2, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3
-       RETURNING *`,
-      [status, notes ? `\n[${new Date().toISOString()}] ${notes}` : '', id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found',
-      });
-    }
-
-    const project = result.rows[0];
-
-    console.log(`✅ Project ${id} transitioned to: ${status}`);
-
-    res.json({
-      success: true,
-      data: project,
-    });
-  } catch (error) {
-    console.error('Error transitioning project:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to transition project',
-    });
   }
-});
+);
+
+/**
+ * PATCH /api/v1/projects/:id/status
+ * Update project status (admin override - no validation)
+ */
+router.patch(
+  '/:id/status',
+  validateBody(UpdateProjectStatusDTO),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const statusDTO = (req as any).dto as UpdateProjectStatusDTO;
+
+      const project = await projectService.updateStatus(id, statusDTO.status);
+
+      console.log(`✅ Project ${id} status updated to: ${statusDTO.status}`);
+
+      res.json({
+        success: true,
+        data: project,
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return res.status(404).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      console.error('Error updating project status:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update project status',
+      });
+    }
+  }
+);
 
 /**
  * POST /api/v1/projects/:id/documents
@@ -300,18 +334,8 @@ router.post('/:id/documents', upload.single('file'), async (req: Request, res: R
       });
     }
 
-    // Verify project exists
-    const projectResult = await query(
-      'SELECT id FROM connect2.projects WHERE id = $1',
-      [projectId]
-    );
-
-    if (projectResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found',
-      });
-    }
+    // Verify project exists using service
+    await projectService.getProjectById(projectId);
 
     // Upload to S3
     const s3Result = await uploadDocument(file.buffer, file.originalname, {
@@ -342,7 +366,8 @@ router.post('/:id/documents', upload.single('file'), async (req: Request, res: R
     const document = docResult.rows[0];
 
     // Queue document for processing (AI extraction, etc.)
-    await sendToQueue({
+    const queueUrl = process.env.DOCUMENT_PROCESSING_QUEUE_URL || '';
+    await sendMessage(queueUrl, {
       action: 'extract',
       documentId: document.id,
       s3Key: s3Result.key,
@@ -359,6 +384,13 @@ router.post('/:id/documents', upload.single('file'), async (req: Request, res: R
       },
     });
   } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     console.error('Error uploading document:', error);
     res.status(500).json({
       success: false,
@@ -375,6 +407,9 @@ router.get('/:id/documents', async (req: Request, res: Response) => {
   try {
     const { id: projectId } = req.params;
 
+    // Verify project exists
+    await projectService.getProjectById(projectId);
+
     const result = await query(
       `SELECT * FROM connect2.documents
        WHERE project_id = $1
@@ -390,6 +425,13 @@ router.get('/:id/documents', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     console.error('Error listing documents:', error);
     res.status(500).json({
       success: false,
@@ -405,6 +447,9 @@ router.get('/:id/documents', async (req: Request, res: Response) => {
 router.get('/:id/documents/:docId/download', async (req: Request, res: Response) => {
   try {
     const { id: projectId, docId } = req.params;
+
+    // Verify project exists
+    await projectService.getProjectById(projectId);
 
     const result = await query(
       `SELECT * FROM connect2.documents
@@ -422,7 +467,7 @@ router.get('/:id/documents/:docId/download', async (req: Request, res: Response)
     const document = result.rows[0];
 
     // Generate pre-signed URL (valid for 1 hour)
-    const downloadUrl = await getDocumentSignedUrl(document.storage_key, 3600);
+    const downloadUrl = await getPresignedUrl(document.storage_key, 3600);
 
     res.json({
       success: true,
@@ -434,6 +479,13 @@ router.get('/:id/documents/:docId/download', async (req: Request, res: Response)
       },
     });
   } catch (error) {
+    if (error instanceof NotFoundException) {
+      return res.status(404).json({
+        success: false,
+        error: error.message,
+      });
+    }
+
     console.error('Error generating download URL:', error);
     res.status(500).json({
       success: false,
