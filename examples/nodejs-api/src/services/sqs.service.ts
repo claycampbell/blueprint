@@ -306,8 +306,8 @@ export const QUEUE_URLS = {
  * @param messageBody - Message payload
  * @param rawMessage - Raw SQS message
  */
-export async function handleDocumentProcessing(messageBody: any, rawMessage: Message): Promise<void> {
-  const { documentId, action, metadata } = messageBody;
+export async function handleDocumentProcessing(messageBody: any, _rawMessage: Message): Promise<void> {
+  const { documentId, action } = messageBody;
 
   console.log(`Processing document ${documentId} with action: ${action}`);
 

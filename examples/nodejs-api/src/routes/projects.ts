@@ -5,9 +5,11 @@
  * Implements standard REST patterns with proper error handling and status codes
  */
 
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import multer from 'multer';
+// @ts-expect-error - JS service without type declarations
 import { uploadDocument, getDocumentSignedUrl } from '../services/s3Service.js';
+// @ts-expect-error - JS service without type declarations
 import { sendToQueue } from '../services/queueService.js';
 import { query } from '../config/database.js';
 
@@ -19,7 +21,7 @@ const upload = multer({
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB max
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     // Accept PDFs, images, and Office documents
     const allowedMimes = [
       'application/pdf',
@@ -92,7 +94,7 @@ router.get('/', async (req: Request, res: Response) => {
  * GET /api/v1/projects/:id
  * Get project details by ID
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
 
@@ -102,10 +104,11 @@ router.get('/:id', async (req: Request, res: Response) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Project not found',
       });
+      return;
     }
 
     res.json({
@@ -125,7 +128,7 @@ router.get('/:id', async (req: Request, res: Response) => {
  * POST /api/v1/projects
  * Create a new project
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       address,
@@ -140,10 +143,11 @@ router.post('/', async (req: Request, res: Response) => {
 
     // Validate required fields
     if (!address || !city || !state) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: address, city, state',
       });
+      return;
     }
 
     // Generate project number
@@ -178,7 +182,7 @@ router.post('/', async (req: Request, res: Response) => {
  * PATCH /api/v1/projects/:id
  * Update project details
  */
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -186,7 +190,7 @@ router.patch('/:id', async (req: Request, res: Response) => {
     // Build dynamic UPDATE query
     const allowedFields = ['status', 'purchase_price', 'list_price', 'assigned_to', 'assigned_builder', 'internal_notes'];
     const setClause: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     Object.keys(updates).forEach((key) => {
       if (allowedFields.includes(key)) {
@@ -196,10 +200,11 @@ router.patch('/:id', async (req: Request, res: Response) => {
     });
 
     if (setClause.length === 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'No valid fields to update',
       });
+      return;
     }
 
     params.push(id);
@@ -213,10 +218,11 @@ router.patch('/:id', async (req: Request, res: Response) => {
     const result = await query(queryText, params);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Project not found',
       });
+      return;
     }
 
     console.log('✅ Project updated:', id);
@@ -238,17 +244,18 @@ router.patch('/:id', async (req: Request, res: Response) => {
  * POST /api/v1/projects/:id/transition
  * Transition project status (LEAD → FEASIBILITY → GO, etc.)
  */
-router.post('/:id/transition', async (req: Request, res: Response) => {
+router.post('/:id/transition', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { status, notes } = req.body;
 
     const validStatuses = ['LEAD', 'FEASIBILITY', 'GO', 'PASS', 'CLOSED'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
       });
+      return;
     }
 
     const result = await query(
@@ -260,10 +267,11 @@ router.post('/:id/transition', async (req: Request, res: Response) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Project not found',
       });
+      return;
     }
 
     const project = result.rows[0];
@@ -287,17 +295,18 @@ router.post('/:id/transition', async (req: Request, res: Response) => {
  * POST /api/v1/projects/:id/documents
  * Upload a document for a project (stores in S3 + database)
  */
-router.post('/:id/documents', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/:id/documents', upload.single('file'), async (req: Request, res: Response): Promise<void> => {
   try {
     const { id: projectId } = req.params;
-    const { type, description } = req.body;
+    const { type } = req.body;
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'No file provided',
       });
+      return;
     }
 
     // Verify project exists
@@ -307,10 +316,11 @@ router.post('/:id/documents', upload.single('file'), async (req: Request, res: R
     );
 
     if (projectResult.rows.length === 0) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Project not found',
       });
+      return;
     }
 
     // Upload to S3
@@ -318,7 +328,7 @@ router.post('/:id/documents', upload.single('file'), async (req: Request, res: R
       projectId,
       type: type || 'general',
       contentType: file.mimetype,
-      uploadedBy: (req as any).user?.id || 'system', // Assumes auth middleware sets req.user
+      uploadedBy: (req as Express.Request & { user?: { id: string } }).user?.id || 'system',
     });
 
     // Save document record in database
@@ -335,7 +345,7 @@ router.post('/:id/documents', upload.single('file'), async (req: Request, res: R
         s3Result.key,
         file.size,
         file.mimetype,
-        (req as any).user?.id || null,
+        (req as Express.Request & { user?: { id: string } }).user?.id || null,
       ]
     );
 
@@ -402,7 +412,7 @@ router.get('/:id/documents', async (req: Request, res: Response) => {
  * GET /api/v1/projects/:id/documents/:docId/download
  * Generate pre-signed URL for document download
  */
-router.get('/:id/documents/:docId/download', async (req: Request, res: Response) => {
+router.get('/:id/documents/:docId/download', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id: projectId, docId } = req.params;
 
@@ -413,10 +423,11 @@ router.get('/:id/documents/:docId/download', async (req: Request, res: Response)
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: 'Document not found',
       });
+      return;
     }
 
     const document = result.rows[0];

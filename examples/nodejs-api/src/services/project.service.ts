@@ -3,13 +3,12 @@
  * Handles all database operations for the projects table
  */
 
-import { pool, query, transaction } from '../config/database.js';
+import { query, transaction } from '../config/database.js';
 import {
   Project,
   ProjectWithRelations,
   CreateProjectDTO,
   UpdateProjectDTO,
-  TransitionProjectDTO,
   ProjectStatus,
   ProjectQueryParams,
 } from '../types/index.js';
@@ -34,7 +33,7 @@ export const getAllProjects = async (params: ProjectQueryParams = {}): Promise<P
 
   // Build WHERE clause dynamically
   const conditions: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   let paramIndex = 1;
 
   if (status) {
@@ -70,7 +69,7 @@ export const getAllProjects = async (params: ProjectQueryParams = {}): Promise<P
   values.push(limit, offset);
 
   const result = await query(queryText, values);
-  return result.rows;
+  return result.rows as Project[];
 };
 
 /**
@@ -130,7 +129,7 @@ export const getProjectById = async (id: string): Promise<ProjectWithRelations |
     return null;
   }
 
-  return result.rows[0];
+  return result.rows[0] as ProjectWithRelations;
 };
 
 /**
@@ -145,7 +144,7 @@ export const getProjectByNumber = async (projectNumber: string): Promise<Project
   `;
 
   const result = await query(queryText, [projectNumber]);
-  return result.rows.length > 0 ? result.rows[0] : null;
+  return result.rows.length > 0 ? (result.rows[0] as Project) : null;
 };
 
 /**
@@ -160,7 +159,7 @@ export const createProject = async (data: CreateProjectDTO): Promise<Project> =>
     `SELECT COUNT(*) as count FROM connect2.projects WHERE project_number LIKE $1`,
     [`PROJ-${year}-%`]
   );
-  const nextNumber = parseInt(countResult.rows[0].count) + 1;
+  const nextNumber = parseInt(String(countResult.rows[0].count)) + 1;
   const projectNumber = `PROJ-${year}-${String(nextNumber).padStart(3, '0')}`;
 
   const queryText = `
@@ -199,7 +198,7 @@ export const createProject = async (data: CreateProjectDTO): Promise<Project> =>
   ];
 
   const result = await query(queryText, values);
-  return result.rows[0];
+  return result.rows[0] as Project;
 };
 
 /**
@@ -211,7 +210,7 @@ export const createProject = async (data: CreateProjectDTO): Promise<Project> =>
 export const updateProject = async (id: string, data: UpdateProjectDTO): Promise<Project | null> => {
   // Build SET clause dynamically only for provided fields
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   let paramIndex = 1;
 
   if (data.address !== undefined) {
@@ -278,7 +277,7 @@ export const updateProject = async (id: string, data: UpdateProjectDTO): Promise
   `;
 
   const result = await query(queryText, values);
-  return result.rows.length > 0 ? result.rows[0] : null;
+  return result.rows.length > 0 ? (result.rows[0] as Project) : null;
 };
 
 /**
@@ -293,7 +292,7 @@ export const transitionProject = async (
   newStatus: ProjectStatus,
   notes?: string
 ): Promise<Project | null> => {
-  return await transaction(async (client) => {
+  return await transaction(async (client): Promise<Project> => {
     // Update the project status
     const updateQuery = `
       UPDATE connect2.projects
@@ -323,7 +322,7 @@ export const transitionProject = async (
       JSON.stringify({ status: newStatus, notes }),
     ]);
 
-    return result.rows[0];
+    return result.rows[0] as Project;
   });
 };
 
@@ -340,7 +339,7 @@ export const deleteProject = async (id: string): Promise<boolean> => {
   `;
 
   const result = await query(queryText, [ProjectStatus.CLOSED, id]);
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 };
 
 /**
@@ -355,7 +354,7 @@ export const hardDeleteProject = async (id: string): Promise<boolean> => {
   `;
 
   const result = await query(queryText, [id]);
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 };
 
 /**
@@ -394,7 +393,7 @@ export const searchProjectsByAddress = async (searchTerm: string): Promise<Proje
   `;
 
   const result = await query(queryText, [searchTerm]);
-  return result.rows;
+  return result.rows as Project[];
 };
 
 export default {

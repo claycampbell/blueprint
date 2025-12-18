@@ -52,7 +52,7 @@ if (NODE_ENV === 'development') {
 // HEALTH CHECK
 // ====================
 
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
@@ -90,7 +90,8 @@ interface ErrorWithStatus extends Error {
   status?: number;
 }
 
-app.use((err: ErrorWithStatus, req: Request, res: Response, next: NextFunction) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: ErrorWithStatus, _req: Request, res: Response, _next: NextFunction) => {
   console.error('❌ Unhandled error:', err);
 
   const status = err.status || 500;

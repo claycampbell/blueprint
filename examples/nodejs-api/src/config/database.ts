@@ -3,7 +3,7 @@
  * Manages connection pool for Connect 2.0 database using pg library
  */
 
-import pkg from 'pg';
+import pkg, { PoolClient, QueryResult } from 'pg';
 const { Pool } = pkg;
 
 // Database configuration from environment variables
@@ -54,7 +54,7 @@ pool.query('SELECT NOW()', (err, res) => {
  * @param {Array} params - Query parameters (parameterized queries for security)
  * @returns {Promise} Query result
  */
-export const query = async (text, params) => {
+export const query = async (text: string, params?: unknown[]): Promise<QueryResult> => {
   const start = Date.now();
   try {
     const res = await pool.query(text, params);
@@ -66,9 +66,10 @@ export const query = async (text, params) => {
     });
     return res;
   } catch (error) {
+    const err = error as Error;
     console.error('❌ Query error:', {
       query: text,
-      error: error.message
+      error: err.message
     });
     throw error;
   }
@@ -104,7 +105,7 @@ export const getClient = async () => {
  * @param {Function} callback - Transaction callback function
  * @returns {Promise} Transaction result
  */
-export const transaction = async (callback) => {
+export const transaction = async <T>(callback: (client: PoolClient) => Promise<T>): Promise<T> => {
   const client = await getClient();
   try {
     await client.query('BEGIN');
