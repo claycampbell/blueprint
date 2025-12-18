@@ -5,15 +5,20 @@
  * error handling, and graceful shutdown.
  */
 
+import 'reflect-metadata';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import projectRoutes from './routes/projects.js';
 import { closePool } from './config/database.js';
+import { validateEnvironment } from './config/validate-env.js';
 
 // Load environment variables
 dotenv.config();
+
+// Validate environment configuration before starting
+validateEnvironment();
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
