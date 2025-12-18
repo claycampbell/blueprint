@@ -629,6 +629,51 @@ MCP (Model Context Protocol) servers are configured in `.mcp.json` at the projec
 
 **Current MCP Servers:**
 - **Atlassian MCP** - Jira/Confluence integration (configured at user level)
+- **Memory Service** - Persistent project context and knowledge (configured at project level)
+
+**Memory Service Integration** - [GitHub: mcp-memory-service](https://github.com/doobidoo/mcp-memory-service)
+
+The Memory Service provides Claude Code with persistent, searchable memory across conversations:
+
+**Capabilities:**
+- Semantic memory search using AI embeddings (5ms retrieval)
+- Persistent context across sessions (remembers project decisions, patterns, architecture)
+- Automatic memory consolidation with quality scoring
+- Web dashboard at `http://localhost:8000` for browsing stored memories
+- Multi-language support (English, Chinese, Japanese, Korean, German, French, Spanish)
+
+**Configuration:**
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "python",
+      "args": ["-m", "mcp_memory_service.server"],
+      "env": {
+        "MCP_HTTP_PORT": "8000"
+      }
+    }
+  }
+}
+```
+
+**Installation:**
+```bash
+pip install mcp-memory-service
+```
+
+**Usage:**
+- Memory is captured automatically during Claude Code sessions
+- Browse memories via web UI: http://localhost:8000
+- Uses SQLite backend by default (fast local storage)
+- No additional configuration required
+
+**What Gets Remembered:**
+- Architecture decisions and technical patterns
+- Code conventions and project standards
+- Workflow preferences and development practices
+- Important project context (epic structure, tech stack, etc.)
+- Frequently referenced documentation
 
 **Adding Project-Level MCP Servers:**
 ```json
