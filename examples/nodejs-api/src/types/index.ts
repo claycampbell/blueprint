@@ -388,3 +388,9 @@ export interface TaskQueryParams {
   page?: number;
   limit?: number;
 }
+
+// ============================================
+// Repository Types (re-exported for convenience)
+// ============================================
+
+export * from './repository.types';
