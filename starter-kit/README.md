@@ -81,8 +81,11 @@ docker-compose logs -f windmill-server
   - Default login: `admin@windmill.dev` / `changeme`
   - First time: Change the admin password!
 
-- **API Server**: http://localhost:3000
-  - Health check: http://localhost:3000/health
+- **Next.js Frontend**: http://localhost:3000 (if you run `npm run dev` in starter-kit)
+
+- **Express API Server**: http://localhost:3001
+  - Health check: http://localhost:3001/health
+  - Start with: `cd api && npm run dev`
 
 - **PostgreSQL**: `localhost:5432`
   - User: `blueprint`
