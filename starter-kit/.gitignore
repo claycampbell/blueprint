@@ -4,6 +4,8 @@
 /node_modules
 /.pnp
 .pnp.js
+api/node_modules/
+**/node_modules/
 
 # testing
 /coverage
@@ -39,3 +41,14 @@ next-env.d.ts
 # icon generated file
 src/assets/iconify-icons/generated-icons.js
 src/assets/iconify-icons/generated-icons.css
+
+# Docker volumes
+postgres_data/
+redis_data/
+localstack_data/
+windmill_worker_data/
+windmill_lsp_cache/
+
+# API build
+api/dist/
+api/build/
