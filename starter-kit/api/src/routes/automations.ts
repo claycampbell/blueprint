@@ -1,8 +1,7 @@
-import { Router } from 'express';
-import { Pool } from 'pg';
+import { Router, Request, Response } from 'express';
+import { pool } from '../db';
 
 const router = Router();
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // GET /api/v1/automations/rules
 router.get('/rules', async (req, res) => {

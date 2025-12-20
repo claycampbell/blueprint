@@ -2,8 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { Pool } from 'pg';
 import winston from 'winston';
+import { pool } from './db';
 
 // Load environment variables
 dotenv.config();
@@ -28,11 +28,6 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
