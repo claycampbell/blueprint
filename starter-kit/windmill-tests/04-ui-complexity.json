@@ -1,0 +1,255 @@
+{
+  "testName": "UI Complexity Limits Test",
+  "description": "Tests the maximum complexity of UI that Windmill can render",
+  "tests": [
+    {
+      "id": "large-table",
+      "name": "Large Data Table",
+      "component": {
+        "type": "table",
+        "config": {
+          "columns": [
+            { "key": "id", "label": "ID", "type": "number", "sortable": true },
+            { "key": "name", "label": "Name", "type": "string", "sortable": true, "filterable": true },
+            { "key": "email", "label": "Email", "type": "string", "filterable": true },
+            { "key": "status", "label": "Status", "type": "select", "options": ["Active", "Inactive", "Pending"] },
+            { "key": "created", "label": "Created", "type": "date", "sortable": true },
+            { "key": "amount", "label": "Amount", "type": "currency", "sortable": true },
+            { "key": "progress", "label": "Progress", "type": "percentage" },
+            { "key": "tags", "label": "Tags", "type": "array" },
+            { "key": "metadata", "label": "Metadata", "type": "json" },
+            { "key": "actions", "label": "Actions", "type": "buttons", "buttons": ["Edit", "Delete", "View"] }
+          ],
+          "features": {
+            "pagination": true,
+            "pageSize": 50,
+            "sorting": true,
+            "filtering": true,
+            "columnResize": true,
+            "export": ["CSV", "JSON", "Excel"],
+            "bulkActions": true,
+            "inlineEdit": true,
+            "rowSelection": true,
+            "virtualScroll": false
+          },
+          "dataSize": 10000
+        }
+      },
+      "expectedLimits": {
+        "maxRows": 10000,
+        "maxColumns": 20,
+        "renderTime": "< 2 seconds",
+        "interactionDelay": "< 100ms"
+      }
+    },
+    {
+      "id": "complex-form",
+      "name": "Complex Multi-Step Form",
+      "component": {
+        "type": "form",
+        "config": {
+          "steps": [
+            {
+              "title": "Basic Information",
+              "fields": [
+                { "name": "firstName", "type": "text", "required": true, "validation": "minLength:2" },
+                { "name": "lastName", "type": "text", "required": true, "validation": "minLength:2" },
+                { "name": "email", "type": "email", "required": true, "validation": "email" },
+                { "name": "phone", "type": "tel", "validation": "phone" },
+                { "name": "dateOfBirth", "type": "date", "validation": "age:18" }
+              ]
+            },
+            {
+              "title": "Address",
+              "fields": [
+                { "name": "street", "type": "text", "required": true },
+                { "name": "city", "type": "text", "required": true },
+                { "name": "state", "type": "select", "options": "dynamic", "required": true },
+                { "name": "zip", "type": "text", "validation": "zipCode" },
+                { "name": "country", "type": "select", "options": "dynamic", "required": true }
+              ]
+            },
+            {
+              "title": "Documents",
+              "fields": [
+                { "name": "idDocument", "type": "file", "accept": ".pdf,.jpg,.png", "maxSize": "5MB" },
+                { "name": "proofOfAddress", "type": "file", "accept": ".pdf", "maxSize": "5MB" },
+                { "name": "additionalDocs", "type": "file", "multiple": true, "maxFiles": 5 }
+              ]
+            },
+            {
+              "title": "Custom Fields",
+              "fields": [
+                { "name": "income", "type": "currency", "validation": "min:0" },
+                { "name": "employmentStatus", "type": "radio", "options": ["Employed", "Self-Employed", "Unemployed"] },
+                { "name": "interests", "type": "checkbox", "options": ["Technology", "Finance", "Real Estate", "Other"] },
+                { "name": "comments", "type": "textarea", "maxLength": 1000 },
+                { "name": "metadata", "type": "json", "schema": "dynamic" }
+              ]
+            }
+          ],
+          "features": {
+            "validation": "realtime",
+            "conditionalFields": true,
+            "autoSave": true,
+            "progressIndicator": true,
+            "navigationButtons": true,
+            "summaryPage": true
+          }
+        }
+      },
+      "expectedLimits": {
+        "maxFields": 100,
+        "maxSteps": 10,
+        "maxFileSize": "100MB",
+        "maxValidationRules": 50
+      }
+    },
+    {
+      "id": "dashboard",
+      "name": "Complex Dashboard",
+      "component": {
+        "type": "dashboard",
+        "config": {
+          "layout": "grid",
+          "widgets": [
+            {
+              "type": "chart",
+              "chartType": "line",
+              "dataPoints": 1000,
+              "series": 5,
+              "realtime": false,
+              "interactive": true
+            },
+            {
+              "type": "chart",
+              "chartType": "bar",
+              "dataPoints": 100,
+              "series": 3,
+              "stacked": true
+            },
+            {
+              "type": "chart",
+              "chartType": "pie",
+              "dataPoints": 10,
+              "interactive": true
+            },
+            {
+              "type": "metric",
+              "count": 6,
+              "sparkline": true
+            },
+            {
+              "type": "table",
+              "rows": 100,
+              "columns": 5,
+              "sortable": true
+            },
+            {
+              "type": "map",
+              "markers": 100,
+              "clustering": true
+            },
+            {
+              "type": "timeline",
+              "events": 50,
+              "interactive": true
+            },
+            {
+              "type": "kanban",
+              "columns": 5,
+              "cards": 50,
+              "draggable": true
+            }
+          ],
+          "features": {
+            "responsive": true,
+            "customizable": true,
+            "exportable": true,
+            "refreshRate": 60
+          }
+        }
+      },
+      "expectedLimits": {
+        "maxWidgets": 20,
+        "maxDataPoints": 10000,
+        "renderTime": "< 3 seconds",
+        "refreshRate": "> 10 seconds"
+      }
+    },
+    {
+      "id": "nested-components",
+      "name": "Deeply Nested Components",
+      "component": {
+        "type": "container",
+        "config": {
+          "depth": 5,
+          "structure": {
+            "tabs": {
+              "count": 5,
+              "content": {
+                "accordion": {
+                  "sections": 5,
+                  "content": {
+                    "form": {
+                      "fields": 10
+                    },
+                    "table": {
+                      "rows": 100
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expectedLimits": {
+        "maxNestingDepth": 10,
+        "maxComponents": 100,
+        "performanceDegradation": "Significant after depth 5"
+      }
+    },
+    {
+      "id": "real-time-updates",
+      "name": "Real-time Data Updates",
+      "component": {
+        "type": "realtime",
+        "config": {
+          "updateFrequency": "1 second",
+          "componentsUpdating": [
+            { "type": "table", "rows": 100 },
+            { "type": "chart", "dataPoints": 100 },
+            { "type": "metrics", "count": 10 }
+          ]
+        }
+      },
+      "expectedLimits": {
+        "minUpdateInterval": "5 seconds",
+        "maxConcurrentUpdates": 10,
+        "websocketSupport": false,
+        "pollingOnly": true
+      }
+    }
+  ],
+  "overallLimitations": {
+    "customCSS": "Limited to predefined themes",
+    "customJS": "No custom JavaScript execution",
+    "externalLibraries": "Cannot import external UI libraries",
+    "mobileResponsive": "Basic responsive design only",
+    "accessibility": "Limited ARIA support",
+    "browserSupport": "Modern browsers only",
+    "offlineCapability": "No offline support",
+    "printLayout": "Basic print styles only"
+  },
+  "recommendations": {
+    "simpleUI": "Use Windmill's built-in UI for simple forms and dashboards",
+    "complexUI": "Build custom React app for complex UI requirements",
+    "hybrid": "Use Windmill for backend workflows, custom frontend for UI",
+    "alternatives": {
+      "retool": "For more complex UI with similar workflow capabilities",
+      "custom": "Full React/Vue/Angular app for complete control",
+      "lowCode": "Consider Appsmith or Tooljet for middle ground"
+    }
+  }
+}
