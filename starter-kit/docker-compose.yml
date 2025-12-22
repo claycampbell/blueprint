@@ -22,9 +22,9 @@ services:
       timeout: 5s
       retries: 5
 
-  # Windmill Server - Business Process Automation Platform
+  # Windmill Server - Business Process Automation Platform (Community Edition)
   windmill-server:
-    image: ghcr.io/windmill-labs/windmill:main
+    image: ghcr.io/windmill-labs/windmill:main  # Community Edition - no expiration
     container_name: windmill-server
     restart: unless-stopped
     expose:
@@ -35,13 +35,15 @@ services:
       - BASE_INTERNAL_URL=http://windmill-server:8000
       - BASE_URL=http://localhost:8000
       - RUST_LOG=info
+      - DISABLE_NSJAIL=true  # For development environments
+      - INSTANCE_NAME=Blueprint Connect 2.0 Dev
     depends_on:
       postgres:
         condition: service_healthy
 
-  # Windmill Worker - Executes automation workflows
+  # Windmill Worker - Executes automation workflows (Community Edition)
   windmill-worker:
-    image: ghcr.io/windmill-labs/windmill:main
+    image: ghcr.io/windmill-labs/windmill:main  # Community Edition - no expiration
     container_name: windmill-worker
     restart: unless-stopped
     environment:
@@ -50,6 +52,7 @@ services:
       - WORKER_GROUP=default
       - KEEP_JOB_DIR=false
       - RUST_LOG=info
+      - DISABLE_NSJAIL=true  # For development environments
     depends_on:
       postgres:
         condition: service_healthy

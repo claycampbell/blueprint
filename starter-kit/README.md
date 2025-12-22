@@ -2,6 +2,10 @@
 
 This is a clean, minimal implementation of the Connect 2.0 platform with **Windmill** as the business process automation engine.
 
+## Important: Windmill Licensing
+
+**This project uses Windmill Community Edition (CE) which is free and has no expiration.** If you see any expiration messages, they refer to optional Enterprise Edition features. See [WINDMILL_LICENSING.md](./WINDMILL_LICENSING.md) for details.
+
 ## Architecture Overview
 
 ```
