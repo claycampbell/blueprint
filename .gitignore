@@ -65,6 +65,9 @@ docs/planning/TIME_ESTIMATION_METHODOLOGY.md
 # Claude Code personal settings
 .claude/settings.local.json
 
+# MCP server configurations (contains tokens)
+.mcp.json
+
 # Temporary/one-off scripts (delete after use)
 scripts/temp-*.py
 scripts/create-*.py

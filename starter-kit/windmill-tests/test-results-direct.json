@@ -1,0 +1,107 @@
+{
+  "timestamp": "2025-12-22T10:11:45.291171",
+  "tests": {
+    "Parallel Execution": {
+      "testName": "Parallel Execution",
+      "parallelCount": 100,
+      "operationsCompleted": 100,
+      "successfulOps": 98,
+      "failedOps": 2,
+      "duration": "0.04 seconds",
+      "opsPerSecond": 2437.9676937474205,
+      "successRate": 98.0,
+      "verdict": "PASS"
+    },
+    "Memory Limits": {
+      "testName": "Memory Limits",
+      "maxArraySize": "1000MB",
+      "maxStringSize": "500MB",
+      "memoryErrorAt": "No error",
+      "currentMemoryUsage": "1382.10MB",
+      "duration": "2.12 seconds",
+      "verdict": "PASS"
+    },
+    "Database Stress": {
+      "testName": "Database Stress",
+      "connectionsCreated": 50,
+      "maxConcurrent": 50,
+      "queriesExecuted": 1000,
+      "bulkInserts": 10000,
+      "transactions": 100,
+      "duration": "2.00 seconds",
+      "queriesPerSecond": "498.88",
+      "verdict": "SIMULATED - Actual DB test needs PostgreSQL connection"
+    },
+    "Complex Workflow": {
+      "testName": "Complex Workflow",
+      "workflowId": "test-1766427110",
+      "stagesCompleted": 6,
+      "stages": [
+        {
+          "stage": "Validation",
+          "duration": 0.2,
+          "status": "completed"
+        },
+        {
+          "stage": "Document Processing",
+          "duration": 0.5,
+          "status": "completed",
+          "documentsProcessed": 5
+        },
+        {
+          "stage": "External APIs",
+          "duration": 0.3,
+          "status": "completed",
+          "apisCalled": 3
+        },
+        {
+          "stage": "Business Rules",
+          "duration": 0.2,
+          "status": "completed",
+          "rulesEvaluated": 10
+        },
+        {
+          "stage": "Database Operations",
+          "duration": 0.3,
+          "status": "completed",
+          "recordsCreated": 3
+        },
+        {
+          "stage": "Notifications",
+          "duration": 0.1,
+          "status": "completed",
+          "notificationsSent": 4
+        }
+      ],
+      "totalDuration": "1.60 seconds",
+      "averageStageTime": "0.27 seconds",
+      "finalStatus": "completed",
+      "verdict": "PASS"
+    },
+    "UI Complexity": {
+      "testName": "UI Complexity Analysis",
+      "testsAnalyzed": 5,
+      "majorLimitations": [
+        "customCSS",
+        "customJS",
+        "externalLibraries",
+        "mobileResponsive",
+        "accessibility",
+        "browserSupport",
+        "offlineCapability",
+        "printLayout"
+      ],
+      "recommendation": "Use Windmill for backend workflows, custom frontend for UI",
+      "verdict": "ANALYZED - Windmill UI limited, React frontend recommended"
+    }
+  },
+  "summary": {
+    "totalTests": 5,
+    "passed": 3,
+    "limited": 0,
+    "simulated": 1,
+    "analyzed": 1,
+    "failed": 0,
+    "overallVerdict": "SUITABLE WITH LIMITATIONS"
+  }
+}

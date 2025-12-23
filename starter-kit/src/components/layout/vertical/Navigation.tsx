@@ -54,10 +54,11 @@ const MenuToggleSvg = (
   </svg>
 )
 
-const Navigation = props => {
-  // Props
-  const { mode } = props
+interface NavigationProps {
+  mode?: string
+}
 
+const Navigation = ({ mode }: NavigationProps) => {
   // Hooks
   const verticalNavOptions = useVerticalNav()
   const { updateSettings, settings } = useSettings()
@@ -65,7 +66,7 @@ const Navigation = props => {
   const theme = useTheme()
 
   // Refs
-  const shadowRef = useRef(null)
+  const shadowRef = useRef<HTMLDivElement>(null)
 
   // Vars
   const { isCollapsed, isHovered, collapseVerticalNav, isBreakpointReached } = verticalNavOptions
@@ -73,18 +74,15 @@ const Navigation = props => {
   const currentMode = muiMode === 'system' ? muiSystemMode : muiMode || mode
   const isDark = currentMode === 'dark'
 
-  const scrollMenu = (container, isPerfectScrollbar) => {
+  const scrollMenu = (container: any, isPerfectScrollbar: boolean) => {
     container = isBreakpointReached || !isPerfectScrollbar ? container.target : container
 
     if (shadowRef && container.scrollTop > 0) {
-      // @ts-ignore
-      if (!shadowRef.current.classList.contains('scrolled')) {
-        // @ts-ignore
-        shadowRef.current.classList.add('scrolled')
+      if (!shadowRef.current?.classList.contains('scrolled')) {
+        shadowRef.current?.classList.add('scrolled')
       }
     } else {
-      // @ts-ignore
-      shadowRef.current.classList.remove('scrolled')
+      shadowRef.current?.classList.remove('scrolled')
     }
   }
 
@@ -98,15 +96,10 @@ const Navigation = props => {
   }, [settings.layout])
 
   return (
-    // eslint-disable-next-line lines-around-comment
-    // Sidebar Vertical Menu
     <VerticalNav
       customStyles={navigationCustomStyles(verticalNavOptions, theme)}
       collapsedWidth={71}
       backgroundColor='var(--mui-palette-background-default)'
-      // eslint-disable-next-line lines-around-comment
-      // The following condition adds the data-dark attribute to the VerticalNav component
-      // when semiDark is enabled and the mode or systemMode is light
       {...(isSemiDark &&
         !isDark && {
           'data-dark': ''

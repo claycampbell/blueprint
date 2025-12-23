@@ -61,6 +61,5 @@
   "description": "Next-generation platform for residential construction lending and development management.",
   "main": ".eslintrc.js",
   "keywords": [],
-  "author": "",
-  "type": "commonjs"
+  "author": ""
 }

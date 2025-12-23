@@ -1,6 +1,6 @@
 import tailwindcssLogical from 'tailwindcss-logical'
 
-import tailwindPlugin from './src/@core/tailwind/plugin'
+import tailwindPlugin from './src/@core/tailwind/plugin.mjs'
 
 const config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,css}'],

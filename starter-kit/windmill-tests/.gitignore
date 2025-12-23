@@ -1,0 +1,34 @@
+# Temporary test scripts (delete after use)
+check-*.py
+create-app-*.py
+create-corrected-*.py
+create-simple-*.py
+create-table-*.py
+create-ui-*.py
+create-working-*.py
+debug-*.py
+get-api-token.py
+get-job-results.py
+get-working-app.py
+list-*.py
+run-*.py
+test-*.py
+try-*.py
+update-*.py
+upload-*.py
+verify-demo-resources.py
+
+# Temporary JSON files
+*-detailed.json
+actual-*.json
+corrected-*.json
+loan_dashboard-detailed.json
+retrieved-*.json
+script-payload.json
+simple-test-app.json
+ui-showcase-*.json
+windmill-*.json
+working-*.json
+
+# Old backups
+*.old
