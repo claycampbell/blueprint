@@ -1,0 +1,41 @@
+# Production Environment Variables
+# Copy this to terraform.tfvars and fill in the values
+# NEVER commit terraform.tfvars with real values to git
+
+project_name = "connect2-app"
+environment  = "prod"
+aws_region   = "us-west-2"
+
+# Networking - Production uses 3 AZs
+vpc_cidr           = "10.2.0.0/16"
+az_count           = 3
+enable_nat_gateway = true
+
+# DNS - Update with your actual domain
+domain_name               = "example.com"
+subdomain                 = "app" # Results in app.example.com, or set to null for root domain
+subject_alternative_names = ["www.example.com"]
+
+# Container - Update with your ECR image
+container_image   = "123456789.dkr.ecr.us-west-2.amazonaws.com/connect2-app-prod:v1.0.0"
+container_port    = 80
+health_check_path = "/"
+
+# ECS Task sizing - Production grade
+task_cpu      = 512
+task_memory   = 1024
+desired_count = 3
+min_capacity  = 3
+max_capacity  = 20
+
+# Environment variables
+environment_variables = [
+  {
+    name  = "NODE_ENV"
+    value = "production"
+  },
+  {
+    name  = "API_URL"
+    value = "https://api.example.com"
+  }
+]

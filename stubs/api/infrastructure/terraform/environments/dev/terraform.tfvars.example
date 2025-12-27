@@ -1,0 +1,14 @@
+# Development Environment Variables
+# Copy this file to terraform.tfvars and fill in the values
+
+# Container image - Update after first ECR push
+container_image = "123456789012.dkr.ecr.us-west-2.amazonaws.com/connect2-api-dev:latest"
+
+# Optional: Enable bastion host for database access
+# enable_bastion = true
+# bastion_allowed_cidrs = ["YOUR_IP/32"]
+# bastion_ssh_public_key = "ssh-rsa AAAA..."
+
+# Optional: Override database settings
+# database_name = "connect2"
+# database_username = "postgres"
