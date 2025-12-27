@@ -1,0 +1,15 @@
+# Production Environment Variables
+# Copy this file to terraform.tfvars and fill in the values
+
+# Required
+domain_name      = "example.com"
+container_image  = "123456789012.dkr.ecr.us-west-2.amazonaws.com/connect2-api-prod:latest"
+redis_auth_token = "your-secure-redis-auth-token-min-16-chars"
+
+# Optional: Override subdomain (default: api)
+# subdomain = "api"
+
+# Bastion host configuration (recommended for production)
+enable_bastion         = true
+bastion_allowed_cidrs  = ["YOUR_OFFICE_IP/32"]
+bastion_ssh_public_key = "ssh-rsa AAAA..."
