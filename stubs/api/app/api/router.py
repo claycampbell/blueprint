@@ -3,11 +3,19 @@
 from fastapi import APIRouter
 
 from app.api.health import router as health_router
+from app.api.v1.workflow import router as workflow_router
+from app.api.v1.workflow_definitions import router as workflow_definitions_router
 
 api_router = APIRouter()
 
 # Health check routes (no prefix, no auth)
 api_router.include_router(health_router, tags=["health"])
+
+# Workflow POC routes
+api_router.include_router(workflow_router, prefix="/api/v1")
+
+# Workflow definition management routes
+api_router.include_router(workflow_definitions_router, prefix="/api/v1")
 
 # TODO: Add v1 routes
 # from app.api.v1 import projects, loans, contacts, documents, tasks

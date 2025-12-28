@@ -1,0 +1,44 @@
+flowchart TB
+    subgraph WFG3["WFG3: Construction Documents (Sub-Process)"]
+        Start([Start]) --> WFI1
+        
+        subgraph WFI1["WFI1: Blueprint Development"]
+            A1[Architect uploads blueprints]
+            A2[Structural drawings]
+            A3[MEP drawings]
+        end
+        
+        WFI1 --> R1{Review}
+        R1 -->|Revisions| WFI1
+        R1 -->|OK| WFI2
+        
+        subgraph WFI2["WFI2: Engineering Coordination"]
+            B1[Structural engineer review]
+            B2[MEP engineer review]
+            B3[Coordination meeting]
+        end
+        
+        WFI2 --> R2{Review}
+        R2 -->|Revisions| WFI1
+        R2 -->|OK| WFI3
+        
+        subgraph WFI3["WFI3: Specifications & Details"]
+            C1[Material specifications]
+            C2[Construction details]
+            C3[Code compliance check]
+        end
+        
+        WFI3 --> R3{Review}
+        R3 -->|Revisions| WFI2
+        R3 -->|OK| WFI4
+        
+        subgraph WFI4["WFI4: CD Approval"]
+            D1[Decision Maker Review]
+            D2[Final sign-off]
+        end
+        
+        WFI4 --> FinalD{Final Decision}
+        FinalD -->|Approved| EndOK([End - Continue to WFG4])
+        FinalD -->|Back to WFG2| EndBack([End - Signal: back_to_wfg2])
+        FinalD -->|Major Revisions| WFI1
+    end

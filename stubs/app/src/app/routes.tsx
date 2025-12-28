@@ -3,6 +3,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ProjectsPage } from '@/pages/ProjectsPage'
 import { LoansPage } from '@/pages/LoansPage'
+import { WorkflowPocPage } from '@/pages/WorkflowPocPage'
+import { WorkflowDefinitionsPage } from '@/pages/WorkflowDefinitionsPage'
 
 export function AppRoutes() {
   return (
@@ -11,7 +13,9 @@ export function AppRoutes() {
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/projects" element={<ProjectsPage />} />
       <Route path="/loans" element={<LoansPage />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/workflow-poc" element={<WorkflowPocPage />} />
+      <Route path="/workflow-definitions" element={<WorkflowDefinitionsPage />} />
+      <Route path="/" element={<Navigate to="/workflow-poc" replace />} />
     </Routes>
   )
 }

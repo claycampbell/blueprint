@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_VS4_POC"
+                  targetNamespace="http://blueprint.dev/bpmn/vs4-poc">
+
+  <bpmn:process id="VS4_DesignEntitlement_POC" name="VS4 Design and Entitlement POC" isExecutable="true">
+
+    <bpmn:startEvent id="StartEvent" name="Start VS4">
+      <bpmn:outgoing>Flow_Start_to_WFG1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- WFG1: Project Kickoff - Call Activity referencing subprocess -->
+    <bpmn:callActivity id="WFG1_CallActivity" name="WFG1: Project Kickoff" calledElement="WFG1_ProjectKickoff">
+      <bpmn:incoming>Flow_Start_to_WFG1</bpmn:incoming>
+      <bpmn:incoming>Flow_WFG2_Back_to_WFG1</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG1_to_Decision1</bpmn:outgoing>
+    </bpmn:callActivity>
+
+    <bpmn:exclusiveGateway id="Decision1" name="WFG1 Decision" default="Flow_WFG1_Approve_to_WFG2">
+      <bpmn:incoming>Flow_WFG1_to_Decision1</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG1_Approve_to_WFG2</bpmn:outgoing>
+      <bpmn:outgoing>Flow_WFG1_Skip_to_WFG3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- WFG2: Schematic Design - Call Activity referencing subprocess -->
+    <bpmn:callActivity id="WFG2_CallActivity" name="WFG2: Schematic Design" calledElement="WFG2_SchematicDesign">
+      <bpmn:incoming>Flow_WFG1_Approve_to_WFG2</bpmn:incoming>
+      <bpmn:incoming>Flow_WFG3_Back_to_WFG2</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG2_to_Decision2</bpmn:outgoing>
+    </bpmn:callActivity>
+
+    <bpmn:exclusiveGateway id="Decision2" name="WFG2 Decision" default="Flow_WFG2_Approve_to_WFG3">
+      <bpmn:incoming>Flow_WFG2_to_Decision2</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG2_Approve_to_WFG3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_WFG2_Back_to_WFG1</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- WFG3: Construction Docs - Call Activity referencing subprocess -->
+    <bpmn:callActivity id="WFG3_CallActivity" name="WFG3: Construction Docs" calledElement="WFG3_ConstructionDocs">
+      <bpmn:incoming>Flow_WFG2_Approve_to_WFG3</bpmn:incoming>
+      <bpmn:incoming>Flow_WFG1_Skip_to_WFG3</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG3_to_Decision3</bpmn:outgoing>
+    </bpmn:callActivity>
+
+    <bpmn:exclusiveGateway id="Decision3" name="WFG3 Decision" default="Flow_WFG3_Approve_to_End">
+      <bpmn:incoming>Flow_WFG3_to_Decision3</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG3_Approve_to_End</bpmn:outgoing>
+      <bpmn:outgoing>Flow_WFG3_Back_to_WFG2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="EndEvent" name="VS4 Complete">
+      <bpmn:incoming>Flow_WFG3_Approve_to_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_Start_to_WFG1" sourceRef="StartEvent" targetRef="WFG1_CallActivity"/>
+    <bpmn:sequenceFlow id="Flow_WFG1_to_Decision1" sourceRef="WFG1_CallActivity" targetRef="Decision1"/>
+
+    <bpmn:sequenceFlow id="Flow_WFG1_Approve_to_WFG2" name="approve" sourceRef="Decision1" targetRef="WFG2_CallActivity"/>
+    <bpmn:sequenceFlow id="Flow_WFG1_Skip_to_WFG3" name="skip_to_wfg3" sourceRef="Decision1" targetRef="WFG3_CallActivity">
+      <bpmn:conditionExpression xsi:type="tFormalExpression">decision_action == "skip_to" and target_step == "WFG3"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_WFG2_to_Decision2" sourceRef="WFG2_CallActivity" targetRef="Decision2"/>
+
+    <bpmn:sequenceFlow id="Flow_WFG2_Approve_to_WFG3" name="approve" sourceRef="Decision2" targetRef="WFG3_CallActivity"/>
+    <bpmn:sequenceFlow id="Flow_WFG2_Back_to_WFG1" name="send_back_wfg1" sourceRef="Decision2" targetRef="WFG1_CallActivity">
+      <bpmn:conditionExpression xsi:type="tFormalExpression">decision_action == "send_back" and target_step == "WFG1"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+    <bpmn:sequenceFlow id="Flow_WFG3_to_Decision3" sourceRef="WFG3_CallActivity" targetRef="Decision3"/>
+
+    <bpmn:sequenceFlow id="Flow_WFG3_Approve_to_End" name="approve" sourceRef="Decision3" targetRef="EndEvent"/>
+    <bpmn:sequenceFlow id="Flow_WFG3_Back_to_WFG2" name="send_back_wfg2" sourceRef="Decision3" targetRef="WFG2_CallActivity">
+      <bpmn:conditionExpression xsi:type="tFormalExpression">decision_action == "send_back" and target_step == "WFG2"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_VS4_POC">
+    <bpmndi:BPMNPlane id="BPMNPlane_VS4_POC" bpmnElement="VS4_DesignEntitlement_POC">
+      <bpmndi:BPMNShape id="StartEvent_di" bpmnElement="StartEvent">
+        <dc:Bounds x="152" y="192" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="WFG1_CallActivity_di" bpmnElement="WFG1_CallActivity">
+        <dc:Bounds x="250" y="170" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Decision1_di" bpmnElement="Decision1" isMarkerVisible="true">
+        <dc:Bounds x="415" y="185" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="WFG2_CallActivity_di" bpmnElement="WFG2_CallActivity">
+        <dc:Bounds x="530" y="170" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Decision2_di" bpmnElement="Decision2" isMarkerVisible="true">
+        <dc:Bounds x="695" y="185" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="WFG3_CallActivity_di" bpmnElement="WFG3_CallActivity">
+        <dc:Bounds x="810" y="170" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Decision3_di" bpmnElement="Decision3" isMarkerVisible="true">
+        <dc:Bounds x="975" y="185" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_di" bpmnElement="EndEvent">
+        <dc:Bounds x="1092" y="192" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <!-- Sequence Flow Edges -->
+      <bpmndi:BPMNEdge id="Flow_Start_to_WFG1_di" bpmnElement="Flow_Start_to_WFG1">
+        <di:waypoint x="188" y="210"/>
+        <di:waypoint x="250" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG1_to_Decision1_di" bpmnElement="Flow_WFG1_to_Decision1">
+        <di:waypoint x="350" y="210"/>
+        <di:waypoint x="415" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG1_Approve_to_WFG2_di" bpmnElement="Flow_WFG1_Approve_to_WFG2">
+        <di:waypoint x="465" y="210"/>
+        <di:waypoint x="530" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG1_Skip_to_WFG3_di" bpmnElement="Flow_WFG1_Skip_to_WFG3">
+        <di:waypoint x="440" y="235"/>
+        <di:waypoint x="440" y="310"/>
+        <di:waypoint x="860" y="310"/>
+        <di:waypoint x="860" y="250"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG2_to_Decision2_di" bpmnElement="Flow_WFG2_to_Decision2">
+        <di:waypoint x="630" y="210"/>
+        <di:waypoint x="695" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG2_Approve_to_WFG3_di" bpmnElement="Flow_WFG2_Approve_to_WFG3">
+        <di:waypoint x="745" y="210"/>
+        <di:waypoint x="810" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG2_Back_to_WFG1_di" bpmnElement="Flow_WFG2_Back_to_WFG1">
+        <di:waypoint x="720" y="185"/>
+        <di:waypoint x="720" y="120"/>
+        <di:waypoint x="300" y="120"/>
+        <di:waypoint x="300" y="170"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG3_to_Decision3_di" bpmnElement="Flow_WFG3_to_Decision3">
+        <di:waypoint x="910" y="210"/>
+        <di:waypoint x="975" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG3_Approve_to_End_di" bpmnElement="Flow_WFG3_Approve_to_End">
+        <di:waypoint x="1025" y="210"/>
+        <di:waypoint x="1092" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG3_Back_to_WFG2_di" bpmnElement="Flow_WFG3_Back_to_WFG2">
+        <di:waypoint x="1000" y="235"/>
+        <di:waypoint x="1000" y="290"/>
+        <di:waypoint x="580" y="290"/>
+        <di:waypoint x="580" y="250"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

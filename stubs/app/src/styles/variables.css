@@ -1,25 +1,40 @@
 :root {
   /* Colors - Light theme */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1d4ed8;
-  --color-secondary: #e5e7eb;
-  --color-secondary-dark: #d1d5db;
+  --color-primary: #007bff;
+  --color-primary-dark: #0056b3;
+  --color-primary-light: rgba(0, 123, 255, 0.1);
+  --color-secondary: #6c757d;
+  --color-secondary-dark: #5a6268;
   --color-danger: #dc2626;
   --color-danger-dark: #b91c1c;
-  --color-success: #16a34a;
-  --color-warning: #ca8a04;
+  --color-success: #28a745;
+  --color-success-dark: #218838;
+  --color-success-light: #d4edda;
+  --color-success-border: #c3e6cb;
+  --color-success-text: #155724;
+  --color-warning: #ffc107;
+  --color-warning-dark: #e0a800;
+  --color-info: #17a2b8;
+  --color-info-dark: #138496;
 
   /* Text */
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
+  --color-text: #333;
+  --color-text-secondary: #666;
+  --color-text-muted: #999;
 
   /* Background */
   --color-background: #ffffff;
-  --color-background-secondary: #f9fafb;
-  --color-background-hover: #f3f4f6;
+  --color-background-secondary: #f8f9fa;
+  --color-background-tertiary: #f3f4f6;
+  --color-background-hover: #e9ecef;
 
   /* Border */
-  --color-border: #e5e7eb;
+  --color-border: #dee2e6;
+  --color-border-light: #e5e7eb;
+
+  /* Card backgrounds */
+  --color-card: #ffffff;
+  --color-card-secondary: #f8f9fa;
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -44,16 +59,46 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  /* Step indicator colors */
+  --step-inactive-bg: #e0e0e0;
+  --step-inactive-text: #666;
+  --step-active-shadow: rgba(0, 123, 255, 0.2);
 }
 
 /* Dark theme */
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Text */
     --color-text: #f9fafb;
+    --color-text-secondary: #d1d5db;
     --color-text-muted: #9ca3af;
+
+    /* Background */
     --color-background: #111827;
     --color-background-secondary: #1f2937;
-    --color-background-hover: #374151;
+    --color-background-tertiary: #374151;
+    --color-background-hover: #4b5563;
+
+    /* Border */
     --color-border: #374151;
+    --color-border-light: #4b5563;
+
+    /* Card backgrounds */
+    --color-card: #1f2937;
+    --color-card-secondary: #374151;
+
+    /* Success colors for dark mode */
+    --color-success-light: #065f46;
+    --color-success-border: #047857;
+    --color-success-text: #6ee7b7;
+
+    /* Step indicator colors */
+    --step-inactive-bg: #4b5563;
+    --step-inactive-text: #9ca3af;
+    --step-active-shadow: rgba(59, 130, 246, 0.3);
+
+    /* Primary adjustments */
+    --color-primary-light: rgba(59, 130, 246, 0.2);
   }
 }

@@ -1,0 +1,58 @@
+flowchart TB
+    subgraph VS4["VS4: Design & Entitlement (Parent Process)"]
+        Start([From VS3]) --> WFG1
+        
+        subgraph WFG1["⊞ WFG1: Project Kickoff"]
+            W1[Call Activity]
+        end
+        
+        WFG1 --> D1{Decision}
+        D1 -->|Approved| WFG2
+        D1 -->|Back to VS3| BackVS3([Back to VS3])
+        
+        subgraph WFG2["⊞ WFG2: Schematic Design"]
+            W2[Call Activity]
+        end
+        
+        WFG2 --> D2{Decision}
+        D2 -->|Approved| WFG3
+        D2 -->|Back| WFG1
+        
+        subgraph WFG3["⊞ WFG3: Construction Docs"]
+            W3[Call Activity]
+        end
+        
+        WFG3 --> D3{Decision}
+        D3 -->|Approved| WFG4
+        D3 -->|Back| WFG2
+        
+        subgraph WFG4["⊞ WFG4: 3D Visualization"]
+            W4[Call Activity]
+        end
+        
+        WFG4 --> D4{Decision}
+        D4 -->|Approved| WFG5
+        D4 -->|Back| WFG3
+        
+        subgraph WFG5["⊞ WFG5: Consultant Coord"]
+            W5[Call Activity]
+        end
+        
+        WFG5 --> D5{Decision}
+        D5 -->|Approved| WFG6
+        D5 -->|Back| WFG4
+        
+        subgraph WFG6["⊞ WFG6: Permitting"]
+            W6[Call Activity]
+        end
+        
+        WFG6 --> D6{Decision}
+        D6 -->|Approved| WFG7
+        D6 -->|Back| WFG5
+        
+        subgraph WFG7["⊞ WFG7: Final Handoff"]
+            W7[Call Activity]
+        end
+        
+        WFG7 --> End([To VS5])
+    end

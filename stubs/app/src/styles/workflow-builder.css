@@ -1,0 +1,310 @@
+/**
+ * WorkflowBuilder Component Styles
+ *
+ * Styles for the BPMN workflow editor component.
+ */
+
+.workflow-builder {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-card);
+}
+
+/* Toolbar */
+.workflow-builder-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--color-card-secondary);
+  border-bottom: 1px solid var(--color-border);
+  gap: 12px;
+}
+
+.workflow-builder-toolbar .toolbar-left,
+.workflow-builder-toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.workflow-builder-toolbar .toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border, #dee2e6);
+  margin: 0 4px;
+}
+
+/* Buttons */
+.workflow-builder .btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.workflow-builder .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.workflow-builder .btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.workflow-builder .btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.workflow-builder .btn-secondary {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.workflow-builder .btn-secondary:hover:not(:disabled) {
+  background: var(--color-secondary-dark);
+}
+
+.workflow-builder .btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-card-secondary, #f8f9fa);
+  border: 1px solid var(--color-border, #dee2e6);
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.workflow-builder .btn-icon:hover:not(:disabled) {
+  background: var(--color-secondary);
+  color: white;
+}
+
+.workflow-builder .btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.workflow-builder .unsaved-indicator {
+  color: var(--color-warning);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Error message */
+.workflow-builder-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--color-error-light);
+  border-bottom: 1px solid var(--color-error-border);
+  color: var(--color-error-text);
+}
+
+.workflow-builder-error .error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--color-error);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.workflow-builder-error .error-message {
+  flex: 1;
+  font-size: 14px;
+}
+
+.workflow-builder-error .error-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-error-text);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+/* Loading state */
+.workflow-builder-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
+
+.workflow-builder-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: workflow-builder-spin 1s linear infinite;
+}
+
+@keyframes workflow-builder-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Canvas */
+.workflow-builder-canvas {
+  position: relative;
+  background: #fafafa;
+  overflow: hidden;
+}
+
+/* Force bpmn-js internal containers to fill the canvas height */
+.workflow-builder-canvas .bjs-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Ensure the diagram layer fills container properly */
+.workflow-builder-canvas .djs-container {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Force the SVG canvas to fill */
+.workflow-builder-canvas .djs-container svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Hide bpmn-js branding */
+.workflow-builder-canvas .bjs-powered-by {
+  display: none;
+}
+
+/* Palette styling */
+.workflow-builder-canvas .djs-palette {
+  background: var(--color-card-secondary, #f8f9fa);
+  border-right: 1px solid var(--color-border, #dee2e6);
+}
+
+.workflow-builder-canvas .djs-palette .entry {
+  color: var(--color-text, #333);
+}
+
+.workflow-builder-canvas .djs-palette .entry:hover {
+  background: var(--color-primary-light, #e3f2fd);
+}
+
+/* Context pad (popup menu on elements) */
+.workflow-builder-canvas .djs-context-pad {
+  background: var(--color-card, #fff);
+  border: 1px solid var(--color-border, #dee2e6);
+  border-radius: 4px;
+}
+
+/* Popup menu styling */
+.workflow-builder-canvas .djs-popup {
+  background: var(--color-card, #fff);
+  border: 1px solid var(--color-border, #dee2e6);
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.workflow-builder-canvas .djs-popup .entry {
+  color: var(--color-text, #333);
+}
+
+.workflow-builder-canvas .djs-popup .entry:hover {
+  background: var(--color-primary-light, #e3f2fd);
+}
+
+/* Dark mode specific overrides */
+@media (prefers-color-scheme: dark) {
+  .workflow-builder-canvas {
+    background: #f5f5f5;
+  }
+
+  .workflow-builder-canvas .djs-palette {
+    background: #2d2d2d;
+    border-right-color: #444;
+  }
+
+  .workflow-builder-canvas .djs-palette .entry {
+    color: #e0e0e0;
+  }
+
+  .workflow-builder-canvas .djs-palette .entry:hover {
+    background: #3d3d3d;
+  }
+
+  .workflow-builder-canvas .djs-context-pad {
+    background: #2d2d2d;
+    border-color: #444;
+  }
+
+  .workflow-builder-canvas .djs-popup {
+    background: #2d2d2d;
+    border-color: #444;
+  }
+
+  .workflow-builder-canvas .djs-popup .entry {
+    color: #e0e0e0;
+  }
+
+  .workflow-builder-canvas .djs-popup .entry:hover {
+    background: #3d3d3d;
+  }
+}
+
+/* Support .dark-mode class */
+.dark-mode .workflow-builder-canvas,
+[data-theme="dark"] .workflow-builder-canvas {
+  background: #f5f5f5;
+}
+
+.dark-mode .workflow-builder-canvas .djs-palette,
+[data-theme="dark"] .workflow-builder-canvas .djs-palette {
+  background: #2d2d2d;
+  border-right-color: #444;
+}
+
+.dark-mode .workflow-builder-canvas .djs-palette .entry,
+[data-theme="dark"] .workflow-builder-canvas .djs-palette .entry {
+  color: #e0e0e0;
+}
+
+.dark-mode .workflow-builder-canvas .djs-palette .entry:hover,
+[data-theme="dark"] .workflow-builder-canvas .djs-palette .entry:hover {
+  background: #3d3d3d;
+}
+
+.dark-mode .workflow-builder-canvas .djs-context-pad,
+[data-theme="dark"] .workflow-builder-canvas .djs-context-pad,
+.dark-mode .workflow-builder-canvas .djs-popup,
+[data-theme="dark"] .workflow-builder-canvas .djs-popup {
+  background: #2d2d2d;
+  border-color: #444;
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_WFG3"
+                  targetNamespace="http://blueprint.dev/bpmn/wfg3">
+
+  <bpmn:process id="WFG3_ConstructionDocs" name="WFG3: Construction Docs" isExecutable="true">
+
+    <bpmn:startEvent id="WFG3_Start" name="Start WFG3">
+      <bpmn:outgoing>Flow_WFG3_Start_to_WFI1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- WFI-1: Final Documentation (only WFI in WFG3) -->
+    <bpmn:userTask id="WFG3_WFI1" name="WFI-1: Final Documentation">
+      <bpmn:incoming>Flow_WFG3_Start_to_WFI1</bpmn:incoming>
+      <bpmn:outgoing>Flow_WFG3_WFI1_to_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:endEvent id="WFG3_End" name="WFG3 Complete">
+      <bpmn:incoming>Flow_WFG3_WFI1_to_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_WFG3_Start_to_WFI1" sourceRef="WFG3_Start" targetRef="WFG3_WFI1"/>
+    <bpmn:sequenceFlow id="Flow_WFG3_WFI1_to_End" sourceRef="WFG3_WFI1" targetRef="WFG3_End"/>
+
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_WFG3">
+    <bpmndi:BPMNPlane id="BPMNPlane_WFG3" bpmnElement="WFG3_ConstructionDocs">
+      <bpmndi:BPMNShape id="WFG3_Start_di" bpmnElement="WFG3_Start">
+        <dc:Bounds x="152" y="192" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="WFG3_WFI1_di" bpmnElement="WFG3_WFI1">
+        <dc:Bounds x="250" y="170" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="WFG3_End_di" bpmnElement="WFG3_End">
+        <dc:Bounds x="412" y="192" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <!-- Sequence Flow Edges -->
+      <bpmndi:BPMNEdge id="Flow_WFG3_Start_to_WFI1_di" bpmnElement="Flow_WFG3_Start_to_WFI1">
+        <di:waypoint x="188" y="210"/>
+        <di:waypoint x="250" y="210"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WFG3_WFI1_to_End_di" bpmnElement="Flow_WFG3_WFI1_to_End">
+        <di:waypoint x="350" y="210"/>
+        <di:waypoint x="412" y="210"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>

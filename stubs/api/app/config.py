@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     debug: bool = False
     environment: str = "development"
 
-    # Database
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/connect2"
+    # Database (use workflow_poc for POC)
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/workflow_poc"
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
