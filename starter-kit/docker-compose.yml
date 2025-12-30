@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database - Shared between API and Windmill
+  postgres:
+    image: postgres:15-alpine
+    container_name: blueprint-postgres
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_USER: blueprint
+      POSTGRES_PASSWORD: blueprint_dev_2024
+      POSTGRES_DB: connect2
+      POSTGRES_MULTIPLE_DATABASES: connect2,windmill
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blueprint -d connect2"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Windmill Server - Business Process Automation Platform (Community Edition)
+  windmill-server:
+    image: ghcr.io/windmill-labs/windmill:main  # Community Edition - no expiration
+    container_name: windmill-server
+    restart: unless-stopped
+    expose:
+      - 8000
+    environment:
+      - DATABASE_URL=postgres://blueprint:blueprint_dev_2024@postgres:5432/windmill?sslmode=disable
+      - MODE=server
+      - BASE_INTERNAL_URL=http://windmill-server:8000
+      - BASE_URL=http://localhost:8000
+      - RUST_LOG=info
+      - DISABLE_NSJAIL=true  # For development environments
+      - INSTANCE_NAME=Blueprint Connect 2.0 Dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Windmill Worker - Executes automation workflows (Community Edition)
+  windmill-worker:
+    image: ghcr.io/windmill-labs/windmill:main  # Community Edition - no expiration
+    container_name: windmill-worker
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://blueprint:blueprint_dev_2024@postgres:5432/windmill?sslmode=disable
+      - MODE=worker
+      - WORKER_GROUP=default
+      - KEEP_JOB_DIR=false
+      - RUST_LOG=info
+      - DISABLE_NSJAIL=true  # For development environments
+    depends_on:
+      postgres:
+        condition: service_healthy
+      windmill-server:
+        condition: service_started
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - windmill_worker_data:/tmp/windmill
+
+  # Windmill LSP - Language Server Protocol for code completion
+  windmill-lsp:
+    image: ghcr.io/windmill-labs/windmill-lsp:latest
+    container_name: windmill-lsp
+    restart: unless-stopped
+    expose:
+      - 3001
+    volumes:
+      - windmill_lsp_cache:/root/.cache
+
+  # Caddy - Reverse proxy for Windmill
+  caddy:
+    image: caddy:2-alpine
+    container_name: windmill-caddy
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - windmill-server
+      - windmill-lsp
+
+  # Redis - For caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: blueprint-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+  # LocalStack - AWS Services Emulation (S3, SQS, etc.)
+  localstack:
+    image: localstack/localstack:latest
+    container_name: blueprint-localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"  # LocalStack gateway
+      - "4510-4559:4510-4559"  # External services ports (optional)
+    environment:
+      - SERVICES=s3,sqs,sns,secretsmanager,ssm
+      - DEBUG=0
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_HOST=localstack
+      - EAGER_SERVICE_LOADING=1
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./localstack-init:/etc/localstack/init
+
+volumes:
+  postgres_data:
+  redis_data:
+  localstack_data:
+  windmill_worker_data:
+  windmill_lsp_cache:
+
+networks:
+  default:
+    name: blueprint-network

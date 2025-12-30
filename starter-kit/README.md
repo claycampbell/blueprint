@@ -1,201 +1,430 @@
-# Connect 2.0 - Blueprint Development Platform
+# Blueprint Connect 2.0 - Starter Kit
 
-Next-generation platform for residential construction lending and development management.
+This is a clean, minimal implementation of the Connect 2.0 platform with **Windmill** as the business process automation engine.
 
-## 🚀 Quick Start
+## Important: Windmill Licensing
 
-### Development
+**This project uses Windmill Community Edition (CE) which is free and has no expiration.** If you see any expiration messages, they refer to optional Enterprise Edition features. See [WINDMILL_LICENSING.md](./WINDMILL_LICENSING.md) for details.
 
-```bash
-# Install dependencies
-npm install
+## Architecture Overview
 
-# Run development server
-npm run dev
-
-# Open browser
-# http://localhost:3000
+```
+┌─────────────────────────────────────────────────────────┐
+│                   Connect 2.0 Platform                    │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   API Layer  │  │   Windmill   │  │  PostgreSQL  │  │
+│  │  (Express)   │◄─┤  (Workflows) │─►│  (Database)  │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│         │                  │                 │          │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │               Business Automations                │  │
+│  │  • Lead Intake → Auto-assign to manager          │  │
+│  │  • Document Upload → Extract & validate          │  │
+│  │  • Status Change → Trigger notifications         │  │
+│  │  • Approval Required → Route to approver         │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Production Build
+## What's Included
+
+### Core Infrastructure
+- **PostgreSQL**: Primary database for all business data
+- **Windmill**: Business process automation platform
+- **Express API**: RESTful API server (TypeScript)
+- **LocalStack**: AWS service emulation (S3, SQS, etc.)
+- **Redis**: Caching and session management
+
+### Key Features
+- **Workflow Orchestration**: Define complex business processes visually or in code
+- **Event-Driven Automation**: Trigger workflows based on business events
+- **Approval Flows**: Built-in human-in-the-loop capabilities
+- **Scheduling**: Cron-based scheduled workflows
+- **Monitoring**: Track all workflow executions with full audit trail
+
+## Quick Start
+
+### Prerequisites
+- Docker Desktop installed and running
+- Node.js 18+ and npm
+- Git
+
+### 1. Clone and Setup
 
 ```bash
-# Build for production
-npm run build
+# Clone the repository
+git clone https://github.com/claycampbell/blueprint.git
+cd blueprint/starter-kit
 
-# Start production server
-npm start
+# Copy environment variables
+cp .env.example .env
+
+# Install API dependencies
+cd api && npm install && cd ..
 ```
 
-## 📦 What's Built
-
-### Pages (17 total)
-- **Home** - Personalized dashboard for Sarah Johnson
-- **Dashboard** - Executive KPIs and analytics
-- **Analytics** - Module-specific charts and metrics
-- **Leads** - Lead management (list, detail, new form)
-- **Feasibility** - Project analysis workflow
-- **Entitlement** - Kanban board for permitting
-- **Loans** - Loan management interface
-- **Servicing/Draws** - Draw review workflow
-- **Contacts** - CRM functionality
-- **Documentation** - Component library reference
-- **About** - Product vision and details
-- **Login** - Authentication page
-
-### Shared Components (6)
-- DataTable
-- StatusBadge
-- DocumentUpload
-- TimelineActivity
-- NotificationToast
-
-### Tech Stack
-- **Framework**: Next.js 15.5.6
-- **UI Library**: Material-UI v6.2.1
-- **Styling**: Tailwind CSS 3.4.17
-- **Charts**: Recharts 3.4.1
-- **Icons**: Remix Icon
-
-## 🌐 Deploy to Azure
-
-See [AZURE_DEPLOYMENT.md](../AZURE_DEPLOYMENT.md) for detailed deployment instructions.
-
-### Quick Deploy
+### 2. Start the Infrastructure
 
 ```bash
-# Run the deployment script
-chmod +x ../deploy-to-azure.sh
-../deploy-to-azure.sh
+# Start all services
+docker-compose up -d
+
+# Wait for services to be healthy (about 30 seconds)
+docker-compose ps
+
+# Check logs if needed
+docker-compose logs -f windmill-server
 ```
 
-Or use Azure Portal (recommended):
-1. Go to [Azure Portal](https://portal.azure.com)
-2. Create new **Static Web App**
-3. Connect GitHub repository
-4. Set build config:
-   - App location: `/starter-kit`
-   - Output location: `.next`
-5. Deploy!
+### 3. Access the Services
 
-## 📊 Project Structure
+- **Windmill UI**: http://localhost:8000
+  - Default login: `admin@windmill.dev` / `changeme`
+  - First time: Change the admin password!
+
+- **Next.js Frontend**: http://localhost:3000 (if you run `npm run dev` in starter-kit)
+
+- **Express API Server**: http://localhost:3001
+  - Health check: http://localhost:3001/health
+  - Start with: `cd api && npm run dev`
+
+- **PostgreSQL**: `localhost:5432`
+  - User: `blueprint`
+  - Password: `blueprint_dev_2024`
+  - Databases: `connect2`, `windmill`
+
+### 4. Create Your First Workflow
+
+1. Open Windmill UI at http://localhost:8000
+2. Click "Flows" → "New Flow"
+3. Name it: `lead_intake`
+4. Add steps:
+   - **Input**: Receive lead data
+   - **Transform**: Validate and enrich
+   - **Database**: Insert into `projects` table
+   - **Notification**: Send notification (email/slack)
+5. Save and test the flow
+
+### 5. Trigger Workflow from API
+
+```bash
+# Create a new lead via API
+curl -X POST http://localhost:3000/api/v1/workflows/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_name": "lead_intake",
+    "entity_type": "project",
+    "inputs": {
+      "name": "123 Main St Development",
+      "address": "123 Main St",
+      "city": "Seattle",
+      "builder_name": "ABC Builders",
+      "contact_email": "john@abcbuilders.com"
+    }
+  }'
+```
+
+## Project Structure
 
 ```
 starter-kit/
-├── src/
-│   ├── app/
-│   │   ├── (dashboard)/          # Main app pages
-│   │   │   ├── home/
-│   │   │   ├── dashboard/
-│   │   │   ├── analytics/
-│   │   │   ├── leads/
-│   │   │   ├── feasibility/
-│   │   │   ├── entitlement/
-│   │   │   ├── loans/
-│   │   │   ├── servicing/
-│   │   │   ├── contacts/
-│   │   │   ├── docs/             # Component documentation
-│   │   │   └── about/
-│   │   └── (blank-layout-pages)/ # Login, etc.
-│   ├── components/
-│   │   ├── layout/               # Header, Footer, Navigation
-│   │   └── shared/               # Reusable components
-│   ├── @core/                    # Core utilities
-│   └── assets/                   # Images, icons, styles
-├── public/                       # Static assets
-└── package.json
+├── docker-compose.yml       # All services configuration
+├── Caddyfile               # Windmill reverse proxy
+├── .env.example            # Environment variables template
+├── init-scripts/           # Database initialization
+│   ├── 01-create-databases.sql
+│   └── 02-connect2-schema.sql
+├── api/                    # Express API server
+│   ├── src/
+│   │   ├── index.ts       # Main server file
+│   │   ├── routes/        # API endpoints
+│   │   │   ├── projects.ts
+│   │   │   ├── contacts.ts
+│   │   │   ├── workflows.ts
+│   │   │   └── automations.ts
+│   │   └── services/      # Business logic
+│   │       └── windmill.service.ts
+│   ├── package.json
+│   └── tsconfig.json
+└── README.md              # This file
 ```
 
-## 🎨 Features
+## Windmill Workflow Examples
 
-### UI Components
-- 📝 Forms with validation
-- 📊 Interactive charts and graphs
-- 📋 Data tables with sorting/filtering
-- 🎯 Kanban boards for workflows
-- 📱 Fully responsive design
-- 🌓 Dark/light mode support
-- 🔔 Notifications and alerts
-- 📄 Document upload with drag-and-drop
+### 1. Lead Intake Automation
 
-### Data Features
-- 160+ mock data records
-- Realistic Seattle/Phoenix property data
-- Complete workflow examples
-- Status tracking across all modules
+```typescript
+// Windmill script: lead_intake.ts
+export async function main(input: {
+  name: string;
+  address: string;
+  builder_email: string;
+}) {
+  // Step 1: Validate input
+  if (!input.name || !input.address) {
+    throw new Error("Missing required fields");
+  }
 
-## 🔧 Development
+  // Step 2: Check for duplicate
+  const existing = await sql`
+    SELECT id FROM projects
+    WHERE address = ${input.address}
+  `;
 
-### Scripts
+  if (existing.length > 0) {
+    return { status: "duplicate", project_id: existing[0].id };
+  }
+
+  // Step 3: Create project
+  const project = await sql`
+    INSERT INTO projects (name, address, status)
+    VALUES (${input.name}, ${input.address}, 'LEAD')
+    RETURNING *
+  `;
+
+  // Step 4: Send notification
+  await sendEmail({
+    to: "acquisitions@blueprint.com",
+    subject: "New Lead: " + input.name,
+    body: `New lead received at ${input.address}`
+  });
+
+  return { status: "created", project: project[0] };
+}
+```
+
+### 2. Document Processing Automation
+
+```typescript
+// Windmill flow: document_processing
+// This would be configured visually in Windmill UI
+
+// Step 1: Receive document upload event
+// Step 2: Download from S3
+// Step 3: Extract text (OCR if needed)
+// Step 4: Parse and validate data
+// Step 5: Update database
+// Step 6: Trigger next workflow if conditions met
+```
+
+### 3. Approval Workflow
+
+```typescript
+// Windmill approval flow with human-in-the-loop
+export async function main(input: {
+  loan_id: string;
+  amount: number;
+}) {
+  // Step 1: Check if approval needed
+  if (input.amount > 1000000) {
+    // Step 2: Create approval task
+    const approval = await createApproval({
+      title: `Loan approval required: $${input.amount}`,
+      assignee: "senior_manager@blueprint.com",
+      data: input
+    });
+
+    // Step 3: Wait for approval (Windmill handles this)
+    if (approval.approved) {
+      // Step 4: Update loan status
+      await sql`
+        UPDATE loans
+        SET status = 'APPROVED'
+        WHERE id = ${input.loan_id}
+      `;
+    } else {
+      // Handle rejection
+      await sql`
+        UPDATE loans
+        SET status = 'REJECTED'
+        WHERE id = ${input.loan_id}
+      `;
+    }
+  }
+}
+```
+
+## API Endpoints
+
+### Projects
+- `GET /api/v1/projects` - List all projects
+- `GET /api/v1/projects/:id` - Get project details
+- `POST /api/v1/projects` - Create new project
+- `PATCH /api/v1/projects/:id` - Update project
+
+### Workflows
+- `POST /api/v1/workflows/run` - Run a workflow immediately
+- `GET /api/v1/workflows/executions/:id` - Get execution status
+- `GET /api/v1/workflows/available` - List available workflows
+- `POST /api/v1/workflows/trigger` - Trigger based on event
+
+### Automations
+- `GET /api/v1/automations/rules` - List automation rules
+- `POST /api/v1/automations/rules` - Create new rule
+- `GET /api/v1/automations/history` - View execution history
+
+## Development Workflow
+
+### Adding a New Workflow
+
+1. **Design in Windmill UI**:
+   - Open http://localhost:8000
+   - Create new flow or script
+   - Test with sample data
+
+2. **Register Automation Rule**:
+   ```sql
+   INSERT INTO automation_rules (
+     name,
+     trigger_type,
+     trigger_config,
+     windmill_path
+   ) VALUES (
+     'Auto-assign on lead creation',
+     'entity_created',
+     '{"entity_type": "project"}',
+     'flows/lead_assignment'
+   );
+   ```
+
+3. **Trigger from Application**:
+   ```typescript
+   // In your application code
+   await fetch('/api/v1/workflows/trigger', {
+     method: 'POST',
+     body: JSON.stringify({
+       event_type: 'entity_created',
+       entity_type: 'project',
+       entity_id: projectId,
+       data: projectData
+     })
+   });
+   ```
+
+## Monitoring & Debugging
+
+### View Workflow Executions
+
+```sql
+-- Check recent executions
+SELECT * FROM workflow_executions
+ORDER BY started_at DESC
+LIMIT 10;
+
+-- Check failed workflows
+SELECT * FROM workflow_executions
+WHERE status = 'FAILED'
+ORDER BY started_at DESC;
+```
+
+### Windmill Logs
 
 ```bash
-npm run dev          # Start dev server with Turbopack
-npm run build        # Production build
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint issues
-npm run format       # Format code with Prettier
+# View Windmill server logs
+docker-compose logs -f windmill-server
+
+# View worker logs
+docker-compose logs -f windmill-worker
 ```
 
-### Environment
+### API Logs
 
-- Node.js 18+ recommended
-- npm 9+ or yarn
-- Modern browser (Chrome, Firefox, Safari, Edge)
+```bash
+# If running locally
+cd api && npm run dev
 
-## 📚 Documentation
+# If running in Docker
+docker-compose logs -f api
+```
 
-- **Component Docs**: Visit `/docs` page in the app
-- **PRD**: See `../PRODUCT_REQUIREMENTS_DOCUMENT.md`
-- **Deployment**: See `../AZURE_DEPLOYMENT.md`
+## Production Considerations
 
-## 🏗️ Architecture
+1. **Security**:
+   - Change all default passwords
+   - Use environment-specific secrets
+   - Enable HTTPS/TLS
+   - Implement proper authentication
 
-### Next.js App Router
-- Server-side rendering (SSR)
-- Static site generation (SSG)
-- API routes
-- File-based routing
+2. **Scaling**:
+   - Add more Windmill workers for parallel execution
+   - Use Redis for distributed locking
+   - Implement database connection pooling
+   - Consider Kubernetes for orchestration
 
-### Component Pattern
-- Client components for interactivity (`'use client'`)
-- Server components for data fetching
-- Shared components for reusability
+3. **Monitoring**:
+   - Set up Prometheus/Grafana
+   - Configure alerting rules
+   - Track workflow SLAs
+   - Monitor resource usage
 
-### State Management
-- React hooks (useState, useEffect)
-- Context API for global state
-- Local state for UI interactions
+4. **Backup**:
+   - Regular PostgreSQL backups
+   - Windmill script versioning
+   - Configuration management
 
-## 🎯 Current Status
+## Next Steps
 
-✅ **Complete**
-- All 17 pages built and functional
-- Navigation fully wired
-- Blueprint branding applied
-- Custom logo created
-- ESLint errors fixed
-- Production build passing
-- Console errors resolved
+1. **Explore Windmill Features**:
+   - Scheduled workflows (cron)
+   - Webhook triggers
+   - Approval flows
+   - Custom scripts in TypeScript/Python
+   - Integration with external services
 
-📋 **Next Steps**
-- Backend API integration
-- Authentication implementation
-- Real-time data connections
-- Advanced form validation
-- Testing suite
+2. **Build Core Workflows**:
+   - Lead intake and qualification
+   - Document processing pipeline
+   - Approval chains
+   - Notification system
+   - Report generation
 
-## 📞 Support
+3. **Extend the API**:
+   - Add authentication (JWT)
+   - Implement role-based access
+   - Add validation middleware
+   - Create DTOs for type safety
+   - Add OpenAPI documentation
 
-For questions or issues:
-1. Check the `/docs` page in the app
-2. Review `AZURE_DEPLOYMENT.md`
-3. Contact the development team
+## Troubleshooting
 
-## 📄 License
+### Services won't start
+```bash
+# Check Docker is running
+docker ps
 
-Commercial - Blueprint/Datapage © 2024
+# Reset everything
+docker-compose down -v
+docker-compose up -d
+```
+
+### Can't connect to Windmill
+```bash
+# Check if Caddy is running
+docker-compose ps caddy
+
+# Check Windmill logs
+docker-compose logs windmill-server
+```
+
+### Database connection errors
+```bash
+# Check PostgreSQL is running
+docker-compose ps postgres
+
+# Connect manually
+docker exec -it blueprint-postgres psql -U blueprint -d connect2
+```
+
+## Support
+
+For issues or questions:
+- Check Windmill docs: https://windmill.dev/docs
+- Review logs: `docker-compose logs`
+- Database state: Connect to PostgreSQL and check tables
 
 ---
 
-**Built with ❤️ for Blueprint by the Connect 2.0 Team**
+Built with Windmill - The open-source developer platform for building production-grade internal tools and workflows.

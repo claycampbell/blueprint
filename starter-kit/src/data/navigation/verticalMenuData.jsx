@@ -103,6 +103,11 @@ const verticalMenuData = () => [
     label: 'Analytics',
     href: '/analytics',
     icon: 'ri-bar-chart-box-line'
+  },
+  {
+    label: 'Windmill Demo',
+    href: '/windmill-demo',
+    icon: 'ri-window-line'
   }
 ]
 

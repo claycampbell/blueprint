@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "windmill": {
+      "url": "http://localhost:8000/api/mcp/w/blueprint/sse?token=YOUR_MCP_TOKEN_HERE"
+    }
+  }
+}
