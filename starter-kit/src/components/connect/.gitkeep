@@ -1,0 +1,16 @@
+# Connect Components
+
+This directory contains React components for the Connect 2.0 platform.
+
+## Assessment Task
+
+Create `ProjectSearch.tsx` in this directory with:
+- Search input with debounced search (300ms)
+- Results table (Project Name, Status, Address, Created Date)
+- Loading and error states
+- Responsive design
+- Full TypeScript typing
+
+Create `ProjectSearch.test.tsx` with unit tests.
+
+Ask Claude Code to guide your implementation!
