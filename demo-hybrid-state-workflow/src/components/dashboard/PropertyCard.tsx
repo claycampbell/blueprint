@@ -3,6 +3,7 @@ import { Property } from '../../types';
 import { getPropertyStats, getPropertyTypeLabel } from '../../utils/propertyHelpers';
 import { STATUS_COLORS } from '../../styles/theme';
 import { getNextDueDate, getDaysUntilDue, formatDueDate } from '../../utils/dateHelpers';
+import { EntitlementStatusBadge } from '../entitlement/EntitlementStatusBadge';
 
 interface PropertyCardProps {
   property: Property;
@@ -99,6 +100,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick })
       }}>
         {getPropertyTypeLabel(property.type)}
       </div>
+
+      {/* Entitlement subprocess badge */}
+      {property.lifecycle === 'entitlement' && property.entitlementStatus && (
+        <div style={{ marginBottom: '0.625rem' }}>
+          <EntitlementStatusBadge status={property.entitlementStatus} size="small" />
+        </div>
+      )}
 
       {/* Status - dot + text */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>

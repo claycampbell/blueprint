@@ -1,5 +1,5 @@
-import React from 'react';
-import { Property, ProcessType } from '../types';
+import React, { useState } from 'react';
+import { Property, ProcessType, EntitlementStatus } from '../types';
 import { PropertyHeader } from '../components/property/PropertyHeader';
 import { StateDimensionsCard } from '../components/property/StateDimensionsCard';
 import { ReactflowLifecyclePath } from '../components/property/ReactflowLifecyclePath';
@@ -8,6 +8,7 @@ import { AvailableActionsSection } from '../components/property/AvailableActions
 import { InProgressSection } from '../components/property/InProgressSection';
 import { CompletedSection } from '../components/property/CompletedSection';
 import { ReactflowStateTimeline } from '../components/property/ReactflowStateTimeline';
+import { EntitlementDetailView } from '../components/entitlement/EntitlementDetailView';
 import { getPropertyTypeLabel } from '../utils/propertyHelpers';
 
 interface PropertyDetailViewProps {
@@ -23,6 +24,27 @@ export const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
   onStartProcess,
   onCompleteProcess
 }) => {
+  const [showEntitlementView, setShowEntitlementView] = useState(false);
+
+  // Detect if property is in entitlement subprocess
+  const isEntitlementSubprocess = property.lifecycle === 'entitlement' && property.entitlementStatus;
+
+  const handleEntitlementStatusChange = (newStatus: EntitlementStatus) => {
+    console.log('Entitlement status changed:', newStatus);
+    // In real implementation, this would update the property data
+  };
+
+  // If entitlement subprocess is active and user wants detail view, show EntitlementDetailView
+  if (isEntitlementSubprocess && showEntitlementView) {
+    return (
+      <EntitlementDetailView
+        property={property}
+        onStatusChange={handleEntitlementStatusChange}
+        onBack={() => setShowEntitlementView(false)}
+      />
+    );
+  }
+
   return (
     <div>
       <PropertyHeader property={property} onBack={onBack} />
@@ -31,6 +53,63 @@ export const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
       <div style={{ padding: '0 2rem', maxWidth: '1400px', margin: '0 auto' }}>
         <ReactflowLifecyclePath property={property} />
         <StateDimensionsCard property={property} />
+
+        {/* Entitlement Subprocess Banner */}
+        {isEntitlementSubprocess && (
+          <div style={{
+            marginTop: '1.5rem',
+            padding: '1.5rem',
+            backgroundColor: '#eff6ff',
+            border: '2px solid #3b82f6',
+            borderRadius: '8px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                color: '#1e40af',
+                marginBottom: '0.5rem'
+              }}>
+                🏛️ Entitlement Subprocess Active
+              </div>
+              <div style={{
+                fontSize: '0.875rem',
+                color: '#1e40af'
+              }}>
+                This property has an active entitlement subprocess with {property.correctionLetters?.length || 0} correction round{property.correctionLetters?.length === 1 ? '' : 's'}.
+                {property.correctionLetters && property.correctionLetters.length > 0 && (
+                  <> Current status: <strong>{property.correctionLetters[property.correctionLetters.length - 1].itemsCompleted}/{property.correctionLetters[property.correctionLetters.length - 1].totalItems} items completed</strong>.</>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowEntitlementView(true)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: 'white',
+                backgroundColor: '#3b82f6',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.15s'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#3b82f6';
+              }}
+            >
+              View Entitlement Details →
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Two-column layout: Main content left, Metadata sidebar right */}

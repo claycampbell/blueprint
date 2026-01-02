@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LifecycleState } from '../types';
 import { PropertyCard } from '../components/dashboard/PropertyCard';
 import { getPropertiesByLifecycle, getDashboardStats } from '../utils/propertyHelpers';
@@ -14,11 +14,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onPropertyClick, c
   const persona = PERSONAS[currentRole];
   const propertiesByPhase = getPropertiesByLifecycle();
   const dashboardStats = getDashboardStats();
+  const [showEntitlementOnly, setShowEntitlementOnly] = useState(false);
 
   // Filter phases based on role permissions
-  const allPhases: LifecycleState[] = ['intake', 'feasibility', 'entitlement', 'construction', 'servicing'];
+  const allPhases: LifecycleState[] = ['intake', 'feasibility', 'entitlement', 'construction', 'servicing', 'closed'];
   const phases = allPhases.filter(phase =>
-    persona.permissions.lifecycleAccess.includes(phase)
+    persona.permissions.lifecycleAccess.includes(phase as Exclude<LifecycleState, 'closed'>)
   );
 
   return (
@@ -68,27 +69,29 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onPropertyClick, c
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button style={{
-              backgroundColor: 'white',
-              border: '1px solid #e2e8f0',
-              padding: '0.625rem 1.25rem',
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              color: '#475569',
-              cursor: 'pointer',
-              fontWeight: '500',
-              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-              transition: 'all 0.15s'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = '#f8fafc';
-              e.currentTarget.style.borderColor = '#cbd5e1';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'white';
-              e.currentTarget.style.borderColor = '#e2e8f0';
-            }}>
-              Filter
+            <button
+              onClick={() => setShowEntitlementOnly(!showEntitlementOnly)}
+              style={{
+                backgroundColor: showEntitlementOnly ? '#eff6ff' : 'white',
+                border: `1px solid ${showEntitlementOnly ? '#3b82f6' : '#e2e8f0'}`,
+                padding: '0.625rem 1.25rem',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                color: showEntitlementOnly ? '#1e40af' : '#475569',
+                cursor: 'pointer',
+                fontWeight: '500',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.15s'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.backgroundColor = showEntitlementOnly ? '#dbeafe' : '#f8fafc';
+                e.currentTarget.style.borderColor = showEntitlementOnly ? '#2563eb' : '#cbd5e1';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.backgroundColor = showEntitlementOnly ? '#eff6ff' : 'white';
+                e.currentTarget.style.borderColor = showEntitlementOnly ? '#3b82f6' : '#e2e8f0';
+              }}>
+              {showEntitlementOnly ? '🏛️ Entitlement Only' : 'Filter'}
             </button>
             <button style={{
               backgroundColor: '#2563eb',
@@ -258,31 +261,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onPropertyClick, c
 
               {/* Properties */}
               <div>
-                {properties.length === 0 ? (
-                  <div style={{
-                    textAlign: 'center',
-                    padding: '3rem 1rem',
-                    backgroundColor: '#fafafa',
-                    borderRadius: '6px',
-                    border: '1px dashed #d1d5db'
-                  }}>
+                {(() => {
+                  // Apply entitlement filter if active
+                  const filteredProperties = showEntitlementOnly
+                    ? properties.filter(p => p.lifecycle === 'entitlement' && p.entitlementStatus)
+                    : properties;
+
+                  return filteredProperties.length === 0 ? (
                     <div style={{
-                      fontSize: '0.8125rem',
-                      color: '#9ca3af',
-                      fontWeight: '400'
+                      textAlign: 'center',
+                      padding: '3rem 1rem',
+                      backgroundColor: '#fafafa',
+                      borderRadius: '6px',
+                      border: '1px dashed #d1d5db'
                     }}>
-                      No properties
+                      <div style={{
+                        fontSize: '0.8125rem',
+                        color: '#9ca3af',
+                        fontWeight: '400'
+                      }}>
+                        {showEntitlementOnly ? 'No entitlement properties' : 'No properties'}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  properties.map(property => (
-                    <PropertyCard
-                      key={property.id}
-                      property={property}
-                      onClick={() => onPropertyClick(property.id)}
-                    />
-                  ))
-                )}
+                  ) : (
+                    filteredProperties.map(property => (
+                      <PropertyCard
+                        key={property.id}
+                        property={property}
+                        onClick={() => onPropertyClick(property.id)}
+                      />
+                    ))
+                  );
+                })()}
               </div>
             </div>
           );
