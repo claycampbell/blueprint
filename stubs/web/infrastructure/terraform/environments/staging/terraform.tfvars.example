@@ -1,0 +1,39 @@
+# Staging Environment Variables
+# Copy this to terraform.tfvars and fill in the values
+
+project_name = "connect2-app"
+environment  = "staging"
+aws_region   = "us-west-2"
+
+# Networking
+vpc_cidr           = "10.1.0.0/16"
+az_count           = 2
+enable_nat_gateway = true
+
+# DNS - Update with your actual domain
+domain_name = "example.com"
+subdomain   = "staging"
+
+# Container - Update with your ECR image
+container_image   = "123456789.dkr.ecr.us-west-2.amazonaws.com/connect2-app-staging:latest"
+container_port    = 80
+health_check_path = "/"
+
+# ECS Task sizing
+task_cpu      = 256
+task_memory   = 512
+desired_count = 2
+min_capacity  = 2
+max_capacity  = 6
+
+# Environment variables
+environment_variables = [
+  {
+    name  = "NODE_ENV"
+    value = "staging"
+  },
+  {
+    name  = "API_URL"
+    value = "https://api-staging.example.com"
+  }
+]

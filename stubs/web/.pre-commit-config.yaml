@@ -1,0 +1,76 @@
+# Pre-commit hooks for Connect 2.0 Web App (TypeScript/React)
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+# Skip hooks: git commit --no-verify (not recommended)
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+
+      - id: end-of-file-fixer
+        name: Fix end of files
+
+      - id: check-yaml
+        name: Check YAML syntax
+        args: ['--unsafe']
+
+      - id: check-json
+        name: Check JSON syntax
+
+      - id: check-added-large-files
+        name: Check for large files
+        args: ['--maxkb=1000']
+
+      - id: check-merge-conflict
+        name: Check for merge conflicts
+
+      - id: detect-private-key
+        name: Detect private keys
+
+      - id: check-case-conflict
+        name: Check for case conflicts
+
+      - id: mixed-line-ending
+        name: Fix line endings
+        args: ['--fix=lf']
+
+  # ESLint for TypeScript/React
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        entry: npm run lint
+        language: system
+        types_or: [javascript, jsx, typescript, tsx]
+        pass_filenames: false
+
+      - id: typecheck
+        name: TypeScript type check
+        entry: npx tsc --noEmit
+        language: system
+        types_or: [typescript, tsx]
+        pass_filenames: false
+
+      - id: vitest
+        name: Run Vitest
+        entry: npm run test -- --run --passWithNoTests
+        language: system
+        types_or: [typescript, tsx, javascript, jsx]
+        pass_filenames: false
+        stages: [pre-commit]
+
+  # Prettier for formatting (optional - uncomment if using Prettier)
+  # - repo: https://github.com/pre-commit/mirrors-prettier
+  #   rev: v4.0.0-alpha.8
+  #   hooks:
+  #     - id: prettier
+  #       name: Prettier format
+  #       types_or: [javascript, jsx, typescript, tsx, css, json]
+
+# Configuration
+default_stages: [pre-commit]
+fail_fast: false
