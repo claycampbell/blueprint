@@ -82,6 +82,15 @@ export function EntitlementDetailView({
     }
   };
 
+  // Get current view index for navigation
+  const viewOrder: ViewMode[] = ['overview', 'triage', 'assignment', 'progress', 'qa', 'resubmittal'];
+  const currentViewIndex = viewOrder.indexOf(viewMode);
+  const nextView = viewOrder.find((v, i) => i > currentViewIndex && availableViews.includes(v));
+  const prevView = [...viewOrder].reverse().find((v, i) => {
+    const originalIndex = viewOrder.indexOf(v);
+    return originalIndex < currentViewIndex && availableViews.includes(v);
+  });
+
   return (
     <div style={{
       display: 'flex',
@@ -96,6 +105,47 @@ export function EntitlementDetailView({
         borderBottom: '1px solid #e5e7eb',
         boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
       }}>
+        {/* Breadcrumb navigation */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '12px',
+          fontSize: '0.8125rem',
+          color: '#6b7280'
+        }}>
+          <button
+            onClick={onBack}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#3b82f6',
+              cursor: 'pointer',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '0.8125rem'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#eff6ff';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            ← Property Details
+          </button>
+          <span>/</span>
+          <span style={{ fontWeight: '500', color: '#111827' }}>Entitlement Subprocess</span>
+          {viewMode !== 'overview' && (
+            <>
+              <span>/</span>
+              <span style={{ fontWeight: '500', color: '#111827' }}>
+                {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
+              </span>
+            </>
+          )}
+        </div>
+
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -103,21 +153,6 @@ export function EntitlementDetailView({
           marginBottom: '16px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={onBack}
-              style={{
-                padding: '6px 12px',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: '#374151',
-                backgroundColor: 'white',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                cursor: 'pointer'
-              }}
-            >
-              ← Back
-            </button>
             <div>
               <h1 style={{
                 fontSize: '1.5rem',
@@ -185,6 +220,72 @@ export function EntitlementDetailView({
             onClick={() => handleViewChange('resubmittal')}
           />
         </div>
+
+        {/* Flow navigation buttons */}
+        {viewMode !== 'overview' && (prevView || nextView) && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop: '1px solid #e5e7eb'
+          }}>
+            {prevView ? (
+              <button
+                onClick={() => handleViewChange(prevView)}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.8125rem',
+                  fontWeight: '500',
+                  color: '#3b82f6',
+                  backgroundColor: 'white',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#eff6ff';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white';
+                }}
+              >
+                ← Previous: {prevView.charAt(0).toUpperCase() + prevView.slice(1)}
+              </button>
+            ) : <div />}
+
+            {nextView ? (
+              <button
+                onClick={() => handleViewChange(nextView)}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '0.8125rem',
+                  fontWeight: '500',
+                  color: 'white',
+                  backgroundColor: '#3b82f6',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#2563eb';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                }}
+              >
+                Next: {nextView.charAt(0).toUpperCase() + nextView.slice(1)} →
+              </button>
+            ) : <div />}
+          </div>
+        )}
       </div>
 
       {/* Main content area */}
@@ -263,6 +364,74 @@ export function EntitlementDetailView({
           />
         )}
       </div>
+
+      {/* Floating navigation helper */}
+      {viewMode !== 'overview' && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          zIndex: 1000
+        }}>
+          <button
+            onClick={() => handleViewChange('overview')}
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              border: '1px solid #d1d5db',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem'
+            }}
+            title="Back to Overview"
+            onMouseOver={(e) => {
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            📊
+          </button>
+          <button
+            onClick={onBack}
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              backgroundColor: 'white',
+              border: '1px solid #d1d5db',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem'
+            }}
+            title="Exit to Property Details"
+            onMouseOver={(e) => {
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            ⬅️
+          </button>
+        </div>
+      )}
     </div>
   );
 }
