@@ -1,8 +1,9 @@
 import { Property } from '../types';
+import { ENTITLEMENT_PROPERTIES } from './entitlementProperties';
 
 /**
- * Comprehensive sample dataset with 18 properties across all lifecycle phases
- * Distribution: 3 intake, 5 feasibility, 3 entitlement, 2 construction, 5 servicing
+ * Comprehensive sample dataset with 22 properties across all lifecycle phases
+ * Distribution: 3 intake, 5 feasibility, 7 entitlement (3 generic + 4 detailed), 2 construction, 5 servicing
  */
 export const MULTIPLE_PROPERTIES: Record<string, Property> = {
   // ========== INTAKE (3 properties) ==========
@@ -890,5 +891,8 @@ export const MULTIPLE_PROPERTIES: Record<string, Property> = {
     updatedAt: new Date('2025-01-14T10:00:00Z'),
     createdBy: 'agent-018',
     assignedTo: 'Mike Torres'
-  }
+  },
+
+  // ========== ENTITLEMENT SUBPROCESS EXAMPLES (4 properties with detailed correction workflows) ==========
+  ...ENTITLEMENT_PROPERTIES
 };

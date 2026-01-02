@@ -1,0 +1,658 @@
+import {
+  Property,
+  CorrectionLetter,
+  CorrectionItem,
+  EntitlementStatus
+} from '../types';
+
+/**
+ * Sample properties showcasing different entitlement subprocess states
+ */
+
+// Helper to create base dates
+const now = new Date();
+const daysAgo = (days: number) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+const daysFromNow = (days: number) => new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+// Property 1: Under Review (Waiting on Jurisdiction)
+export const PROPERTY_UNDER_REVIEW: Property = {
+  id: 'ent-001',
+  type: 'subdivision',
+  lifecycle: 'entitlement',
+  status: 'active',
+  approvalState: 'pending',
+  riskLevel: 4.5,
+  entitlementStatus: 'under-review',
+  attributes: {
+    address: '1245 Lakeside Drive',
+    city: 'Seattle',
+    state: 'WA',
+    zip: '98102',
+    parcelNumber: '1234567890',
+    lotSizeSF: 18000,
+    estimatedBuildableSF: 12000,
+    jurisdiction: 'City of Seattle',
+    propertyValue: 2800000,
+    zoningDistrict: 'SF 5000',
+    imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400'
+  },
+  activeProcesses: [
+    {
+      id: 'proc-ent-001',
+      type: 'permit-submission',
+      status: 'in-progress',
+      propertyId: 'ent-001',
+      assignedTo: 'brittani',
+      startedAt: daysAgo(21),
+      dueDate: daysFromNow(39), // 60 days total
+      outputs: [
+        {
+          key: 'applicationNumber',
+          value: '2024-1234',
+          type: 'data',
+          timestamp: daysAgo(21)
+        },
+        {
+          key: 'submissionDate',
+          value: daysAgo(21).toISOString(),
+          type: 'data',
+          timestamp: daysAgo(21)
+        }
+      ],
+      notes: 'Submitted to DCI on ' + daysAgo(21).toLocaleDateString() + '. Waiting for plan review to begin.'
+    }
+  ],
+  processHistory: [],
+  stateHistory: [
+    {
+      id: 'sh-001',
+      propertyId: 'ent-001',
+      stateType: 'lifecycle',
+      previousValue: 'feasibility',
+      newValue: 'entitlement',
+      changedAt: daysAgo(45),
+      changedBy: 'brittani',
+      reason: 'Feasibility approved, moving to entitlement'
+    }
+  ],
+  createdAt: daysAgo(120),
+  updatedAt: daysAgo(2),
+  createdBy: 'dave',
+  assignedTo: 'brittani'
+};
+
+// Property 2: Corrections Received (Triage Phase)
+const correctionLetter1: CorrectionLetter = {
+  id: 'cl-001',
+  propertyId: 'ent-002',
+  permitApplicationId: '2024-5678',
+  jurisdictionDocumentId: 'Plan Check #2',
+  letterDate: daysAgo(3),
+  receivedDate: daysAgo(2),
+  roundNumber: 2,
+  documentUrl: 'https://example.com/corrections/2024-5678-round2.pdf',
+  documentHash: 'abc123def456',
+  extractedText: 'Corrections extracted via AI...',
+  totalItems: 8,
+  itemsCompleted: 0,
+  itemsInProgress: 0,
+  itemsNotStarted: 8,
+  responseDueDate: daysFromNow(14),
+  internalTargetDate: daysFromNow(12),
+  status: 'received',
+  items: [
+    {
+      id: 'ci-001',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Civil-3.a',
+      discipline: 'civil',
+      description: 'Clarify setback from south property line. Show dimension on site plan.',
+      sheetNumbers: ['C-101'],
+      detailReferences: ['Detail 3/C-101'],
+      severity: 'major',
+      category: 'setback',
+      estimatedEffortHours: 4,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-002',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Civil-5.b',
+      discipline: 'civil',
+      description: 'Revise drainage calculations to include 100-year storm event per DCI Tip #345.',
+      sheetNumbers: ['C-201'],
+      severity: 'critical',
+      category: 'drainage',
+      estimatedEffortHours: 8,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-003',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Structural-2.a',
+      discipline: 'structural',
+      description: 'Update beam calculations for garage header to reflect actual span dimensions.',
+      sheetNumbers: ['S-101'],
+      severity: 'major',
+      category: 'structural-calcs',
+      estimatedEffortHours: 6,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-004',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Architectural-1.c',
+      discipline: 'architectural',
+      description: 'Provide elevation view showing roof pitch and ridge height.',
+      sheetNumbers: ['A-201'],
+      severity: 'minor',
+      category: 'elevations',
+      estimatedEffortHours: 2,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-005',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Architectural-4.a',
+      discipline: 'architectural',
+      description: 'Show accessibility path from public right-of-way to main entrance.',
+      sheetNumbers: ['A-101'],
+      severity: 'major',
+      category: 'accessibility',
+      estimatedEffortHours: 3,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-006',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Landscape-1.a',
+      discipline: 'landscape',
+      description: 'Identify street tree species and planting locations per Green Factor requirements.',
+      sheetNumbers: ['L-101'],
+      severity: 'major',
+      category: 'landscaping',
+      estimatedEffortHours: 5,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-007',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Fire-2.b',
+      discipline: 'fire',
+      description: 'Clarify fire hydrant location within 400 feet of structure.',
+      sheetNumbers: ['C-101'],
+      severity: 'critical',
+      category: 'fire-access',
+      estimatedEffortHours: 2,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-008',
+      correctionLetterId: 'cl-001',
+      propertyId: 'ent-002',
+      itemNumber: 'Zoning-1.a',
+      discipline: 'zoning',
+      description: 'Confirm compliance with DADUs regulations per SMC 23.44.041.',
+      sheetNumbers: ['A-101'],
+      severity: 'minor',
+      category: 'zoning-compliance',
+      estimatedEffortHours: 1,
+      status: 'not-started',
+      createdAt: daysAgo(2),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    }
+  ],
+  createdAt: daysAgo(2),
+  createdBy: 'brittani',
+  updatedAt: daysAgo(2)
+};
+
+export const PROPERTY_CORRECTIONS_RECEIVED: Property = {
+  id: 'ent-002',
+  type: 'adaptive-reuse',
+  lifecycle: 'entitlement',
+  status: 'active',
+  approvalState: 'needs-revision',
+  riskLevel: 6.0,
+  entitlementStatus: 'corrections-received',
+  correctionLetters: [correctionLetter1],
+  attributes: {
+    address: '892 Capitol Hill Avenue',
+    city: 'Seattle',
+    state: 'WA',
+    zip: '98102',
+    parcelNumber: '9876543210',
+    lotSizeSF: 7200,
+    estimatedBuildableSF: 5400,
+    jurisdiction: 'City of Seattle',
+    propertyValue: 1950000,
+    zoningDistrict: 'NC3-65',
+    imageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400'
+  },
+  activeProcesses: [
+    {
+      id: 'proc-ent-002',
+      type: 'permit-submission',
+      status: 'blocked',
+      propertyId: 'ent-002',
+      assignedTo: 'brittani',
+      startedAt: daysAgo(67),
+      outputs: [
+        {
+          key: 'applicationNumber',
+          value: '2024-5678',
+          type: 'data',
+          timestamp: daysAgo(67)
+        }
+      ],
+      notes: 'Received Round 2 corrections on ' + daysAgo(2).toLocaleDateString() + '. Need to triage and assign to consultants.'
+    }
+  ],
+  processHistory: [],
+  stateHistory: [],
+  createdAt: daysAgo(180),
+  updatedAt: daysAgo(2),
+  createdBy: 'dave',
+  assignedTo: 'brittani'
+};
+
+// Property 3: Addressing Corrections (In Progress)
+const correctionLetter2: CorrectionLetter = {
+  id: 'cl-002',
+  propertyId: 'ent-003',
+  permitApplicationId: '2024-9012',
+  jurisdictionDocumentId: 'Plan Check #1',
+  letterDate: daysAgo(12),
+  receivedDate: daysAgo(11),
+  roundNumber: 1,
+  documentUrl: 'https://example.com/corrections/2024-9012-round1.pdf',
+  documentHash: 'xyz789abc123',
+  totalItems: 6,
+  itemsCompleted: 4,
+  itemsInProgress: 2,
+  itemsNotStarted: 0,
+  responseDueDate: daysFromNow(3),
+  internalTargetDate: daysFromNow(1),
+  status: 'in-progress',
+  items: [
+    {
+      id: 'ci-101',
+      correctionLetterId: 'cl-002',
+      propertyId: 'ent-003',
+      itemNumber: 'Civil-1.a',
+      discipline: 'civil',
+      description: 'Add spot elevations at property corners.',
+      sheetNumbers: ['C-101'],
+      severity: 'minor',
+      estimatedEffortHours: 2,
+      assignedToConsultantId: 'wilson-associates',
+      assignedToPerson: 'Sarah Wilson',
+      assignedDate: daysAgo(10),
+      dueDate: daysFromNow(1),
+      status: 'completed',
+      responseDescription: 'Added spot elevations per surveyor data.',
+      revisedSheetNumbers: ['C-101'],
+      reviewedBy: 'brittani',
+      reviewedDate: daysAgo(1),
+      createdAt: daysAgo(11),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-102',
+      correctionLetterId: 'cl-002',
+      propertyId: 'ent-003',
+      itemNumber: 'Civil-2.b',
+      discipline: 'civil',
+      description: 'Show utility connection points.',
+      sheetNumbers: ['C-101'],
+      severity: 'major',
+      estimatedEffortHours: 4,
+      assignedToConsultantId: 'wilson-associates',
+      assignedToPerson: 'Sarah Wilson',
+      assignedDate: daysAgo(10),
+      dueDate: daysFromNow(1),
+      status: 'in-progress',
+      createdAt: daysAgo(11),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-103',
+      correctionLetterId: 'cl-002',
+      propertyId: 'ent-003',
+      itemNumber: 'Structural-1.a',
+      discipline: 'structural',
+      description: 'Provide foundation details for seismic zone.',
+      sheetNumbers: ['S-101'],
+      severity: 'critical',
+      estimatedEffortHours: 6,
+      assignedToConsultantId: 'martin-structural',
+      assignedToPerson: 'John Martin',
+      assignedDate: daysAgo(10),
+      dueDate: daysFromNow(1),
+      status: 'completed',
+      responseDescription: 'Updated foundation details per IBC 2021 seismic requirements.',
+      revisedSheetNumbers: ['S-101', 'S-102'],
+      reviewedBy: 'brittani',
+      reviewedDate: daysAgo(2),
+      createdAt: daysAgo(11),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(2)
+    },
+    {
+      id: 'ci-104',
+      correctionLetterId: 'cl-002',
+      propertyId: 'ent-003',
+      itemNumber: 'Architectural-1.a',
+      discipline: 'architectural',
+      description: 'Add window schedule with U-values.',
+      sheetNumbers: ['A-301'],
+      severity: 'minor',
+      estimatedEffortHours: 2,
+      assignedToConsultantId: 'design-studio',
+      assignedToPerson: 'Maria Garcia',
+      assignedDate: daysAgo(10),
+      dueDate: daysFromNow(1),
+      status: 'completed',
+      responseDescription: 'Added window schedule with manufacturer specs.',
+      revisedSheetNumbers: ['A-301'],
+      reviewedBy: 'brittani',
+      reviewedDate: daysAgo(1),
+      createdAt: daysAgo(11),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-105',
+      correctionLetterId: 'cl-002',
+      propertyId: 'ent-003',
+      itemNumber: 'Architectural-3.b',
+      discipline: 'architectural',
+      description: 'Clarify roof assembly R-value compliance.',
+      sheetNumbers: ['A-401'],
+      severity: 'major',
+      estimatedEffortHours: 3,
+      assignedToConsultantId: 'design-studio',
+      assignedToPerson: 'Maria Garcia',
+      assignedDate: daysAgo(10),
+      dueDate: daysFromNow(1),
+      status: 'in-progress',
+      createdAt: daysAgo(11),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-106',
+      correctionLetterId: 'cl-002',
+      propertyId: 'ent-003',
+      itemNumber: 'Mechanical-1.a',
+      discipline: 'mechanical',
+      description: 'Show HVAC equipment location and screening.',
+      sheetNumbers: ['M-101'],
+      severity: 'minor',
+      estimatedEffortHours: 2,
+      assignedToConsultantId: 'mep-engineers',
+      assignedToPerson: 'David Chen',
+      assignedDate: daysAgo(10),
+      dueDate: daysFromNow(1),
+      status: 'completed',
+      responseDescription: 'Added rooftop unit location with screening detail.',
+      revisedSheetNumbers: ['M-101'],
+      reviewedBy: 'brittani',
+      reviewedDate: daysAgo(1),
+      createdAt: daysAgo(11),
+      createdBy: 'brittani',
+      extractionMethod: 'ai-assisted',
+      updatedAt: daysAgo(1)
+    }
+  ],
+  createdAt: daysAgo(11),
+  createdBy: 'brittani',
+  updatedAt: daysAgo(1)
+};
+
+export const PROPERTY_ADDRESSING_CORRECTIONS: Property = {
+  id: 'ent-003',
+  type: 'multi-family-rehab',
+  lifecycle: 'entitlement',
+  status: 'active',
+  approvalState: 'needs-revision',
+  riskLevel: 5.0,
+  entitlementStatus: 'addressing-corrections',
+  correctionLetters: [correctionLetter2],
+  attributes: {
+    address: '3421 University Way NE',
+    city: 'Seattle',
+    state: 'WA',
+    zip: '98105',
+    parcelNumber: '1122334455',
+    lotSizeSF: 12000,
+    estimatedBuildableSF: 9600,
+    jurisdiction: 'City of Seattle',
+    propertyValue: 3200000,
+    zoningDistrict: 'NC3-75',
+    imageUrl: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400'
+  },
+  activeProcesses: [
+    {
+      id: 'proc-ent-003',
+      type: 'permit-submission',
+      status: 'in-progress',
+      propertyId: 'ent-003',
+      assignedTo: 'brittani',
+      startedAt: daysAgo(78),
+      notes: 'Round 1 corrections almost complete. 4 of 6 items done, 2 still in progress with consultants.'
+    }
+  ],
+  processHistory: [],
+  stateHistory: [],
+  createdAt: daysAgo(210),
+  updatedAt: now,
+  createdBy: 'dave',
+  assignedTo: 'brittani'
+};
+
+// Property 4: Corrections QA (Review Phase)
+const correctionLetter3: CorrectionLetter = {
+  id: 'cl-003',
+  propertyId: 'ent-004',
+  permitApplicationId: '2024-3456',
+  jurisdictionDocumentId: 'Plan Check #3',
+  letterDate: daysAgo(25),
+  receivedDate: daysAgo(24),
+  roundNumber: 3,
+  documentUrl: 'https://example.com/corrections/2024-3456-round3.pdf',
+  documentHash: 'def456ghi789',
+  totalItems: 4,
+  itemsCompleted: 4,
+  itemsInProgress: 0,
+  itemsNotStarted: 0,
+  responseDueDate: daysFromNow(1),
+  internalTargetDate: now,
+  status: 'in-qa',
+  items: [
+    {
+      id: 'ci-201',
+      correctionLetterId: 'cl-003',
+      propertyId: 'ent-004',
+      itemNumber: 'Civil-1.a',
+      discipline: 'civil',
+      description: 'Revise grading to ensure positive drainage away from foundation.',
+      sheetNumbers: ['C-102'],
+      severity: 'critical',
+      estimatedEffortHours: 4,
+      assignedToConsultantId: 'wilson-associates',
+      assignedToPerson: 'Sarah Wilson',
+      assignedDate: daysAgo(22),
+      dueDate: daysAgo(1),
+      status: 'consultant-submitted',
+      responseDescription: 'Revised grading plan with 2% minimum slope away from all foundation walls.',
+      revisedSheetNumbers: ['C-102'],
+      createdAt: daysAgo(24),
+      createdBy: 'brittani',
+      extractionMethod: 'manual',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-202',
+      correctionLetterId: 'cl-003',
+      propertyId: 'ent-004',
+      itemNumber: 'Architectural-2.a',
+      discipline: 'architectural',
+      description: 'Show required exit signage on floor plans.',
+      sheetNumbers: ['A-101'],
+      severity: 'minor',
+      estimatedEffortHours: 1,
+      assignedToConsultantId: 'design-studio',
+      assignedToPerson: 'Maria Garcia',
+      assignedDate: daysAgo(22),
+      dueDate: daysAgo(1),
+      status: 'consultant-submitted',
+      responseDescription: 'Added exit signage symbols per IBC requirements.',
+      revisedSheetNumbers: ['A-101'],
+      createdAt: daysAgo(24),
+      createdBy: 'brittani',
+      extractionMethod: 'manual',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-203',
+      correctionLetterId: 'cl-003',
+      propertyId: 'ent-004',
+      itemNumber: 'Electrical-1.b',
+      discipline: 'electrical',
+      description: 'Provide panel schedule with circuit loads.',
+      sheetNumbers: ['E-101'],
+      severity: 'major',
+      estimatedEffortHours: 3,
+      assignedToConsultantId: 'mep-engineers',
+      assignedToPerson: 'David Chen',
+      assignedDate: daysAgo(22),
+      dueDate: daysAgo(1),
+      status: 'consultant-submitted',
+      responseDescription: 'Added complete panel schedule with calculated loads.',
+      revisedSheetNumbers: ['E-101'],
+      createdAt: daysAgo(24),
+      createdBy: 'brittani',
+      extractionMethod: 'manual',
+      updatedAt: daysAgo(1)
+    },
+    {
+      id: 'ci-204',
+      correctionLetterId: 'cl-003',
+      propertyId: 'ent-004',
+      itemNumber: 'Plumbing-1.a',
+      discipline: 'plumbing',
+      description: 'Clarify water service size calculation.',
+      sheetNumbers: ['P-101'],
+      severity: 'major',
+      estimatedEffortHours: 2,
+      assignedToConsultantId: 'mep-engineers',
+      assignedToPerson: 'David Chen',
+      assignedDate: daysAgo(22),
+      dueDate: daysAgo(1),
+      status: 'consultant-submitted',
+      responseDescription: 'Provided fixture unit calculation showing 1.5" service is adequate.',
+      revisedSheetNumbers: ['P-101'],
+      createdAt: daysAgo(24),
+      createdBy: 'brittani',
+      extractionMethod: 'manual',
+      updatedAt: daysAgo(1)
+    }
+  ],
+  createdAt: daysAgo(24),
+  createdBy: 'brittani',
+  updatedAt: daysAgo(1)
+};
+
+export const PROPERTY_CORRECTIONS_QA: Property = {
+  id: 'ent-004',
+  type: 'subdivision',
+  lifecycle: 'entitlement',
+  status: 'active',
+  approvalState: 'needs-revision',
+  riskLevel: 3.5,
+  entitlementStatus: 'corrections-qa',
+  correctionLetters: [correctionLetter3],
+  attributes: {
+    address: '5678 Greenwood Avenue North',
+    city: 'Seattle',
+    state: 'WA',
+    zip: '98103',
+    parcelNumber: '5566778899',
+    lotSizeSF: 22000,
+    estimatedBuildableSF: 16500,
+    jurisdiction: 'City of Seattle',
+    propertyValue: 4100000,
+    zoningDistrict: 'SF 7200',
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400'
+  },
+  activeProcesses: [
+    {
+      id: 'proc-ent-004',
+      type: 'permit-submission',
+      status: 'in-progress',
+      propertyId: 'ent-004',
+      assignedTo: 'brittani',
+      startedAt: daysAgo(145),
+      notes: 'Round 3 corrections all submitted by consultants. Ready for internal QA review before resubmittal.'
+    }
+  ],
+  processHistory: [],
+  stateHistory: [],
+  createdAt: daysAgo(280),
+  updatedAt: now,
+  createdBy: 'dave',
+  assignedTo: 'brittani'
+};
+
+// Export all entitlement properties
+export const ENTITLEMENT_PROPERTIES: Record<string, Property> = {
+  'ent-001': PROPERTY_UNDER_REVIEW,
+  'ent-002': PROPERTY_CORRECTIONS_RECEIVED,
+  'ent-003': PROPERTY_ADDRESSING_CORRECTIONS,
+  'ent-004': PROPERTY_CORRECTIONS_QA
+};
