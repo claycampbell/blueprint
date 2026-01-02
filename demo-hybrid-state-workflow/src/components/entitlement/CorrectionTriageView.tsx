@@ -24,6 +24,13 @@ export function CorrectionTriageView({
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [pdfPage, setPdfPage] = useState(1);
 
+  // Debug logging
+  console.log('CorrectionTriageView rendering:', {
+    letterId: letter.id,
+    pdfUrl,
+    documentUrl: letter.documentUrl
+  });
+
   const untriaged = letter.items.filter(item => item.status === 'not-started');
   const triaged = letter.items.filter(item => item.status !== 'not-started');
 
