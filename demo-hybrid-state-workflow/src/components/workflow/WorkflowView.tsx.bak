@@ -1,0 +1,132 @@
+import React, { useState } from 'react';
+import { Property, LifecycleState, WorkflowStageView } from '../../types';
+import StageDisplay from './StageDisplay';
+import Checklist from './Checklist';
+import StageNavigation from './StageNavigation';
+import { buildWorkflowStageView } from './workflowUtils';
+
+interface WorkflowViewProps {
+  property: Property;
+}
+
+/**
+ * Traditional workflow-centric UI component
+ *
+ * Demonstrates the rigid, stage-based approach where:
+ * - Everything is organized around the "current stage"
+ * - Users must complete a stage before advancing
+ * - Backwards movement is awkward/restricted
+ * - Concurrent processes are difficult to represent
+ */
+const WorkflowView: React.FC<WorkflowViewProps> = ({ property }) => {
+  const [stageView, setStageView] = useState<WorkflowStageView>(
+    buildWorkflowStageView(property)
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAdvance = () => {
+    if (!stageView.canAdvance) {
+      setError('Cannot advance: Complete all required items first');
+      return;
+    }
+    setError(null);
+    // In a real app, this would trigger a state transition
+    console.log(`Advancing from ${stageView.stage} to ${stageView.nextStage}`);
+  };
+
+  const handleGoBack = () => {
+    if (!stageView.canGoBack) {
+      setError('Cannot go backwards in workflow');
+      return;
+    }
+    setError(null);
+    console.log(`Going back from ${stageView.stage} to ${stageView.previousStage}`);
+  };
+
+  return (
+    <div className="workflow-view">
+      {/* Header: Property Info + Current Stage */}
+      <div className="workflow-header">
+        <div className="property-info-workflow">
+          <h2>{property.attributes.address}</h2>
+          <div className="property-meta-workflow">
+            <span className="badge badge-info">{property.type}</span>
+            <span className="badge badge-gray">{property.status}</span>
+          </div>
+        </div>
+
+        <div className="current-stage-banner">
+          <div className="stage-label">Current Stage</div>
+          <div className="stage-name">{stageView.displayName}</div>
+          <div className="stage-description">{stageView.description}</div>
+        </div>
+      </div>
+
+      {/* Stage Progress Indicator */}
+      <StageDisplay
+        currentStage={stageView.stage}
+        completedStages={getCompletedStages(property)}
+      />
+
+      {/* Stage-Specific Content Area */}
+      <div className="stage-content-area">
+        <h3>{stageView.displayName} Tasks</h3>
+        <p className="stage-instructions">
+          Complete all required items below to advance to the next stage.
+        </p>
+
+        {/* Checklist for Current Stage */}
+        <Checklist items={stageView.checklist} />
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="workflow-error">
+          <svg
+            width="20"
+            height="20"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Stage Navigation */}
+      <StageNavigation
+        currentStage={stageView.stage}
+        nextStage={stageView.nextStage}
+        previousStage={stageView.previousStage}
+        canAdvance={stageView.canAdvance}
+        canGoBack={stageView.canGoBack}
+        onAdvance={handleAdvance}
+        onGoBack={handleGoBack}
+      />
+    </div>
+  );
+};
+
+/**
+ * Helper: Determine which stages are completed based on lifecycle state
+ */
+function getCompletedStages(property: Property): LifecycleState[] {
+  const stageOrder: LifecycleState[] = [
+    'intake',
+    'feasibility',
+    'entitlement',
+    'construction',
+    'servicing',
+    'closed'
+  ];
+
+  const currentIndex = stageOrder.indexOf(property.lifecycle);
+  return stageOrder.slice(0, currentIndex);
+}
+
+export default WorkflowView;

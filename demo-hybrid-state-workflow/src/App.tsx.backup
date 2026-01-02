@@ -1,0 +1,104 @@
+import React, { useState } from 'react';
+import { useSyncedProperty } from './hooks/useSyncedProperty';
+import { ViewToggle, ViewMode } from './components/ViewToggle';
+import { ComparisonView } from './components/ComparisonView';
+import { WorkflowView } from './components/WorkflowView';
+import { StateMachineView } from './components/StateMachineView';
+import { SAMPLE_PROPERTIES } from './data/sampleData';
+
+function App() {
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('prop-002');
+  const [viewMode, setViewMode] = useState<ViewMode>('side-by-side');
+
+  const {
+    property,
+    completeProcess,
+    loadProperty
+  } = useSyncedProperty(selectedPropertyId);
+
+  const handlePropertyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newId = e.target.value;
+    setSelectedPropertyId(newId);
+    loadProperty(newId);
+  };
+
+  return (
+    <div className="container">
+      {/* Header */}
+      <header style={{ marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+          Hybrid State Machine + Workflow Demo
+        </h1>
+        <p style={{ color: 'var(--color-gray-500)', fontSize: '1.125rem' }}>
+          Interactive demonstration of hybrid approach to property lifecycle management
+        </p>
+      </header>
+
+      {/* Property Selector */}
+      <div className="card" style={{ marginBottom: '2rem' }}>
+        <label htmlFor="property-select" style={{
+          display: 'block',
+          marginBottom: '0.5rem',
+          fontWeight: '500'
+        }}>
+          Select Property:
+        </label>
+        <select
+          id="property-select"
+          value={selectedPropertyId}
+          onChange={handlePropertyChange}
+          style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '0.5rem',
+            border: '1px solid var(--color-gray-300)',
+            borderRadius: '6px',
+            fontSize: '1rem'
+          }}
+        >
+          <option value="prop-001">123 Main Street (Intake - Subdivision)</option>
+          <option value="prop-002">456 Oak Avenue (Feasibility - Multi-Family Rehab)</option>
+          <option value="prop-003">789 Pine Road (Feasibility Complete - Land Banking)</option>
+        </select>
+      </div>
+
+      {/* View Mode Toggle */}
+      <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+
+      {/* Comparison View - Side-by-side or single view */}
+      <ComparisonView
+        viewMode={viewMode}
+        property={property}
+        workflowView={
+          <WorkflowView
+            property={property}
+            onCompleteProcess={completeProcess}
+          />
+        }
+        stateMachineView={
+          <StateMachineView
+            property={property}
+            onCompleteProcess={completeProcess}
+          />
+        }
+      />
+
+      {/* Footer */}
+      <footer style={{
+        marginTop: '4rem',
+        paddingTop: '2rem',
+        borderTop: '1px solid var(--color-gray-200)',
+        textAlign: 'center',
+        color: 'var(--color-gray-500)',
+        fontSize: '0.875rem'
+      }}>
+        <p>Demo: Hybrid State Machine + Workflow Model for Connect 2.0</p>
+        <p style={{ marginTop: '0.5rem' }}>
+          This demonstrates property-centric state management with concurrent processes
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;

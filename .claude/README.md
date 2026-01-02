@@ -213,6 +213,12 @@ New team members should:
 - **devkit@devkit-marketplace** - Developer utilities and skills
 - **superpowers@superpowers-marketplace** - Advanced coding capabilities
 
+### Project Skills
+- **jira-automation** ([.claude/skills/jira-automation/SKILL.md](.claude/skills/jira-automation/SKILL.md)) - Complete Jira automation toolkit using REST API
+- **everhour-integration** ([.claude/skills/everhour-integration/SKILL.md](.claude/skills/everhour-integration/SKILL.md)) - Time tracking integration via Everhour REST API
+- **plan** ([.claude/skills/plan/SKILL.md](.claude/skills/plan/SKILL.md)) - Create detailed task breakdown using Claude Code To Do feature
+- **scope** ([.claude/skills/scope/SKILL.md](.claude/skills/scope/SKILL.md)) - Create comprehensive project scope documents as development checklists
+
 ### Standard Permissions
 All team members have these tools auto-approved:
 - Git operations (`git add`, `git commit`, `git push`, `gh` CLI)

@@ -1,0 +1,494 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  --color-background: #f9fafb;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-900: #111827;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-900);
+  line-height: 1.6;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.button-secondary {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.button-secondary:hover {
+  background-color: var(--color-gray-300);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-info {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-gray {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Comparison View - Stack vertically on mobile */
+  .comparison-view {
+    grid-template-columns: 1fr !important;
+  }
+
+  .comparison-panel {
+    min-height: 400px;
+  }
+}
+
+/* ============================================================================
+   Workflow-Centric UI Styles (Traditional, Rigid)
+   ============================================================================ */
+
+.workflow-view {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+/* Workflow Header */
+.workflow-header {
+  border-bottom: 2px solid var(--color-gray-200);
+  padding-bottom: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.property-info-workflow h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.property-meta-workflow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Current Stage Banner - Very Prominent */
+.current-stage-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.stage-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
+
+.stage-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.stage-description {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* Stage Display - Linear Progress */
+.stage-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--color-gray-50);
+  border-radius: 8px;
+}
+
+.stage-display-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.stage-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+}
+
+.stage-circle-completed {
+  background-color: var(--color-success);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.stage-circle-current {
+  background-color: var(--color-primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  transform: scale(1.1);
+}
+
+.stage-circle-future {
+  background-color: white;
+  color: var(--color-gray-400);
+  border: 2px solid var(--color-gray-300);
+}
+
+.stage-number {
+  font-size: 1.125rem;
+}
+
+.stage-label-display {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stage-label-completed {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.stage-label-current {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.stage-label-future {
+  color: var(--color-gray-400);
+}
+
+.stage-connector {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  z-index: -1;
+}
+
+.stage-connector-completed,
+.stage-connector-current {
+  background-color: var(--color-success);
+}
+
+.stage-connector-future {
+  background-color: var(--color-gray-300);
+}
+
+/* Stage Content Area */
+.stage-content-area {
+  margin: 2rem 0;
+}
+
+.stage-content-area h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-gray-900);
+}
+
+.stage-instructions {
+  color: var(--color-gray-500);
+  margin-bottom: 1.5rem;
+}
+
+/* Checklist Styles */
+.checklist-container {
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.checklist-progress {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: var(--color-gray-200);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-success) 0%, #059669 100%);
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.checklist-section {
+  margin-bottom: 1.5rem;
+}
+
+.checklist-section:last-child {
+  margin-bottom: 0;
+}
+
+.checklist-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-700);
+  margin-bottom: 0.75rem;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.checklist-item:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.checklist-item-completed {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.checklist-checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  color: var(--color-gray-400);
+}
+
+.checklist-item-completed .checklist-checkbox {
+  color: var(--color-success);
+}
+
+.checklist-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.checklist-label-text-completed {
+  text-decoration: line-through;
+  color: var(--color-gray-500);
+}
+
+.required-indicator {
+  color: var(--color-danger);
+  margin-left: 0.25rem;
+  font-weight: 700;
+}
+
+/* Workflow Error Message */
+.workflow-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin: 1.5rem 0;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-weight: 500;
+}
+
+.workflow-error svg {
+  flex-shrink: 0;
+}
+
+/* Stage Navigation */
+.stage-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--color-gray-200);
+}
+
+.nav-back,
+.nav-advance {
+  display: flex;
+  align-items: center;
+}
+
+.button-large {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.button-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-disabled:hover {
+  background-color: var(--color-primary);
+}
+
+.button-secondary.button-disabled:hover {
+  background-color: var(--color-gray-200);
+}
+
+@media (max-width: 768px) {
+  .stage-display {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .stage-display-item {
+    flex-basis: calc(33.33% - 0.67rem);
+  }
+
+  .stage-connector {
+    display: none;
+  }
+
+  .stage-navigation {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+
+  .nav-back,
+  .nav-advance {
+    width: 100%;
+  }
+
+  .nav-back button,
+  .nav-advance button {
+    width: 100%;
+  }
+}
