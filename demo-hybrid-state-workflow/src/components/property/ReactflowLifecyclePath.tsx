@@ -21,7 +21,8 @@ export const ReactflowLifecyclePath: React.FC<ReactflowLifecyclePathProps> = ({ 
         'feasibility': 'entitlement',
         'entitlement': 'construction',
         'construction': 'servicing',
-        'servicing': null // End state
+        'servicing': 'closed',
+        'closed': null // End state
       };
       return progressionMap[currentLifecycle];
     };

@@ -20,7 +20,6 @@ interface StageNavigationProps {
  * - Validation prevents advancement until checklist complete
  */
 const StageNavigation: React.FC<StageNavigationProps> = ({
-  currentStage,
   nextStage,
   previousStage,
   canAdvance,

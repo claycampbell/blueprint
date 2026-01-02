@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import ReactFlow, { Node, Edge, Position } from 'reactflow';
+import ReactFlow, { Node, Edge, Position, MarkerType } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Property, StateChange } from '../../types';
+import { Property } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ReactflowStateTimelineProps {
@@ -150,7 +150,7 @@ export const ReactflowStateTimeline: React.FC<ReactflowStateTimelineProps> = ({
             strokeDasharray: index === 0 ? undefined : '5,5'
           },
           markerEnd: {
-            type: 'arrowclosed' as const,
+            type: MarkerType.ArrowClosed,
             color: nextColor,
             width: 20,
             height: 20

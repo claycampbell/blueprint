@@ -29,7 +29,7 @@ export const LifecyclePathView: React.FC<LifecyclePathViewProps> = ({ property }
   }
 
   // Add each transition
-  lifecycleTransitions.forEach((transition, index) => {
+  lifecycleTransitions.forEach((transition) => {
     const newState = transition.newValue as LifecycleState;
     const previousState = transition.previousValue as LifecycleState;
 

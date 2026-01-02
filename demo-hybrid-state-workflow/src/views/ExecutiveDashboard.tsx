@@ -1,6 +1,5 @@
 import React from 'react';
 import { MULTIPLE_PROPERTIES } from '../data/multipleProperties';
-import { Property, LifecycleState } from '../types';
 import { getPropertiesByLifecycle } from '../utils/propertyHelpers';
 
 interface ExecutiveDashboardProps {

@@ -85,8 +85,8 @@ export function EntitlementDetailView({
   // Get current view index for navigation
   const viewOrder: ViewMode[] = ['overview', 'triage', 'assignment', 'progress', 'qa', 'resubmittal'];
   const currentViewIndex = viewOrder.indexOf(viewMode);
-  const nextView = viewOrder.find((v, i) => i > currentViewIndex && availableViews.includes(v));
-  const prevView = [...viewOrder].reverse().find((v, i) => {
+  const nextView = viewOrder.find((v, idx) => idx > currentViewIndex && availableViews.includes(v));
+  const prevView = [...viewOrder].reverse().find((v) => {
     const originalIndex = viewOrder.indexOf(v);
     return originalIndex < currentViewIndex && availableViews.includes(v);
   });
@@ -160,7 +160,7 @@ export function EntitlementDetailView({
                 color: '#111827',
                 marginBottom: '4px'
               }}>
-                {property.address}
+                {property.attributes.address}
               </h1>
               <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                 Entitlement Subprocess
@@ -518,9 +518,9 @@ function OverviewContent({
           gap: '12px',
           fontSize: '0.875rem'
         }}>
-          <InfoItem label="Address" value={property.address} />
-          <InfoItem label="City" value={property.city} />
-          <InfoItem label="Project Type" value={property.projectType} />
+          <InfoItem label="Address" value={property.attributes.address} />
+          <InfoItem label="City" value={property.attributes.city} />
+          <InfoItem label="Project Type" value={property.type} />
           <InfoItem label="Current Phase" value={property.lifecycle} />
         </div>
       </div>

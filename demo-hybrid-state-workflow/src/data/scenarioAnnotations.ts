@@ -304,6 +304,6 @@ export function getActiveAnnotations(
     }
 
     // If duration is specified, check if still active
-    return currentTimestamp < annotation.eventTimestamp + annotation.duration;
+    return currentTimestamp < annotation.eventTimestamp + (annotation.duration || 0);
   });
 }

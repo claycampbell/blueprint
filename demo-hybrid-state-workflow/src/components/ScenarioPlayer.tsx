@@ -36,7 +36,6 @@ export const ScenarioPlayer: React.FC<ScenarioPlayerProps> = ({
     currentEvent,
     totalEvents,
     speed,
-    mode,
     progress,
     play,
     pause,
@@ -45,7 +44,6 @@ export const ScenarioPlayer: React.FC<ScenarioPlayerProps> = ({
     stepBackward,
     jumpToEvent,
     changeSpeed,
-    toggleMode,
     events
   } = useScenarioPlayback({
     scenario,

@@ -21,7 +21,6 @@ interface StartProcessModalProps {
 
 export const StartProcessModal: React.FC<StartProcessModalProps> = ({
   isOpen,
-  processType,
   processLabel,
   description,
   estimatedDays,

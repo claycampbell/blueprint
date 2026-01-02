@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Property, StateChange } from '../../types';
+import { Property } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 
 interface StateTimelineProps {
@@ -129,7 +129,7 @@ export const StateTimeline: React.FC<StateTimelineProps> = ({ property }) => {
 
         {/* State change entries */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {displayHistory.map((change, index) => {
+          {displayHistory.map((change) => {
             const dimensionColor = getDimensionColor(change.stateType);
             const timeAgo = formatDistanceToNow(new Date(change.changedAt), { addSuffix: true });
 

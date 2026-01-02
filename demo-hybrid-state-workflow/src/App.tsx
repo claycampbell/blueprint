@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DashboardView } from './views/DashboardView';
 import { TimelineView } from './views/TimelineView';
 import { PropertyDetailView } from './views/PropertyDetailView';
@@ -69,54 +69,57 @@ function App() {
   };
 
   const handleCompleteProcess = (propertyId: string, processId: string) => {
-    setProperties(prev => {
-      const property = prev[propertyId];
-      if (!property) return prev;
+    // Get property and process info before state update
+    const property = properties[propertyId];
+    if (!property) return;
 
-      // Find the process being completed
-      const process = property.activeProcesses.find(p => p.id === processId);
-      if (!process) return prev;
+    const process = property.activeProcesses.find(p => p.id === processId);
+    if (!process) return;
+
+    // Calculate new state values
+    let newRiskLevel = property.riskLevel;
+    let newApprovalState = property.approvalState;
+    let newLifecycle = property.lifecycle;
+
+    // Risk assessment process completion updates risk dimension
+    if (process.type === 'feasibility-analysis' || process.type === 'environmental-assessment') {
+      // Simulate risk decrease after completing analysis
+      newRiskLevel = Math.max(1, property.riskLevel - 1.5);
+    }
+
+    // Title review completion updates approval dimension
+    if (process.type === 'title-review') {
+      if (property.approvalState === 'pending') {
+        newApprovalState = 'approved';
+      }
+    }
+
+    setProperties(prev => {
+      const currentProperty = prev[propertyId];
+      if (!currentProperty) return prev;
 
       // Complete the process
-      const updatedProcesses = property.activeProcesses.map(p =>
+      const updatedProcesses = currentProperty.activeProcesses.map(p =>
         p.id === processId
           ? { ...p, status: 'completed' as const, completedAt: new Date() }
           : p
       );
 
-      // State Machine Updates - processes update state dimensions!
-      let newRiskLevel = property.riskLevel;
-      let newApprovalState = property.approvalState;
-      let newLifecycle = property.lifecycle;
-
-      // Risk assessment process completion updates risk dimension
-      if (process.type === 'site-analysis' || process.type === 'environmental-review') {
-        // Simulate risk decrease after completing analysis
-        newRiskLevel = Math.max(1, property.riskLevel - 1.5);
-      }
-
-      // Title review completion updates approval dimension
-      if (process.type === 'title-review') {
-        if (property.approvalState === 'pending') {
-          newApprovalState = 'approved';
-        }
-      }
-
       // Check if all feasibility processes are complete for lifecycle advancement
       const allFeasibilityProcesses = updatedProcesses.filter(p =>
-        p.type === 'site-analysis' || p.type === 'title-review' || p.type === 'environmental-review'
+        p.type === 'feasibility-analysis' || p.type === 'title-review' || p.type === 'environmental-assessment'
       );
       const allFeasibilityComplete = allFeasibilityProcesses.length > 0 &&
         allFeasibilityProcesses.every(p => p.status === 'completed');
 
-      if (allFeasibilityComplete && property.lifecycle === 'feasibility') {
+      if (allFeasibilityComplete && currentProperty.lifecycle === 'feasibility') {
         newLifecycle = 'entitlement';
       }
 
       return {
         ...prev,
         [propertyId]: {
-          ...property,
+          ...currentProperty,
           activeProcesses: updatedProcesses,
           riskLevel: newRiskLevel,
           approvalState: newApprovalState,
@@ -126,7 +129,7 @@ function App() {
       };
     });
 
-    const processName = process.type.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const processName = process.type.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     let message = 'Process marked as complete';
     if (newLifecycle !== property.lifecycle) {
       message = `Lifecycle advanced to ${newLifecycle}`;

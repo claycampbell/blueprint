@@ -267,7 +267,7 @@ export const InteractiveProcessCard: React.FC<InteractiveProcessCardProps> = ({ 
             newValue: 'Completed'
           }
         ]}
-        onConfirm={(notes) => {
+        onConfirm={() => {
           onComplete();
           setShowCompleteModal(false);
         }}

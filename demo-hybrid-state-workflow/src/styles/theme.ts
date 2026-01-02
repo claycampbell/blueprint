@@ -9,6 +9,7 @@ export interface PhaseColorScheme {
   text: string;
   dot: string;
   label: string;
+  icon: string;
 }
 
 /**
@@ -21,42 +22,48 @@ export const PHASE_COLORS: Record<string, PhaseColorScheme> = {
     border: '#e5e7eb',
     text: '#6b7280',
     dot: '#3b82f6',
-    label: 'INTAKE'
+    label: 'INTAKE',
+    icon: '📥'
   },
   feasibility: {
     background: '#ffffff',
     border: '#e5e7eb',
     text: '#6b7280',
     dot: '#f59e0b',
-    label: 'FEASIBILITY'
+    label: 'FEASIBILITY',
+    icon: '🔍'
   },
   entitlement: {
     background: '#ffffff',
     border: '#e5e7eb',
     text: '#6b7280',
     dot: '#8b5cf6',
-    label: 'ENTITLEMENT'
+    label: 'ENTITLEMENT',
+    icon: '📋'
   },
   construction: {
     background: '#ffffff',
     border: '#e5e7eb',
     text: '#6b7280',
     dot: '#f97316',
-    label: 'CONSTRUCTION'
+    label: 'CONSTRUCTION',
+    icon: '🏗️'
   },
   servicing: {
     background: '#ffffff',
     border: '#e5e7eb',
     text: '#6b7280',
     dot: '#10b981',
-    label: 'SERVICING'
+    label: 'SERVICING',
+    icon: '💰'
   },
   closed: {
     background: '#ffffff',
     border: '#e5e7eb',
     text: '#6b7280',
     dot: '#6b7280',
-    label: 'CLOSED'
+    label: 'CLOSED',
+    icon: '✅'
   }
 };
 

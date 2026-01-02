@@ -2,7 +2,7 @@
  * Extended type definitions for scenario playback functionality
  */
 
-import { ProcessType, LifecycleState, StateType } from './index';
+import { ProcessType, StateType } from './index';
 
 /**
  * Playback modes for scenario player

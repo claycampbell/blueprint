@@ -18,8 +18,7 @@ interface WorkflowViewWrapperProps {
  * Now uses the comprehensive workflow components from ./workflow/
  */
 export const WorkflowView: React.FC<WorkflowViewWrapperProps> = ({
-  property,
-  onCompleteProcess
+  property
 }) => {
   return <WorkflowViewComponent property={property} />;
 };

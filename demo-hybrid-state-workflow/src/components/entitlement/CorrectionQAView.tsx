@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CorrectionLetter, CorrectionItem } from '../../types';
+import { CorrectionLetter } from '../../types';
 import { getDisciplineColor } from '../../utils/disciplineColors';
 
 interface CorrectionQAViewProps {

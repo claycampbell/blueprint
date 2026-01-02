@@ -16,7 +16,6 @@ interface ComparisonViewProps {
  */
 export const ComparisonView: React.FC<ComparisonViewProps> = ({
   viewMode,
-  property,
   workflowView,
   stateMachineView
 }) => {

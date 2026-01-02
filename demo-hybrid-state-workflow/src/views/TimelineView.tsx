@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { MULTIPLE_PROPERTIES } from '../data/multipleProperties';
-import { getDayOffset, getDuration, addDays } from '../utils/dateHelpers';
+import { getDuration, addDays } from '../utils/dateHelpers';
 import { getLifecycleLabel } from '../utils/propertyHelpers';
-import { Process } from '../types';
+import { Process, LifecycleState } from '../types';
 import { UserRole, PERSONAS } from '../types/personas';
 
 interface TimelineViewProps {
@@ -10,13 +10,13 @@ interface TimelineViewProps {
   currentRole: UserRole;
 }
 
-export const TimelineView: React.FC<TimelineViewProps> = ({ onPropertyClick, currentRole }) => {
+export const TimelineView: React.FC<TimelineViewProps> = ({ currentRole }) => {
   const persona = PERSONAS[currentRole];
   const allProperties = Object.values(MULTIPLE_PROPERTIES);
 
   // Filter properties based on role lifecycle access
   const properties = allProperties.filter(p =>
-    persona.permissions.lifecycleAccess.includes(p.lifecycle)
+    persona.permissions.lifecycleAccess.includes(p.lifecycle as Exclude<LifecycleState, 'closed'>) || p.lifecycle === 'closed'
   );
   // Start timeline 10 days ago to show overdue items
   const today = new Date();
@@ -56,13 +56,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ onPropertyClick, cur
     if (process.status === 'blocked') return '#ef4444'; // red
     if (process.status === 'in-progress') return '#8b5cf6'; // purple
     return '#3b82f6'; // blue for pending
-  };
-
-  const getProcessLighterColor = (process: Process): string => {
-    if (process.status === 'completed') return '#d1fae5';
-    if (process.status === 'blocked') return '#fee2e2';
-    if (process.status === 'in-progress') return '#ede9fe';
-    return '#dbeafe';
   };
 
   return (

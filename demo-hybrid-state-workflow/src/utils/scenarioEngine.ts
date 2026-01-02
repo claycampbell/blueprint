@@ -44,7 +44,7 @@ export function createExecutableEvents(
  */
 function createEventExecutor(
   event: ScenarioEvent,
-  propertyId: string,
+  _propertyId: string,
   handlers: {
     onProcessStart: (processType: ProcessType) => void;
     onProcessComplete: (processId: string) => void;

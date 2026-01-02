@@ -263,7 +263,7 @@ export function getBackwardsTransitionError(
  * Provides suggestions for how users might work around workflow limitations
  */
 export function getWorkflowWorkaroundSuggestion(
-  fromState: LifecycleState,
+  _fromState: LifecycleState,
   toState: LifecycleState
 ): string {
   return `Consider one of these workarounds:\n\n` +

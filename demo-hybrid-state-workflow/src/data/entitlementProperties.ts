@@ -1,8 +1,6 @@
 import {
   Property,
-  CorrectionLetter,
-  CorrectionItem,
-  EntitlementStatus
+  CorrectionLetter
 } from '../types';
 
 /**
@@ -484,6 +482,7 @@ export const PROPERTY_ADDRESSING_CORRECTIONS: Property = {
       propertyId: 'ent-003',
       assignedTo: 'brittani',
       startedAt: daysAgo(78),
+      outputs: [],
       notes: 'Round 1 corrections almost complete. 4 of 6 items done, 2 still in progress with consultants.'
     }
   ],
@@ -638,6 +637,7 @@ export const PROPERTY_CORRECTIONS_QA: Property = {
       propertyId: 'ent-004',
       assignedTo: 'brittani',
       startedAt: daysAgo(145),
+      outputs: [],
       notes: 'Round 3 corrections all submitted by consultants. Ready for internal QA review before resubmittal.'
     }
   ],
