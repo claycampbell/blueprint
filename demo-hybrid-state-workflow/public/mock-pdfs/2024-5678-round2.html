@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Plan Check #2 - Application 2024-5678</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 40px;
+            background: white;
+            color: #000;
+            font-size: 11pt;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-weight: bold;
+            font-size: 18pt;
+            margin-bottom: 10px;
+        }
+        .letterhead {
+            font-size: 9pt;
+            color: #333;
+        }
+        .title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .info-block {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+        .correction-item {
+            margin: 25px 0;
+            padding: 15px;
+            border-left: 4px solid #d32f2f;
+            background: #fff3f3;
+        }
+        .item-number {
+            font-weight: bold;
+            color: #d32f2f;
+            font-size: 12pt;
+        }
+        .discipline {
+            display: inline-block;
+            background: #1976d2;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 9pt;
+            margin-left: 10px;
+        }
+        .severity {
+            float: right;
+            font-weight: bold;
+        }
+        .severity.critical { color: #d32f2f; }
+        .severity.major { color: #f57c00; }
+        .severity.minor { color: #388e3c; }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #666;
+        }
+        .sheet-ref {
+            color: #1976d2;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CITY OF SEATTLE</div>
+        <div class="letterhead">
+            Department of Construction & Inspections<br>
+            700 Fifth Avenue, Suite 2000 | Seattle, WA 98104<br>
+            Phone: (206) 684-8600 | www.seattle.gov/sdci
+        </div>
+    </div>
+
+    <div class="info-block">
+        <strong>Application Number:</strong> 2024-5678<br>
+        <strong>Property Address:</strong> 892 Capitol Hill Avenue, Seattle, WA 98102<br>
+        <strong>Applicant:</strong> Blueprint Capital LLC<br>
+        <strong>Plan Check Round:</strong> #2<br>
+        <strong>Date Issued:</strong> December 30, 2025<br>
+        <strong>Response Due:</strong> January 13, 2026 (14 days)
+    </div>
+
+    <div class="title">CORRECTION LETTER - PLAN CHECK #2</div>
+
+    <p>The following corrections must be addressed before this permit application can be approved. Please provide written responses and revised plan sheets as indicated below.</p>
+
+    <!-- Item 1 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Civil-3.a</span>
+            <span class="discipline">CIVIL</span>
+            <span class="severity major">MAJOR</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">C-101</span> | <strong>Detail:</strong> <span class="sheet-ref">Detail 3/C-101</span></p>
+        <p><strong>Correction:</strong> Clarify setback from south property line. Show dimension on site plan. Current plan does not clearly indicate the required 5-foot setback from the property line. Add dimension line and verify compliance with LR3 zoning requirements per SMC 23.44.014.</p>
+    </div>
+
+    <!-- Item 2 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Civil-5.b</span>
+            <span class="discipline">CIVIL</span>
+            <span class="severity critical">CRITICAL</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">C-201</span></p>
+        <p><strong>Correction:</strong> Revise drainage calculations to include 100-year storm event per DCI Tip #345. Current calculations only address 25-year storm. Seattle requires analysis of 100-year storm for all new development. Provide updated hydraulic calculations and revise drainage plan accordingly.</p>
+    </div>
+
+    <!-- Item 3 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Structural-2.a</span>
+            <span class="discipline">STRUCTURAL</span>
+            <span class="severity major">MAJOR</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">S-101</span></p>
+        <p><strong>Correction:</strong> Update beam calculations for garage header to reflect actual span dimensions. Plan shows 20-foot span but calculations are based on 18-foot span. Recalculate beam size and provide structural detail showing proper connection to supporting columns.</p>
+    </div>
+
+    <!-- Item 4 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Architectural-1.c</span>
+            <span class="discipline">ARCHITECTURAL</span>
+            <span class="severity minor">MINOR</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">A-201</span></p>
+        <p><strong>Correction:</strong> Provide elevation view showing roof pitch and ridge height. Current elevations do not clearly indicate roof geometry. Add section cut or elevation detail showing 6:12 pitch and verify ridge height does not exceed 35-foot height limit for this zone.</p>
+    </div>
+
+    <!-- Item 5 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Architectural-4.a</span>
+            <span class="discipline">ARCHITECTURAL</span>
+            <span class="severity major">MAJOR</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">A-101</span></p>
+        <p><strong>Correction:</strong> Show accessibility path from public right-of-way to main entrance. Current site plan does not indicate accessible route. Demonstrate compliance with ICC A117.1 and show path width, slope, and surface material. Include ramp details if grade change exceeds 1:20.</p>
+    </div>
+
+    <!-- Item 6 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Landscape-1.a</span>
+            <span class="discipline">LANDSCAPE</span>
+            <span class="severity major">MAJOR</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">L-101</span></p>
+        <p><strong>Correction:</strong> Identify street tree species and planting locations per Green Factor requirements. Site must achieve minimum Green Factor score of 0.30 for NC3 zone. Provide updated landscape plan showing street trees (minimum 2" caliper), planting strips, and Green Factor calculation worksheet.</p>
+    </div>
+
+    <!-- Item 7 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Fire-2.b</span>
+            <span class="discipline">FIRE</span>
+            <span class="severity critical">CRITICAL</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">C-101</span></p>
+        <p><strong>Correction:</strong> Clarify fire hydrant location within 400 feet of structure. Current plan does not show distance to nearest hydrant. Verify existing hydrant location or indicate where new hydrant will be installed. Provide distance calculation and coordinate with Seattle Fire Department.</p>
+    </div>
+
+    <!-- Item 8 -->
+    <div class="correction-item">
+        <div>
+            <span class="item-number">Zoning-1.a</span>
+            <span class="discipline">ZONING</span>
+            <span class="severity minor">MINOR</span>
+        </div>
+        <p><strong>Sheet(s):</strong> <span class="sheet-ref">A-101</span></p>
+        <p><strong>Correction:</strong> Confirm compliance with DADUs regulations per SMC 23.44.041. Plans indicate detached accessory dwelling unit but do not show owner occupancy statement. Provide written affidavit that property owner will occupy either primary residence or DADU as required by code.</p>
+    </div>
+
+    <div class="footer">
+        <p><strong>Response Instructions:</strong></p>
+        <ul>
+            <li>Provide written response to each item listed above</li>
+            <li>Submit revised plan sheets with revision clouds and dates</li>
+            <li>Include correction item number on each revised sheet</li>
+            <li>Submit via Seattle Services Portal or in person at SDCI counter</li>
+        </ul>
+        <p>For questions, contact your plan reviewer: Jane Thompson, PE | (206) 684-8750 | jane.thompson@seattle.gov</p>
+        <p><em>This is an automated document generated by the City of Seattle Department of Construction & Inspections.</em></p>
+    </div>
+</body>
+</html>

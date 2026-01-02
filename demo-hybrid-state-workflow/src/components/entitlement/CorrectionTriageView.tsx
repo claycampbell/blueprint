@@ -17,7 +17,7 @@ interface CorrectionTriageViewProps {
  */
 export function CorrectionTriageView({
   letter,
-  pdfUrl,
+  pdfUrl = letter.documentUrl,
   onItemUpdate,
   onCompleteTriageClicked
 }: CorrectionTriageViewProps) {

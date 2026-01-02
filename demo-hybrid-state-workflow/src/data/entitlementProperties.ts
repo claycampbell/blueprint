@@ -90,7 +90,7 @@ const correctionLetter1: CorrectionLetter = {
   letterDate: daysAgo(3),
   receivedDate: daysAgo(2),
   roundNumber: 2,
-  documentUrl: 'https://example.com/corrections/2024-5678-round2.pdf',
+  documentUrl: '/mock-pdfs/2024-5678-round2.html',
   documentHash: 'abc123def456',
   extractedText: 'Corrections extracted via AI...',
   totalItems: 8,
