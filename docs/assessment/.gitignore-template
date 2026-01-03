@@ -1,0 +1,135 @@
+# Blueprint Assessment Repository - .gitignore
+# Copy this to the root of the new assessment repository
+
+# ============================================
+# Node.js / NPM
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json.backup
+.pnpm-debug.log*
+
+# ============================================
+# Next.js
+# ============================================
+.next/
+out/
+build/
+dist/
+.vercel/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# ============================================
+# Environment Variables (CRITICAL - Never commit)
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.production
+*.env
+
+# ============================================
+# Testing
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+
+# ============================================
+# IDE / Editor
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.log
+nul
+NUL
+
+# ============================================
+# Assessment-Specific
+# ============================================
+# Individual candidate summary files (except template)
+docs/assessment/*_SUMMARY.md
+docs/assessment/*-summary.md
+!docs/assessment/README.md
+!docs/assessment/INSTRUCTIONS.md
+!docs/assessment/EVALUATION_RUBRIC.md
+!docs/assessment/INTERVIEWER_QUICK_START.md
+!docs/assessment/ASSESSMENT_SETUP_EMAIL.md
+!docs/assessment/ASSESSMENT_COMPLETE.md
+
+# Candidate work directories (if created)
+candidate-work/
+
+# ============================================
+# Generated Files (Starter Kit)
+# ============================================
+# Icon generation (if using Materialize template)
+starter-kit/src/assets/iconify-icons/generated-icons.js
+starter-kit/src/assets/iconify-icons/generated-icons.css
+
+# ============================================
+# Security - Never Commit These
+# ============================================
+# Credentials
+credentials.json
+*.key
+*.pem
+*.p12
+*.pfx
+
+# API keys
+api-keys.txt
+secrets.txt
+
+# Database
+*.sqlite
+*.db
+
+# ============================================
+# Python (if any scripts added)
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+
+# ============================================
+# Build artifacts
+# ============================================
+*.tar.gz
+*.zip
+*.rar
