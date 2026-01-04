@@ -94,9 +94,43 @@ cat > starter-kit/package.json << 'PKGJSON'
   "keywords": ["assessment", "react", "typescript", "nextjs"]
 }
 PKGJSON
+
+# Copy TECHNOLOGY_STACK_DECISION.md (referenced in instructions)
+echo "Copying technology stack documentation..."
+cp "$OLDPWD/TECHNOLOGY_STACK_DECISION.md" docs/
+
+# Create simplified Next.js config (no redirects to non-existent routes)
+echo "Creating simplified next.config.mjs..."
+cat > starter-kit/next.config.mjs << 'NEXTCONFIG'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Clean configuration for assessment starter
+  reactStrictMode: true,
+}
+
+export default nextConfig
+NEXTCONFIG
+
+# Create simplified Tailwind config (no missing dependencies)
+echo "Creating simplified tailwind.config.js..."
+cat > starter-kit/tailwind.config.js << 'TAILWINDCONFIG'
+/** @type {import('tailwindcss').Config} */
+const config = {
+  content: [
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+export default config
+TAILWINDCONFIG
+
 cp "$OLDPWD/starter-kit/tsconfig.json" starter-kit/
-cp "$OLDPWD/starter-kit/next.config.mjs" starter-kit/
-cp "$OLDPWD/starter-kit/tailwind.config.js" starter-kit/
 cp "$OLDPWD/starter-kit/postcss.config.mjs" starter-kit/
 cp "$OLDPWD/starter-kit/.eslintrc.js" starter-kit/
 cp "$OLDPWD/starter-kit/.prettierrc.json" starter-kit/

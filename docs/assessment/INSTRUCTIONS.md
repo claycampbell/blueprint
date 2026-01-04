@@ -29,6 +29,30 @@ Before starting, ensure you have:
 
 ---
 
+## Time Tracking (Optional but Recommended)
+
+We've provided a simple time tracking script to help you measure your progress:
+
+```bash
+cd starter-kit
+
+# Start the timer
+node track-time.js start
+
+# Mark milestones as you progress
+node track-time.js milestone
+
+# Check your current time
+node track-time.js status
+
+# Stop when complete
+node track-time.js stop
+```
+
+**This is optional** - you can use your own timer if you prefer. The script will generate a summary you can include in your reflection document.
+
+---
+
 ## Part 1: Setup & Familiarization (15 minutes)
 
 ### Task 1.1: Understand the Project
