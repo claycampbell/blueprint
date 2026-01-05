@@ -1,6 +1,6 @@
 # Web Infrastructure Documentation
 
-**Version:** 2.0
+**Version:** 3.0
 **Last Updated:** January 2026
 **Related Documents:** [SYSTEM_ARCHITECTURE.md](../../docs/architecture/SYSTEM_ARCHITECTURE.md), [GITHUB_ACTIONS.md](GITHUB_ACTIONS.md)
 
@@ -8,35 +8,36 @@
 
 ## Overview
 
-The Connect 2.0 Web App is deployed to AWS as a **standalone service** with its own complete infrastructure:
+The Connect 2.0 Web App is deployed to AWS as a **static SPA** using S3 + CloudFront:
 
 - **Terraform** for infrastructure as code
-- **Docker** for containerization
-- **ECS Fargate** for container orchestration (dedicated cluster per environment)
+- **S3** for static file hosting
+- **CloudFront** for global CDN with HTTPS
 - **GitHub Actions** for CI/CD
+
+### Why S3 + CloudFront Instead of ECS?
+
+| Aspect | S3 + CloudFront | ECS Fargate |
+|--------|-----------------|-------------|
+| **Cost** | ~$5-20/month | ~$50-200/month |
+| **Complexity** | Simple | Containers, networking, auto-scaling |
+| **Performance** | Global edge caching | Single region |
+| **Scaling** | Automatic, unlimited | Manual configuration |
+| **Maintenance** | Zero servers | Container updates, patching |
+
+For a React SPA that makes API calls to a separate backend, S3 + CloudFront is the optimal choice.
 
 ### Independent Infrastructure
 
-This repository contains **all infrastructure required** to run the Web application. There are no external dependencies or shared resources with other services.
+This repository contains **all infrastructure required** to run the Web application:
 
 | Component | Module Location |
 |-----------|-----------------|
-| **VPC, Subnets, NAT** | `infrastructure/terraform/modules/networking/` |
-| **ECS Cluster** | `infrastructure/terraform/modules/ecs-cluster/` |
-| **ECS Service** | `infrastructure/terraform/modules/ecs-service/` |
-| **ALB** | `infrastructure/terraform/modules/alb/` |
-| **ECR Repository** | `infrastructure/terraform/modules/ecr/` |
+| **S3 Bucket** | Inline in environment config |
+| **CloudFront Distribution** | `infrastructure/terraform/modules/cloudfront/` |
 | **ACM Certificates** | `infrastructure/terraform/modules/acm/` |
 | **Route53 DNS** | `infrastructure/terraform/modules/dns-record/` |
 | **SNS Alerts** | `infrastructure/terraform/modules/sns-alerts/` |
-
-### Benefits of Independent Infrastructure
-
-- **No cross-service dependencies** — Deploy, rollback, or destroy without affecting other services
-- **Cloud provider flexibility** — Can be migrated to Azure, GCP, or other providers independently
-- **Isolated blast radius** — Infrastructure issues don't cascade to other services
-- **Clear ownership** — All resources are managed within this repository
-- **Independent scaling** — Scale infrastructure based on Web-specific needs
 
 ---
 
@@ -44,43 +45,39 @@ This repository contains **all infrastructure required** to run the Web applicat
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         CONNECT 2.0 WEB INFRASTRUCTURE                           │
-│                              (VPC: 10.2.0.0/16)                                  │
+│                      CONNECT 2.0 WEB INFRASTRUCTURE                              │
+│                         (S3 + CloudFront Static SPA)                            │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
 │  │                              Route 53                                    │    │
-│  │              app.connect.com / app-{env}.connect.com                     │    │
+│  │              app.connect.com / app-staging.connect.com                   │    │
+│  │              pr-{N}.app.connect.com (PR Previews)                        │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │              Application Load Balancer (HTTPS)                           │    │
-│  │                    (SSL/TLS termination, health checks)                  │    │
+│  │                     CloudFront Distribution                              │    │
+│  │              (Global CDN, HTTPS, SPA Routing, Security Headers)          │    │
+│  │                                                                          │    │
+│  │    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                 │    │
+│  │    │  Edge: US    │  │  Edge: EU    │  │  Edge: APAC  │  ...            │    │
+│  │    └──────────────┘  └──────────────┘  └──────────────┘                 │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
-│  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                         VPC (2-3 AZs)                                    │    │
-│  │  Public Subnets: ALB, NAT Gateway                                        │    │
-│  │  Private Subnets: ECS Tasks                                              │    │
-│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                              Origin Access Control                              │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                ECS Fargate Cluster (connect2-web-cluster-{env})          │    │
-│  │                       (Dedicated to Web service)                         │    │
-│  └─────────────────────────────────────────────────────────────────────────┘    │
-│                                      │                                          │
-│  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                       ECS Service (Web)                                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                      │    │
-│  │  │   Task 1    │  │   Task 2    │  │   Task N    │  (Auto-scaling)      │    │
-│  │  │  (Nginx +   │  │  (Nginx +   │  │  (Nginx +   │                      │    │
-│  │  │   React)    │  │   React)    │  │   React)    │                      │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                      │    │
+│  │                          S3 Bucket (Private)                             │    │
+│  │                       connect2-web-{environment}                         │    │
+│  │                                                                          │    │
+│  │    ┌──────────────────────────────────────────────────────────┐         │    │
+│  │    │  index.html  │  assets/  │  static/  │  manifest.json   │         │    │
+│  │    └──────────────────────────────────────────────────────────┘         │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                         ECR (Container Registry)                         │    │
-│  │                         connect2-web-{env}                               │    │
+│  │                    ACM Certificate (us-east-1)                           │    │
+│  │          *.app.connect.com (wildcard for PR previews)                    │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -90,23 +87,31 @@ This repository contains **all infrastructure required** to run the Web applicat
 
 ## Environments
 
-| Environment | Branch | AWS Resources | Purpose |
-|-------------|--------|---------------|---------|
-| **Development** | `development` | Minimal, Spot instances | Feature testing |
-| **Staging** | `staging` | Production-like, Spot | Pre-release validation |
-| **Production** | `main` | Full HA, no Spot | Live users |
+| Environment | Branch | URL | Purpose |
+|-------------|--------|-----|---------|
+| **PR Preview** | PR branches | `pr-{N}.app.connect.com` | QA testing before merge |
+| **Staging** | `staging` | `app-staging.connect.com` | Client UAT, pre-release |
+| **Production** | `main` | `app.connect.com` | Live users |
 
 ### Environment Differences
 
-| Feature | Dev | Staging | Prod |
-|---------|-----|---------|------|
-| Fargate Tasks | 2 | 2-6 | 3-20 |
-| CPU/Memory | 256/512 | 256/512 | 512/1024 |
-| Spot Instances | Yes | Yes | No |
-| Autoscaling | No | Yes | Yes |
-| HTTPS | No | Yes | Yes |
-| Log Retention | 7 days | 14 days | 90 days |
-| Deletion Protection | No | No | Yes |
+| Feature | PR Preview | Staging | Prod |
+|---------|------------|---------|------|
+| CloudFront Price Class | US/EU | US/EU | Global |
+| S3 Versioning | No | Yes | Yes |
+| Object Retention | 7 days | 30 days | 90 days |
+| Custom Domain | `pr-{N}.app.*` | `app-staging.*` | `app.*` |
+| API Backend | Staging API | Staging API | Production API |
+
+### PR Previews
+
+PR Previews provide isolated testing environments for each pull request:
+
+- **Automatic creation** when PR is opened
+- **Automatic updates** when PR is updated
+- **Automatic cleanup** when PR is closed
+- **URL posted as PR comment** for easy access
+- **Uses Staging API** for backend functionality
 
 ---
 
@@ -114,134 +119,91 @@ This repository contains **all infrastructure required** to run the Web applicat
 
 ```
 infrastructure/
-├── docker/
-│   ├── Dockerfile                  # Multi-stage build (Node → Nginx)
-│   ├── nginx.conf                  # SPA routing, caching, security headers
-│   └── .dockerignore               # Files excluded from Docker build
 └── terraform/
     ├── modules/                    # Reusable Terraform modules
-    │   ├── networking/             # VPC, subnets, NAT gateway
-    │   ├── ecs-cluster/            # ECS Fargate cluster
-    │   ├── ecs-service/            # ECS service definition
-    │   ├── alb/                    # Application Load Balancer
-    │   ├── ecr/                    # Container registry
+    │   ├── cloudfront/             # CloudFront distribution
+    │   ├── s3-website/             # S3 bucket for static hosting
     │   ├── acm/                    # SSL/TLS certificates
     │   ├── dns-record/             # Route53 DNS records
     │   ├── route53-zone/           # Route53 hosted zones
     │   └── sns-alerts/             # Alerting topics
     └── environments/               # Environment-specific configurations
-        ├── dev/
-        │   ├── main.tf             # Complete infrastructure definition
+        ├── pr-preview/
+        │   ├── main.tf             # Ephemeral PR preview infrastructure
         │   ├── variables.tf
-        │   ├── outputs.tf
-        │   └── dev.tfvars
+        │   └── outputs.tf
         ├── staging/
-        │   ├── main.tf
+        │   ├── main.tf             # S3 + CloudFront for staging
         │   ├── variables.tf
-        │   ├── outputs.tf
-        │   └── staging.tfvars
+        │   └── outputs.tf
         └── prod/
-            ├── main.tf
+            ├── main.tf             # S3 + CloudFront for production
             ├── variables.tf
-            ├── outputs.tf
-            └── prod.tfvars
-
-scripts/
-└── rollback.sh                     # ECS rollback script
+            └── outputs.tf
 ```
 
 ---
 
 ## Terraform Modules
 
-### networking
+### cloudfront
 
-Creates the VPC foundation with public and private subnets.
+Creates CloudFront distribution with SPA routing and security headers.
 
 **Resources Created:**
-- VPC with DNS support
-- Public subnets (for ALB)
-- Private subnets (for ECS tasks)
-- Internet Gateway
-- NAT Gateway (optional)
-- Route tables
+- CloudFront Distribution
+- Origin Access Control (OAC)
+- Response Headers Policy (security headers)
+
+**Key Features:**
+- SPA routing (404/403 → index.html)
+- HTTPS-only with TLS 1.2+
+- Security headers (CSP, HSTS, X-Frame-Options)
+- Gzip/Brotli compression
+- Cache optimization
 
 **Key Variables:**
 ```hcl
-vpc_cidr           = "10.2.0.0/16"  # Dedicated Web VPC
-az_count           = 2
-enable_nat_gateway = true
+s3_bucket_regional_domain_name = aws_s3_bucket.website.bucket_regional_domain_name
+domain_names                   = ["app.connect.com"]
+certificate_arn                = module.acm.certificate_arn
+price_class                    = "PriceClass_All"  # Global
+content_security_policy        = "default-src 'self'; connect-src 'self' https://api.connect.com;"
 ```
 
-### ecr
+### s3-website
 
-Creates the Elastic Container Registry for Docker images.
+Creates S3 bucket configured for static website hosting.
 
 **Resources Created:**
-- ECR Repository
-- Lifecycle policy (cleanup old images)
+- S3 Bucket (private)
+- Public Access Block
+- Versioning Configuration
+- Server-side Encryption
+- Lifecycle Rules
 
 **Key Variables:**
 ```hcl
-image_tag_mutability = "MUTABLE"  # or "IMMUTABLE" for prod
-scan_on_push         = true
-image_count_to_keep  = 10
-```
-
-### alb
-
-Creates the Application Load Balancer for traffic distribution.
-
-**Resources Created:**
-- Application Load Balancer
-- Target Group (IP-based for Fargate)
-- HTTP Listener (redirect to HTTPS)
-- HTTPS Listener (with ACM certificate)
-- Security Group
-
-**Key Variables:**
-```hcl
-container_port    = 80
-health_check_path = "/"
-certificate_arn   = "arn:aws:acm:..."  # null for HTTP only
-```
-
-### ecs-service
-
-Creates the ECS Fargate service.
-
-**Resources Created:**
-- ECS Service
-- Task Definition
-- IAM Roles (task execution, task)
-- Security Group
-- CloudWatch Log Group
-- Auto Scaling (optional)
-
-**Key Variables:**
-```hcl
-cluster_id         = module.ecs_cluster.cluster_id
-container_image    = "123456789.dkr.ecr.us-west-2.amazonaws.com/connect2-web:latest"
-task_cpu           = 256
-task_memory        = 512
-desired_count      = 2
-enable_autoscaling = true
+bucket_name     = "connect2-web-staging"
+versioning      = true
+retention_days  = 30
 ```
 
 ### dns-record
 
-Creates Route53 records.
+Creates Route53 records for CloudFront.
 
 **Resources Created:**
-- Route53 A Record (alias to ALB)
-- Route53 AAAA Record (IPv6, optional)
+- Route53 A Record (IPv4 alias to CloudFront)
+- Route53 AAAA Record (IPv6 alias to CloudFront)
 
 **Key Variables:**
 ```hcl
-zone_id     = module.route53_zone.zone_id
-domain_name = "app"  # Results in app.connect.com
-alb_dns     = module.alb.dns_name
-alb_zone_id = module.alb.zone_id
+route53_zone_id       = module.route53_zone.zone_id
+record_name           = "app"  # Results in app.connect.com
+alias_target_dns_name = module.cloudfront.distribution_domain_name
+alias_target_zone_id  = module.cloudfront.distribution_hosted_zone_id
+create_ipv6_record    = true
 ```
 
 ---
@@ -252,23 +214,17 @@ alb_zone_id = module.alb.zone_id
 
 1. **Create S3 bucket for Terraform state:**
    ```bash
-   aws s3 mb s3://connect2-web-terraform-state-dev --region us-west-2
+   aws s3 mb s3://connect2-web-terraform-state-staging --region us-west-2
    aws s3api put-bucket-versioning \
-     --bucket connect2-web-terraform-state-dev \
+     --bucket connect2-web-terraform-state-staging \
      --versioning-configuration Status=Enabled
    ```
 
-2. **Configure environment variables:**
+2. **Deploy infrastructure:**
    ```bash
-   cd infrastructure/terraform/environments/dev
-   cp terraform.tfvars.example terraform.tfvars
-   # Edit terraform.tfvars with your values
-   ```
-
-3. **Deploy infrastructure:**
-   ```bash
+   cd infrastructure/terraform/environments/staging
    terraform init
-   terraform plan
+   terraform plan -var="domain_name=connect.com" -var="api_url=https://api-staging.connect.com"
    terraform apply
    ```
 
@@ -276,201 +232,166 @@ alb_zone_id = module.alb.zone_id
 
 Deployments are automated via GitHub Actions:
 
-1. Push code to branch (`development`, `staging`, or `main`)
-2. CI workflow runs (lint, test, build)
+1. Push code to branch (`staging` or `main`)
+2. CI workflow runs (lint, type-check, test, build)
 3. Deploy workflow triggers:
-   - Builds Docker image
-   - Pushes to ECR
-   - Updates ECS service
-4. ECS performs rolling deployment
+   - Builds React app with `npm run build`
+   - Syncs `dist/` to S3 with proper cache headers
+   - Invalidates CloudFront cache
+4. Changes are live globally within minutes
 
 ### Manual Deployment
 
 ```bash
-# Build and push Docker image
-aws ecr get-login-password --region us-west-2 | \
-  docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-west-2.amazonaws.com
+# Build the React app
+npm ci
+npm run build
 
-docker build -t connect2-web:latest -f infrastructure/docker/Dockerfile .
-docker tag connect2-web:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-web-dev:latest
-docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-web-dev:latest
+# Sync to S3 with cache headers
+aws s3 sync dist/ s3://connect2-web-staging/ \
+  --delete \
+  --cache-control "public, max-age=31536000, immutable" \
+  --exclude "index.html" \
+  --exclude "*.json"
 
-# Trigger ECS deployment (to this repository's dedicated cluster)
-aws ecs update-service \
-  --cluster connect2-web-cluster-dev \
-  --service connect2-web-service-dev \
-  --force-new-deployment
+aws s3 sync dist/ s3://connect2-web-staging/ \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --include "index.html" \
+  --include "*.json"
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+  --distribution-id E1234567890ABC \
+  --paths "/*"
 ```
 
 ---
 
-## Docker Configuration
+## Cache Strategy
 
-### Dockerfile
+### Long-lived Assets (JS, CSS, Images)
 
-The Dockerfile uses a multi-stage build:
+- **Cache-Control:** `public, max-age=31536000, immutable`
+- **Duration:** 1 year
+- **Rationale:** Vite generates hashed filenames; content changes = new filename
 
-**Stage 1 (builder):**
-- Uses `node:20-alpine`
-- Installs dependencies with `npm ci`
-- Builds production bundle with `npm run build`
+### Short-lived Assets (HTML, JSON)
 
-**Stage 2 (production):**
-- Uses `nginx:alpine`
-- Copies built assets from stage 1
-- Configures Nginx for SPA routing
-- Runs as non-root user for security
+- **Cache-Control:** `no-cache, no-store, must-revalidate`
+- **Duration:** Always revalidate
+- **Rationale:** Entry points must always fetch latest version
 
-### Nginx Configuration
+### CloudFront Cache Invalidation
 
-The `nginx.conf` provides:
-- **SPA Routing:** All routes serve `index.html`
-- **Static Asset Caching:** 1-year cache for JS/CSS/images
-- **Gzip Compression:** Reduces transfer size
-- **Security Headers:** X-Frame-Options, X-Content-Type-Options, etc.
-- **Health Check Endpoint:** `/health` returns 200 OK
-- **API Proxy:** `/api/` routes to backend (configurable)
-
----
-
-## Monitoring & Logging
-
-### CloudWatch Logs
-
-Container logs are sent to CloudWatch:
-- **Log Group:** `/ecs/connect2-web-{environment}`
-- **Retention:** 7 days (dev), 14 days (staging), 90 days (prod)
-
-**View logs:**
-```bash
-aws logs tail /ecs/connect2-web-dev --follow
-```
-
-### Health Checks
-
-- **ALB Health Check:** `GET /` every 30 seconds
-- **Container Health Check:** `curl http://localhost/health`
-
-### Metrics
-
-ECS provides metrics in CloudWatch:
-- CPU Utilization
-- Memory Utilization
-- Running Task Count
-
----
-
-## Cost Optimization
-
-### Fargate Spot (Dev/Staging)
-
-Dev and staging environments use Fargate Spot for ~70% cost savings:
-```hcl
-use_spot = true
-```
-
-**Note:** Spot instances can be interrupted. Not recommended for production.
-
-### Right-sizing
-
-Start with minimal resources and scale up as needed:
-```hcl
-task_cpu    = 256   # 0.25 vCPU
-task_memory = 512   # 512 MB
-```
-
-### Auto Scaling
-
-Production uses target tracking scaling based on CPU:
-```hcl
-enable_autoscaling = true
-min_capacity       = 3
-max_capacity       = 20
-cpu_target_value   = 60  # Scale when CPU > 60%
-```
-
----
-
-## Troubleshooting
-
-### Container Won't Start
-
-1. **Check CloudWatch Logs:**
-   ```bash
-   aws logs tail /ecs/connect2-web-dev --since 1h
-   ```
-
-2. **Describe task failures:**
-   ```bash
-   aws ecs describe-tasks \
-     --cluster connect2-cluster-dev \
-     --tasks <task-arn>
-   ```
-
-3. **Common issues:**
-   - Image not found in ECR
-   - Port mismatch (container vs target group)
-   - Memory limit exceeded
-   - Health check failing
-
-### Terraform State Lock
-
-If Terraform reports a state lock:
-```bash
-# Check who holds the lock
-terraform force-unlock <LOCK_ID>
-```
-
-### ECS Service Stuck
-
-If deployment is stuck:
-```bash
-# Check service events
-aws ecs describe-services \
-  --cluster connect2-web-cluster-dev \
-  --services connect2-web-service-dev
-
-# Force new deployment
-aws ecs update-service \
-  --cluster connect2-web-cluster-dev \
-  --service connect2-web-service-dev \
-  --force-new-deployment
-```
+After each deployment, we invalidate `/*` to ensure users get the new `index.html` immediately.
 
 ---
 
 ## Security
 
-### IAM Roles
+### Origin Access Control (OAC)
 
-- **Task Execution Role:** Allows ECS to pull images from ECR and write logs
-- **Task Role:** Application permissions (S3, etc.)
+S3 bucket is completely private. Only CloudFront can access it via OAC:
 
-### Network Security
-
-- ALB in public subnets (internet-facing)
-- ECS tasks in private subnets (no public IP)
-- Security groups restrict traffic:
-  - ALB: Allows 80/443 from anywhere
-  - ECS: Allows traffic only from ALB
-
-### Secrets Management
-
-Use AWS Secrets Manager or Parameter Store for sensitive values:
 ```hcl
-environment_variables = [
-  {
-    name  = "API_URL"
-    value = "https://api.connect2.com"
-  }
-]
+resource "aws_cloudfront_origin_access_control" "website" {
+  name                              = "connect2-web-staging-oac"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+```
 
-secrets = [
-  {
-    name      = "AUTH_SECRET"
-    valueFrom = "arn:aws:secretsmanager:us-west-2:123456789:secret:auth-secret"
-  }
-]
+### Security Headers
+
+CloudFront adds security headers to all responses:
+
+| Header | Value |
+|--------|-------|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Content-Security-Policy` | Configured per environment |
+
+### Content Security Policy
+
+CSP is configured to allow connections to the API backend:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline' 'unsafe-eval';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https:;
+font-src 'self' data:;
+connect-src 'self' https://api.connect.com;
+```
+
+---
+
+## Cost Optimization
+
+### S3 + CloudFront Cost Breakdown
+
+| Resource | Estimated Monthly Cost |
+|----------|----------------------|
+| S3 Storage | $0.50 (10GB) |
+| S3 Requests | $1-5 |
+| CloudFront Data Transfer | $5-15 |
+| CloudFront Requests | $2-5 |
+| Route53 Hosted Zone | $0.50 |
+| ACM Certificate | Free |
+| **Total** | **~$10-25/month** |
+
+Compare to ECS Fargate: $50-200/month for equivalent availability.
+
+### Additional Savings
+
+- **PR Previews auto-cleanup:** Resources deleted when PR closes
+- **Lifecycle rules:** Old S3 versions auto-deleted
+- **Price class selection:** Staging uses US/EU only; Production uses global
+
+---
+
+## Monitoring & Troubleshooting
+
+### CloudFront Metrics
+
+Available in CloudWatch:
+- Requests
+- Bytes Downloaded
+- 4xx Error Rate
+- 5xx Error Rate
+- Cache Hit Rate
+
+### Common Issues
+
+**Changes not appearing:**
+1. Check CloudFront invalidation completed
+2. Clear browser cache
+3. Check S3 sync succeeded
+
+**404 errors on routes:**
+1. Verify CloudFront custom error responses
+2. Check SPA routing returns `index.html` for 403/404
+
+**SSL certificate issues:**
+1. Verify ACM certificate is in us-east-1
+2. Check DNS validation completed
+3. Verify certificate covers the domain
+
+### Viewing Logs
+
+```bash
+# Check CloudFront distribution status
+aws cloudfront get-distribution --id E1234567890ABC
+
+# List S3 bucket contents
+aws s3 ls s3://connect2-web-staging/
+
+# Check recent invalidations
+aws cloudfront list-invalidations --distribution-id E1234567890ABC
 ```
 
 ---

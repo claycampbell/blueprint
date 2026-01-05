@@ -1,6 +1,6 @@
 # GitHub Actions CI/CD Documentation
 
-**Version:** 2.0
+**Version:** 3.0
 **Last Updated:** January 2026
 **Related Documents:** [INFRASTRUCTURE.md](INFRASTRUCTURE.md), [SYSTEM_ARCHITECTURE.md](../../docs/architecture/SYSTEM_ARCHITECTURE.md)
 
@@ -11,22 +11,19 @@
 This project uses GitHub Actions for continuous integration and deployment:
 
 - **CI (Continuous Integration):** Automated testing on every PR and push
-- **CD (Continuous Deployment):** Automated deployments to AWS environments
+- **CD (Continuous Deployment):** Automated S3 deployments with CloudFront invalidation
+- **PR Previews:** Ephemeral preview environments for each pull request
 
-### Independent Infrastructure
+### Static SPA Deployment
 
-The Connect 2.0 Web App is a **standalone repository** with its own complete infrastructure:
+The Connect 2.0 Web App is deployed as a **static SPA** to S3 + CloudFront:
 
 | Component | Resource Name |
 |-----------|---------------|
-| **ECS Cluster** | `connect2-web-cluster-{env}` |
-| **ECS Service** | `connect2-web-service-{env}` |
-| **ECR Repository** | `connect2-web-{env}` |
-| **VPC** | `10.2.0.0/16` (dedicated Web network) |
-| **ALB** | `app.connect.com` / `app-{env}.connect.com` |
+| **S3 Bucket** | `connect2-web-{env}` |
+| **CloudFront Distribution** | Global CDN with HTTPS |
+| **ACM Certificate** | `*.app.connect.com` (wildcard for PR previews) |
 | **Terraform State** | `connect2-web-terraform-state-{env}` |
-
-This repository owns all its infrastructure—no dependencies on external resources or shared state.
 
 ---
 
@@ -35,8 +32,8 @@ This repository owns all its infrastructure—no dependencies on external resour
 ### CI Workflow (`ci.yml`)
 
 **Triggers:**
-- Pull requests to `main`, `staging`, `development`
-- Push to `main`, `staging`, `development`
+- Pull requests to `main`, `staging`
+- Push to `main`, `staging`
 
 **Jobs:**
 
@@ -51,23 +48,6 @@ All jobs run in parallel for faster feedback.
 
 ---
 
-### Deploy to Dev (`deploy-dev.yml`)
-
-**Triggers:**
-- Push to `development` branch
-- Manual dispatch
-
-**What it does:**
-1. Builds Docker image from `infrastructure/docker/Dockerfile`
-2. Tags with commit SHA and `latest`
-3. Pushes to ECR (`connect2-web-dev`)
-4. Updates ECS service to trigger rolling deployment
-5. Waits for deployment to stabilize
-
-**Environment:** `development`
-
----
-
 ### Deploy to Staging (`deploy-staging.yml`)
 
 **Triggers:**
@@ -75,11 +55,10 @@ All jobs run in parallel for faster feedback.
 - Manual dispatch
 
 **What it does:**
-1. Builds Docker image
-2. Tags with commit SHA and `latest`
-3. Pushes to ECR (`connect2-web-staging`)
-4. Updates ECS service
-5. Waits for deployment to stabilize
+1. Builds React app with `npm run build`
+2. Syncs build output to S3 with cache headers
+3. Invalidates CloudFront cache
+4. Reports deployment summary
 
 **Environment:** `staging`
 
@@ -93,14 +72,44 @@ All jobs run in parallel for faster feedback.
 
 **What it does:**
 1. **Runs full test suite first** (lint, type-check, test, build)
-2. Builds Docker image
-3. Tags with commit SHA, `latest`, and version number
-4. Pushes to ECR (`connect2-web-prod`)
-5. Updates ECS service
-6. Waits for deployment to stabilize
-7. Creates GitHub Release with version tag
+2. Builds React app with production API URL
+3. Syncs build output to S3 with cache headers
+4. Invalidates CloudFront cache
+5. Creates GitHub Release with version tag
 
 **Environment:** `production` (can require approval)
+
+---
+
+### Deploy PR Preview (`deploy-pr-preview.yml`)
+
+**Triggers:**
+- Pull request opened, synchronized, or reopened
+- Targeting `staging` or `main` branches
+
+**What it does:**
+1. Builds React app with staging API URL
+2. Creates S3 bucket and CloudFront distribution via Terraform
+3. Syncs build output to S3
+4. Invalidates CloudFront cache
+5. Posts preview URL as PR comment
+
+**Resources Created:**
+- S3 Bucket: `connect2-web-pr-{number}`
+- CloudFront Distribution with custom domain
+- Route53 DNS record: `pr-{number}.app.connect.com`
+
+---
+
+### Cleanup PR Preview (`cleanup-pr-preview.yml`)
+
+**Triggers:**
+- Pull request closed
+
+**What it does:**
+1. Empties S3 bucket
+2. Destroys Terraform resources (CloudFront, DNS, S3)
+3. Reports cleanup summary
 
 ---
 
@@ -119,7 +128,6 @@ All jobs run in parallel for faster feedback.
 - Runs `terraform apply -auto-approve`
 
 **Branch → Environment Mapping:**
-- `development` → `dev`
 - `staging` → `staging`
 - `main` → `prod`
 
@@ -128,32 +136,38 @@ All jobs run in parallel for faster feedback.
 ## Branch Strategy
 
 ```
-development ──────────────────────────────► Dev Environment
-     │
-     └──► PR to staging
-              │
-              ▼
-staging ──────────────────────────────────► Staging Environment
-     │
+feature-branch ─────────► PR to staging
+                              │
+                              ├──► PR Preview Created (pr-123.app.connect.com)
+                              │
+                              ▼
+staging ──────────────────────────────────► Staging Environment (app-staging.connect.com)
+     │                                       (Client UAT + QA)
      └──► PR to main
               │
               ▼
-main ─────────────────────────────────────► Production Environment
+main ─────────────────────────────────────► Production Environment (app.connect.com)
 ```
+
+### Two-Environment Model
+
+The Web uses a **two-environment model** (Staging + Production):
+
+- **PR Previews** provide isolated testing for each pull request
+- **PR Previews connect to Staging API** for backend functionality
+- **Staging** serves as the integration environment for final QA
+- **Production** serves live users
 
 ### Workflow
 
 1. **Feature Development:**
-   - Create feature branch from `development`
-   - Push changes (CI runs)
-   - Create PR to `development`
-   - Merge after review → deploys to Dev
+   - Create feature branch from `staging`
+   - Push changes (CI runs, PR preview created)
+   - Create PR to `staging`
+   - Test on PR preview URL
+   - Merge after review → deploys to Staging
 
-2. **Staging Release:**
-   - Create PR from `development` to `staging`
-   - Review and merge → deploys to Staging
-
-3. **Production Release:**
+2. **Production Release:**
    - Create PR from `staging` to `main`
    - Review and merge → deploys to Production
    - GitHub Release created automatically
@@ -168,10 +182,18 @@ Configure these in **Settings → Secrets and variables → Actions**:
 |--------|-------------|
 | `AWS_ACCESS_KEY_ID` | AWS IAM access key |
 | `AWS_SECRET_ACCESS_KEY` | AWS IAM secret key |
+| `CLOUDFRONT_STAGING_DISTRIBUTION_ID` | CloudFront distribution ID for staging |
+| `CLOUDFRONT_PROD_DISTRIBUTION_ID` | CloudFront distribution ID for production |
+| `STAGING_API_URL` | API URL for staging (used in builds) |
+| `PROD_API_URL` | API URL for production (used in builds) |
+| `DOMAIN_NAME` | Root domain (e.g., `connect.com`) |
+| `ROUTE53_ZONE_ID` | Route53 hosted zone ID |
+| `WILDCARD_CERTIFICATE_ARN` | ACM certificate for `*.app.connect.com` |
 
 ### IAM Permissions Required
 
 The AWS credentials need these permissions:
+
 ```json
 {
   "Version": "2012-10-17",
@@ -179,25 +201,43 @@ The AWS credentials need these permissions:
     {
       "Effect": "Allow",
       "Action": [
-        "ecr:GetAuthorizationToken",
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage",
-        "ecr:PutImage",
-        "ecr:InitiateLayerUpload",
-        "ecr:UploadLayerPart",
-        "ecr:CompleteLayerUpload"
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ],
+      "Resource": [
+        "arn:aws:s3:::connect2-web-*",
+        "arn:aws:s3:::connect2-web-*/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetDistribution",
+        "cloudfront:CreateDistribution",
+        "cloudfront:UpdateDistribution",
+        "cloudfront:DeleteDistribution",
+        "cloudfront:TagResource",
+        "cloudfront:CreateOriginAccessControl",
+        "cloudfront:DeleteOriginAccessControl",
+        "cloudfront:GetOriginAccessControl",
+        "cloudfront:CreateResponseHeadersPolicy",
+        "cloudfront:DeleteResponseHeadersPolicy",
+        "cloudfront:GetResponseHeadersPolicy"
       ],
       "Resource": "*"
     },
     {
       "Effect": "Allow",
       "Action": [
-        "ecs:UpdateService",
-        "ecs:DescribeServices",
-        "ecs:DescribeTasks"
+        "route53:ChangeResourceRecordSets",
+        "route53:GetHostedZone",
+        "route53:ListResourceRecordSets"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:route53:::hostedzone/*"
     },
     {
       "Effect": "Allow",
@@ -236,30 +276,27 @@ For production safety, configure GitHub Environments:
 All deploy workflows support `workflow_dispatch` for manual triggering:
 
 1. Go to **Actions** tab
-2. Select the workflow (e.g., "Deploy to Dev")
+2. Select the workflow (e.g., "Deploy to Staging")
 3. Click **Run workflow**
 4. Select branch and click **Run workflow**
 
 The Terraform workflow also allows selecting:
-- Environment (`dev`, `staging`, `prod`)
+- Environment (`staging`, `prod`)
 - Action (`plan` or `apply`)
 
 ---
 
 ## Workflow Files
 
-### Web Workflows
-
 ```
 .github/workflows/
-├── ci.yml              # Lint, test, type-check, build on all branches
-├── deploy-dev.yml      # Deploy to dev on push to development
-├── deploy-staging.yml  # Deploy to staging on push to staging
-├── deploy-prod.yml     # Deploy to prod on push to main (with tests + GitHub Release)
-└── terraform.yml       # Infrastructure changes (VPC, ECS, ECR, etc.)
+├── ci.yml                  # Lint, test, type-check, build on all branches
+├── deploy-staging.yml      # Deploy to staging on push to staging
+├── deploy-prod.yml         # Deploy to prod on push to main (with tests + GitHub Release)
+├── deploy-pr-preview.yml   # Create PR preview on PR open/update
+├── cleanup-pr-preview.yml  # Cleanup PR preview on PR close
+└── terraform.yml           # Infrastructure changes (S3, CloudFront, etc.)
 ```
-
-All workflows are self-contained within this repository. No external workflow dependencies.
 
 ---
 
@@ -280,26 +317,87 @@ All workflows are self-contained within this repository. No external workflow de
          │
          ▼
 ┌─────────────────┐     ┌─────────────────┐
-│ Deploy Workflow │────►│  Build Docker   │
-│   (per branch)  │     │     Image       │
+│ Deploy Workflow │────►│  npm run build  │
+│   (per branch)  │     │                 │
 └─────────────────┘     └────────┬────────┘
                                  │
                                  ▼
                         ┌─────────────────┐
-                        │   Push to ECR   │
+                        │   S3 Sync       │
+                        │ (with cache     │
+                        │   headers)      │
                         └────────┬────────┘
                                  │
                                  ▼
                         ┌─────────────────┐
-                        │  Update ECS     │
-                        │    Service      │
+                        │   CloudFront    │
+                        │  Invalidation   │
                         └────────┬────────┘
                                  │
                                  ▼
                         ┌─────────────────┐
-                        │ Rolling Deploy  │
-                        │ (zero downtime) │
+                        │  Live Globally  │
+                        │  (within mins)  │
                         └─────────────────┘
+```
+
+---
+
+## PR Preview Flow
+
+```
+┌─────────────────┐
+│  Open/Update PR │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│    CI Workflow  │──────────────────────────┐
+│     (tests)     │                          │
+└────────┬────────┘                          │
+         │                                   │
+         ▼                                   ▼
+┌─────────────────┐                 ┌─────────────────┐
+│ Terraform Apply │                 │   npm build     │
+│ (S3 + CloudFront│                 │                 │
+│   + DNS record) │                 └────────┬────────┘
+└────────┬────────┘                          │
+         │                                   │
+         └───────────────┬───────────────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │   S3 Sync       │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │   Post PR       │
+                │   Comment with  │
+                │   Preview URL   │
+                └─────────────────┘
+                         │
+                         ▼
+         ┌───────────────────────────────────┐
+         │  pr-123.app.connect.com → Ready!  │
+         └───────────────────────────────────┘
+
+┌─────────────────┐
+│   Close PR      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Empty S3      │
+│   Terraform     │
+│   Destroy       │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Resources     │
+│   Cleaned Up    │
+└─────────────────┘
 ```
 
 ---
@@ -313,19 +411,7 @@ All workflows are self-contained within this repository. No external workflow de
 | PR Type | Contains | Examples |
 |---------|----------|----------|
 | **Code PR** | React components, hooks, tests, styles | `feat: add login page` |
-| **Infrastructure PR** | Terraform, Docker, GitHub Actions, nginx.conf | `infra: add CDN distribution` |
-
-**Why?**
-- **Clean rollbacks** - revert code without affecting infrastructure (and vice versa)
-- **Easier reviews** - reviewers can focus on one type of change
-- **Simpler debugging** - know exactly what changed if issues arise
-- **Independent timing** - infrastructure may need to deploy before code
-
-**When a feature needs both:**
-```
-1. PR #1: "infra: Add CloudFront distribution" → merge, wait for deploy
-2. PR #2: "feat: Configure app for CDN assets" → merge
-```
+| **Infrastructure PR** | Terraform, GitHub Actions | `infra: update CloudFront cache policy` |
 
 ### Commit Messages
 
@@ -333,7 +419,7 @@ Use conventional commits for clear history:
 ```
 feat: add user authentication
 fix: resolve login redirect issue
-infra: add CDN distribution
+infra: update CloudFront security headers
 docs: update deployment documentation
 chore: upgrade dependencies
 ```
@@ -344,25 +430,8 @@ chore: upgrade dependencies
 feature/add-login-page
 bugfix/fix-header-styling
 hotfix/security-patch
-infra/add-cdn-distribution
+infra/update-cloudfront-config
 ```
-
-### Pull Request Process
-
-1. Create PR with descriptive title
-2. **Verify it's either code OR infrastructure, not both**
-3. Wait for CI to pass
-4. Request review from team member
-5. Address feedback
-6. Merge when approved
-
-### Deployment Verification
-
-After each deployment:
-1. Check GitHub Actions summary
-2. Verify ECS service is stable
-3. Test the application URL
-4. Monitor CloudWatch for errors
 
 ---
 
@@ -387,20 +456,19 @@ npm run test           # Run tests locally
 
 ### Deployment Failing
 
-**ECR Push fails:**
+**S3 Sync fails:**
 - Check AWS credentials are correct
-- Verify ECR repository exists
+- Verify S3 bucket exists
 - Check IAM permissions
 
-**ECS Update fails:**
-- Verify cluster and service names match
-- Check service exists in the target environment
-- Review CloudWatch logs for container errors
+**CloudFront Invalidation fails:**
+- Verify distribution ID is correct
+- Check IAM permissions for CloudFront
 
-**Terraform fails:**
-- Check S3 bucket for state exists
-- Verify AWS credentials have Terraform permissions
-- Run `terraform plan` locally to debug
+**Changes not appearing:**
+- Check CloudFront invalidation completed
+- Clear browser cache
+- Wait a few minutes for edge propagation
 
 ### Viewing Logs
 
@@ -411,16 +479,14 @@ npm run test           # Run tests locally
 
 **AWS logs:**
 ```bash
-# View ECS task logs
-aws logs tail /ecs/connect2-web-dev --follow
+# Check S3 bucket contents
+aws s3 ls s3://connect2-web-staging/
 
-# View specific deployment
-aws ecs describe-services \
-  --cluster connect2-web-cluster-dev \
-  --services connect2-web-service-dev
+# Check CloudFront distribution status
+aws cloudfront get-distribution --id E1234567890ABC
 
-# Check ECS cluster status
-aws ecs describe-clusters --clusters connect2-web-cluster-dev
+# Check recent invalidations
+aws cloudfront list-invalidations --distribution-id E1234567890ABC
 ```
 
 ---

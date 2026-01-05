@@ -4,22 +4,28 @@ variable "route53_zone_id" {
 }
 
 variable "record_name" {
-  description = "Name of the DNS record (e.g., app.connect.example.com)"
+  description = "Name of the DNS record (e.g., app, app-staging)"
   type        = string
 }
 
-variable "alb_dns_name" {
-  description = "DNS name of the ALB"
+variable "alias_target_dns_name" {
+  description = "DNS name of the alias target (ALB or CloudFront)"
   type        = string
 }
 
-variable "alb_zone_id" {
-  description = "Zone ID of the ALB"
+variable "alias_target_zone_id" {
+  description = "Zone ID of the alias target (ALB or CloudFront)"
   type        = string
 }
 
 variable "evaluate_target_health" {
   description = "Whether to evaluate target health"
+  type        = bool
+  default     = false  # CloudFront doesn't support health checks in Route53
+}
+
+variable "create_ipv6_record" {
+  description = "Create AAAA record for IPv6 (recommended for CloudFront)"
   type        = bool
   default     = true
 }

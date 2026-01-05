@@ -101,26 +101,35 @@ This repository contains **all infrastructure required** to run the API service.
 
 | Environment | Branch | Resources | Purpose |
 |-------------|--------|-----------|---------|
-| **Development** | `development` | Minimal, Spot | Feature testing |
-| **Staging** | `staging` | Production-like, Spot | Pre-release validation |
+| **Staging** | `staging` | Production-like, Spot | Client UAT, pre-release validation |
 | **Production** | `main` | Full HA, Multi-AZ | Live users |
 
 ### Environment Differences
 
-| Feature | Dev | Staging | Prod |
-|---------|-----|---------|------|
-| Fargate Tasks | 2 | 2-6 | 3-20 |
-| CPU/Memory | 256/512 | 256/512 | 512/1024 |
-| Spot Instances | Yes | Yes | No |
-| Autoscaling | No | Yes | Yes |
-| HTTPS | No | Yes | Yes |
-| RDS Instance | db.t3.micro | db.t3.small | db.t3.medium |
-| RDS Multi-AZ | No | No | Yes |
-| Redis Nodes | 1 | 2 | 3 |
-| Redis TLS | No | No | Yes |
-| Log Retention | 7 days | 14 days | 90 days |
-| Deletion Protection | No | No | Yes |
-| Bastion Host | Optional | Optional | Recommended |
+| Feature | Staging | Production |
+|---------|---------|------------|
+| Fargate Tasks | 2-6 | 3-20 |
+| CPU/Memory | 512/1024 | 1024/2048 |
+| Spot Instances | Yes | No |
+| Autoscaling | Yes | Yes |
+| HTTPS | Yes | Yes |
+| RDS Instance | db.t3.small | db.r6g.large |
+| RDS Multi-AZ | No | Yes |
+| Redis Nodes | 2 | 3 |
+| Redis TLS | Yes | Yes |
+| Log Retention | 14 days | 90 days |
+| Deletion Protection | No | Yes |
+| Bastion Host | Optional | Recommended |
+
+### Why No Dev Environment?
+
+The API uses a **two-environment model** (Staging + Production):
+
+- **PR Previews** (Web only) point to the Staging API for testing
+- **Staging** serves as the integration environment for QA and client UAT
+- **Production** serves live users
+
+This simplifies infrastructure and reduces costs while still providing full testing capabilities.
 
 ---
 
@@ -146,11 +155,6 @@ infrastructure/
     │   ├── bastion/                # Bastion host for DB access
     │   └── sns-alerts/             # Alerting topics
     └── environments/               # Environment-specific configurations
-        ├── dev/
-        │   ├── main.tf             # Complete infrastructure definition
-        │   ├── variables.tf
-        │   ├── outputs.tf
-        │   └── dev.tfvars
         ├── staging/
         │   ├── main.tf
         │   ├── variables.tf
@@ -307,12 +311,6 @@ secrets = [
 ### 1. Create S3 Bucket for Terraform State
 
 ```bash
-# Development
-aws s3 mb s3://connect2-api-terraform-state-dev --region us-west-2
-aws s3api put-bucket-versioning \
-  --bucket connect2-api-terraform-state-dev \
-  --versioning-configuration Status=Enabled
-
 # Staging
 aws s3 mb s3://connect2-api-terraform-state-staging --region us-west-2
 aws s3api put-bucket-versioning \
@@ -329,7 +327,7 @@ aws s3api put-bucket-versioning \
 ### 2. Configure Environment Variables
 
 ```bash
-cd infrastructure/terraform/environments/dev
+cd infrastructure/terraform/environments/staging
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars with your values
 ```
@@ -390,7 +388,7 @@ docker build -t connect2-api:dev \
 
 Deployments are automated via GitHub Actions:
 
-1. Push code to branch (`development`, `staging`, or `main`)
+1. Push code to branch (`staging` or `main`)
 2. CI workflow runs (lint, test, type-check, build)
 3. Deploy workflow triggers:
    - Builds Docker image
@@ -406,13 +404,13 @@ aws ecr get-login-password --region us-west-2 | \
   docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-west-2.amazonaws.com
 
 docker build -t connect2-api:latest -f infrastructure/docker/Dockerfile --target production .
-docker tag connect2-api:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-api-dev:latest
-docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-api-dev:latest
+docker tag connect2-api:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-api-staging:latest
+docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-api-staging:latest
 
 # Trigger ECS deployment (to this repository's dedicated cluster)
 aws ecs update-service \
-  --cluster connect2-api-cluster-dev \
-  --service connect2-api-service-dev \
+  --cluster connect2-api-cluster-staging \
+  --service connect2-api-service-staging \
   --force-new-deployment
 ```
 
@@ -424,11 +422,11 @@ aws ecs update-service \
 
 Container logs are sent to CloudWatch:
 - **Log Group:** `/ecs/connect2-api-{environment}`
-- **Retention:** 7 days (dev), 14 days (staging), 90 days (prod)
+- **Retention:** 14 days (staging), 90 days (prod)
 
 **View logs:**
 ```bash
-aws logs tail /ecs/connect2-api-dev --follow
+aws logs tail /ecs/connect2-api-staging --follow
 ```
 
 ### Health Checks
@@ -515,9 +513,9 @@ Access controlled via IAM policies.
 
 ## Cost Optimization
 
-### Fargate Spot (Dev/Staging)
+### Fargate Spot (Staging)
 
-Dev and staging environments use Fargate Spot for ~70% cost savings:
+Staging environment uses Fargate Spot for ~70% cost savings:
 ```hcl
 use_spot = true
 ```
@@ -528,17 +526,17 @@ use_spot = true
 
 Start with minimal resources and scale up as needed:
 ```hcl
-# Dev
-task_cpu    = 256   # 0.25 vCPU
-task_memory = 512   # 512 MB
-instance_class = "db.t3.micro"
-node_type = "cache.t3.micro"
-
-# Production
+# Staging
 task_cpu    = 512   # 0.5 vCPU
 task_memory = 1024  # 1 GB
-instance_class = "db.t3.medium"
-node_type = "cache.t3.medium"
+instance_class = "db.t3.small"
+node_type = "cache.t3.small"
+
+# Production
+task_cpu    = 1024  # 1 vCPU
+task_memory = 2048  # 2 GB
+instance_class = "db.r6g.large"
+node_type = "cache.r6g.large"
 ```
 
 ### Auto Scaling
@@ -560,13 +558,13 @@ memory_target_value = 70
 
 1. **Check CloudWatch Logs:**
    ```bash
-   aws logs tail /ecs/connect2-api-dev --since 1h
+   aws logs tail /ecs/connect2-api-staging --since 1h
    ```
 
 2. **Describe task failures:**
    ```bash
    aws ecs describe-tasks \
-     --cluster connect2-api-cluster-dev \
+     --cluster connect2-api-cluster-staging \
      --tasks <task-arn>
    ```
 
@@ -584,7 +582,7 @@ memory_target_value = 70
 2. **Check secrets:**
    ```bash
    aws secretsmanager get-secret-value \
-     --secret-id connect2-api/dev/rds-credentials
+     --secret-id connect2-api/staging/rds-credentials
    ```
 
 3. **Test connectivity via bastion:**
@@ -598,7 +596,7 @@ memory_target_value = 70
 2. **Check secrets:**
    ```bash
    aws secretsmanager get-secret-value \
-     --secret-id connect2-api/dev/redis-credentials
+     --secret-id connect2-api/staging/redis-credentials
    ```
 
 3. **Test via bastion:**

@@ -9,7 +9,7 @@ on:
 env:
   AWS_REGION: us-west-2
   ECR_REPOSITORY: connect2-api-prod
-  ECS_CLUSTER: connect2-cluster-prod       # Shared cluster
+  ECS_CLUSTER: connect2-api-cluster-prod
   ECS_SERVICE: connect2-api-service-prod
 
 jobs:

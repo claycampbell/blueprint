@@ -21,16 +21,6 @@ variable "aws_region" {
 }
 
 # =============================================================================
-# Networking Variables
-# =============================================================================
-
-variable "vpc_cidr" {
-  description = "CIDR block for the Web VPC"
-  type        = string
-  default     = "10.2.0.0/16"
-}
-
-# =============================================================================
 # DNS Variables
 # =============================================================================
 
@@ -52,65 +42,10 @@ variable "route53_zone_id" {
 }
 
 # =============================================================================
-# Container Variables
-# =============================================================================
-
-variable "container_image" {
-  description = "Docker image to deploy"
-  type        = string
-}
-
-variable "container_port" {
-  description = "Container port"
-  type        = number
-  default     = 80
-}
-
-variable "health_check_path" {
-  description = "Health check path"
-  type        = string
-  default     = "/"
-}
-
-# =============================================================================
-# ECS Task Variables
-# =============================================================================
-
-variable "task_cpu" {
-  description = "Task CPU units"
-  type        = number
-  default     = 256
-}
-
-variable "task_memory" {
-  description = "Task memory in MB"
-  type        = number
-  default     = 512
-}
-
-variable "desired_count" {
-  description = "Desired task count"
-  type        = number
-  default     = 2
-}
-
-variable "min_capacity" {
-  description = "Minimum task count for autoscaling"
-  type        = number
-  default     = 2
-}
-
-variable "max_capacity" {
-  description = "Maximum task count for autoscaling"
-  type        = number
-  default     = 6
-}
-
-# =============================================================================
 # Application Variables
 # =============================================================================
 
 variable "api_url" {
-  description = "URL of the API backend"
+  description = "URL of the API backend (used for CSP headers)"
   type        = string
 }

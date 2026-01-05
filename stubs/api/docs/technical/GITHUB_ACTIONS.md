@@ -35,8 +35,8 @@ This repository owns all its infrastructure—no dependencies on external resour
 ### CI Workflow (`ci.yml`)
 
 **Triggers:**
-- Pull requests to `main`, `staging`, `development`
-- Push to `main`, `staging`, `development`
+- Pull requests to `main`, `staging`
+- Push to `main`, `staging`
 
 **Jobs:**
 
@@ -48,23 +48,6 @@ This repository owns all its infrastructure—no dependencies on external resour
 | `build` | Docker image build | `docker build` |
 
 All jobs run in parallel for faster feedback. The `build` job runs after all checks pass.
-
----
-
-### Deploy to Dev (`deploy-dev.yml`)
-
-**Triggers:**
-- Push to `development` branch
-- Manual dispatch
-
-**What it does:**
-1. Builds Docker image from `infrastructure/docker/Dockerfile`
-2. Tags with commit SHA and `latest`
-3. Pushes to ECR (`connect2-api-dev`)
-4. Updates ECS service to trigger rolling deployment
-5. Waits for deployment to stabilize
-
-**Environment:** `development`
 
 ---
 
@@ -119,7 +102,6 @@ All jobs run in parallel for faster feedback. The `build` job runs after all che
 - Runs `terraform apply -auto-approve`
 
 **Branch → Environment Mapping:**
-- `development` → `dev`
 - `staging` → `staging`
 - `main` → `prod`
 
@@ -128,32 +110,36 @@ All jobs run in parallel for faster feedback. The `build` job runs after all che
 ## Branch Strategy
 
 ```
-development ──────────────────────────────► Dev Environment
-     │
-     └──► PR to staging
-              │
-              ▼
+feature-branch ─────────► PR to staging
+                              │
+                              ▼
 staging ──────────────────────────────────► Staging Environment
-     │
+     │                                       (Client UAT + QA)
      └──► PR to main
               │
               ▼
 main ─────────────────────────────────────► Production Environment
 ```
 
+### Why Two Environments?
+
+The API uses a **two-environment model** (Staging + Production):
+
+- **PR Previews** (Web only) point to the Staging API for frontend QA testing
+- **Staging** serves as the integration environment for API testing and client UAT
+- **Production** serves live users
+
+This simplifies infrastructure, reduces costs, and provides clear separation between testing and production.
+
 ### Workflow
 
 1. **Feature Development:**
-   - Create feature branch from `development`
+   - Create feature branch from `staging`
    - Push changes (CI runs)
-   - Create PR to `development`
-   - Merge after review → deploys to Dev
+   - Create PR to `staging`
+   - Merge after review → deploys to Staging
 
-2. **Staging Release:**
-   - Create PR from `development` to `staging`
-   - Review and merge → deploys to Staging
-
-3. **Production Release:**
+2. **Production Release:**
    - Create PR from `staging` to `main`
    - Review and merge → deploys to Production
    - GitHub Release created automatically
@@ -236,12 +222,12 @@ For production safety, configure GitHub Environments:
 All deploy workflows support `workflow_dispatch` for manual triggering:
 
 1. Go to **Actions** tab
-2. Select the workflow (e.g., "Deploy to Dev")
+2. Select the workflow (e.g., "Deploy to Staging")
 3. Click **Run workflow**
 4. Select branch and click **Run workflow**
 
 The Terraform workflow also allows selecting:
-- Environment (`dev`, `staging`, `prod`)
+- Environment (`staging`, `prod`)
 - Action (`plan` or `apply`)
 
 ---
@@ -253,7 +239,6 @@ The Terraform workflow also allows selecting:
 ```
 .github/workflows/
 ├── ci.yml              # Lint, test, type-check on all branches
-├── deploy-dev.yml      # Deploy to dev on push to development
 ├── deploy-staging.yml  # Deploy to staging on push to staging
 ├── deploy-prod.yml     # Deploy to prod on push to main (with tests + GitHub Release)
 └── terraform.yml       # Infrastructure changes (VPC, ECS, RDS, Redis, etc.)
@@ -404,15 +389,15 @@ uv run pytest -v           # Run tests locally
 **AWS logs:**
 ```bash
 # View ECS task logs
-aws logs tail /ecs/connect2-api-dev --follow
+aws logs tail /ecs/connect2-api-staging --follow
 
 # View specific deployment
 aws ecs describe-services \
-  --cluster connect2-api-cluster-dev \
-  --services connect2-api-service-dev
+  --cluster connect2-api-cluster-staging \
+  --services connect2-api-service-staging
 
 # Check ECS cluster status
-aws ecs describe-clusters --clusters connect2-api-cluster-dev
+aws ecs describe-clusters --clusters connect2-api-cluster-staging
 ```
 
 ---

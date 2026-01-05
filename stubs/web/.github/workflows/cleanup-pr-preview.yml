@@ -1,0 +1,61 @@
+# Cleanup PR Preview
+# Destroys ephemeral S3 + CloudFront deployment when PR is closed
+name: Cleanup PR Preview
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [staging, main]
+
+env:
+  AWS_REGION: us-west-2
+  TF_WORKING_DIR: infrastructure/terraform/environments/pr-preview
+
+jobs:
+  cleanup-preview:
+    name: Cleanup PR Preview
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Empty S3 bucket
+        continue-on-error: true
+        run: |
+          BUCKET_NAME="connect2-web-pr-${{ github.event.pull_request.number }}"
+          echo "Emptying S3 bucket: $BUCKET_NAME"
+          aws s3 rm s3://$BUCKET_NAME --recursive || true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.0'
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform destroy -auto-approve \
+            -var="pr_number=${{ github.event.pull_request.number }}" \
+            -var="domain_name=${{ secrets.DOMAIN_NAME }}" \
+            -var="route53_zone_id=${{ secrets.ROUTE53_ZONE_ID }}" \
+            -var="wildcard_certificate_arn=${{ secrets.WILDCARD_CERTIFICATE_ARN }}" \
+            -var="api_url=${{ secrets.STAGING_API_URL }}"
+
+      - name: Cleanup summary
+        run: |
+          echo "## PR Preview Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Destroyed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reason:** PR ${{ github.event.action }}" >> $GITHUB_STEP_SUMMARY

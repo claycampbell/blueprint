@@ -4,11 +4,11 @@ name: Terraform
 
 on:
   pull_request:
-    branches: [main, staging, development]
+    branches: [main, staging]
     paths:
       - 'infrastructure/terraform/**'
   push:
-    branches: [main, staging, development]
+    branches: [main, staging]
     paths:
       - 'infrastructure/terraform/**'
   workflow_dispatch:
@@ -18,7 +18,6 @@ on:
         required: true
         type: choice
         options:
-          - dev
           - staging
           - prod
       action:
@@ -54,9 +53,6 @@ jobs:
           elif [ "${{ github.ref_name }}" == "staging" ]; then
             echo "environment=staging" >> $GITHUB_OUTPUT
             echo "tf_directory=infrastructure/terraform/environments/staging" >> $GITHUB_OUTPUT
-          else
-            echo "environment=dev" >> $GITHUB_OUTPUT
-            echo "tf_directory=infrastructure/terraform/environments/dev" >> $GITHUB_OUTPUT
           fi
 
   # Run terraform plan on PRs

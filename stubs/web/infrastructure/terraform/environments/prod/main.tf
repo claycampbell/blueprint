@@ -1,7 +1,7 @@
 # Web Frontend - Production Environment
 #
-# This configuration deploys the React frontend with its own independent infrastructure.
-# Includes: VPC, ECS Cluster, ECS Service, ALB, ECR, DNS, SSL Certificate
+# This configuration deploys the React frontend as a static SPA to S3 + CloudFront.
+# No VPC, ECS, or containers - just static hosting with global CDN.
 #
 # This infrastructure is fully self-contained and can be deployed to any AWS account
 # without dependencies on shared infrastructure.
@@ -25,6 +25,7 @@ terraform {
   }
 }
 
+# Default provider for most resources
 provider "aws" {
   region = var.aws_region
 
@@ -38,31 +39,19 @@ provider "aws" {
   }
 }
 
-# =============================================================================
-# Networking - Own VPC for Web
-# =============================================================================
+# us-east-1 provider required for CloudFront ACM certificates
+provider "aws" {
+  alias  = "us_east_1"
+  region = "us-east-1"
 
-module "networking" {
-  source = "../../modules/networking"
-
-  project_name       = "${var.project_name}-web"
-  environment        = var.environment
-  vpc_cidr           = var.vpc_cidr
-  az_count           = 2
-  enable_nat_gateway = true
-}
-
-# =============================================================================
-# ECS Cluster - Own cluster for Web
-# =============================================================================
-
-module "ecs_cluster" {
-  source = "../../modules/ecs-cluster"
-
-  project_name              = "${var.project_name}-web"
-  environment               = var.environment
-  enable_container_insights = true
-  enable_spot               = false  # No Spot in production for stability
+  default_tags {
+    tags = {
+      Project     = var.project_name
+      Environment = var.environment
+      ManagedBy   = "terraform"
+      Component   = "web"
+    }
+  }
 }
 
 # =============================================================================
@@ -78,115 +67,155 @@ module "route53_zone" {
   domain_name  = var.domain_name
 }
 
-# =============================================================================
-# ECR Repository
-# =============================================================================
-
-module "ecr" {
-  source = "../../modules/ecr"
-
-  project_name         = "${var.project_name}-web"
-  environment          = var.environment
-  image_tag_mutability = "IMMUTABLE"
-  scan_on_push         = true
-  image_count_to_keep  = 20
+locals {
+  route53_zone_id = var.create_route53_zone ? module.route53_zone[0].zone_id : var.route53_zone_id
+  full_domain     = "app.${var.domain_name}"
 }
 
 # =============================================================================
-# SSL Certificate
+# SSL Certificate (must be in us-east-1 for CloudFront)
 # =============================================================================
 
 module "acm" {
   source = "../../modules/acm"
+  providers = {
+    aws = aws.us_east_1
+  }
 
-  project_name      = "${var.project_name}-web"
-  environment       = var.environment
-  domain_name       = "app.${var.domain_name}"
-  route53_zone_id   = var.create_route53_zone ? module.route53_zone[0].zone_id : var.route53_zone_id
+  project_name    = "${var.project_name}-web"
+  environment     = var.environment
+  domain_name     = local.full_domain
+  route53_zone_id = local.route53_zone_id
 
+  # Include www subdomain for production
   subject_alternative_names = [
     "www.${var.domain_name}"
   ]
 }
 
 # =============================================================================
-# Application Load Balancer
+# CloudFront Distribution (must be created before S3 bucket policy)
 # =============================================================================
 
-module "alb" {
-  source = "../../modules/alb"
+module "cloudfront" {
+  source = "../../modules/cloudfront"
 
-  project_name               = "${var.project_name}-web"
-  environment                = var.environment
-  vpc_id                     = module.networking.vpc_id
-  public_subnet_ids          = module.networking.public_subnet_ids
-  container_port             = var.container_port
-  health_check_path          = var.health_check_path
-  certificate_arn            = module.acm.certificate_arn
-  enable_deletion_protection = true  # Protect production ALB
+  project_name                   = var.project_name
+  environment                    = var.environment
+  s3_bucket_id                   = aws_s3_bucket.website.id
+  s3_bucket_regional_domain_name = aws_s3_bucket.website.bucket_regional_domain_name
+  domain_names                   = [local.full_domain, "www.${var.domain_name}"]
+  certificate_arn                = module.acm.certificate_arn
+  price_class                    = "PriceClass_All"  # Global distribution for production
+
+  content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' ${var.api_url};"
 }
 
 # =============================================================================
-# DNS Record
+# S3 Bucket for Static Website
+# =============================================================================
+
+resource "aws_s3_bucket" "website" {
+  bucket = "${var.project_name}-web-${var.environment}"
+
+  tags = {
+    Name        = "${var.project_name}-web-${var.environment}"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
+# Block all public access - CloudFront will access via OAC
+resource "aws_s3_bucket_public_access_block" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# Enable versioning for rollback capability
+resource "aws_s3_bucket_versioning" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# Server-side encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# Lifecycle rules to clean up old versions (longer retention for production)
+resource "aws_s3_bucket_lifecycle_configuration" "website" {
+  bucket = aws_s3_bucket.website.id
+
+  rule {
+    id     = "cleanup-old-versions"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90  # Longer retention for production
+    }
+  }
+}
+
+# Bucket policy allowing CloudFront OAC access
+resource "aws_s3_bucket_policy" "website" {
+  bucket = aws_s3_bucket.website.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowCloudFrontOAC"
+        Effect    = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.website.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = module.cloudfront.distribution_arn
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [aws_s3_bucket_public_access_block.website]
+}
+
+# =============================================================================
+# DNS Records
 # =============================================================================
 
 module "dns_record" {
   source = "../../modules/dns-record"
 
-  route53_zone_id    = var.create_route53_zone ? module.route53_zone[0].zone_id : var.route53_zone_id
-  record_name        = "app"
-  alb_dns_name       = module.alb.alb_dns_name
-  alb_zone_id        = module.alb.alb_zone_id
+  route53_zone_id       = local.route53_zone_id
+  record_name           = "app"
+  alias_target_dns_name = module.cloudfront.distribution_domain_name
+  alias_target_zone_id  = module.cloudfront.distribution_hosted_zone_id
+  create_ipv6_record    = true
 }
 
-# =============================================================================
-# ECS Service
-# =============================================================================
+# WWW redirect record
+module "dns_record_www" {
+  source = "../../modules/dns-record"
 
-module "ecs_service" {
-  source = "../../modules/ecs-service"
-
-  project_name   = var.project_name
-  service_name   = "${var.project_name}-web"
-  environment    = var.environment
-  aws_region     = var.aws_region
-
-  # Own infrastructure
-  ecs_cluster_arn    = module.ecs_cluster.cluster_arn
-  ecs_cluster_name   = module.ecs_cluster.cluster_name
-  vpc_id             = module.networking.vpc_id
-  private_subnet_ids = module.networking.private_subnet_ids
-
-  # ALB
-  alb_security_group_id = module.alb.security_group_id
-  target_group_arn      = module.alb.target_group_arn
-
-  # Container configuration
-  container_image   = var.container_image
-  container_port    = var.container_port
-  health_check_path = var.health_check_path
-
-  # Resources - Production scale
-  task_cpu      = var.task_cpu
-  task_memory   = var.task_memory
-  desired_count = var.desired_count
-  min_capacity  = var.min_capacity
-  max_capacity  = var.max_capacity
-
-  # Environment variables
-  environment_variables = [
-    {
-      name  = "NODE_ENV"
-      value = "production"
-    },
-    {
-      name  = "API_URL"
-      value = var.api_url
-    }
-  ]
-
-  log_retention_days = 90
-  use_spot           = false  # No Spot in production for stability
-  enable_autoscaling = true
-  cpu_target_value   = 60     # More aggressive scaling in prod
+  route53_zone_id       = local.route53_zone_id
+  record_name           = "www"
+  alias_target_dns_name = module.cloudfront.distribution_domain_name
+  alias_target_zone_id  = module.cloudfront.distribution_hosted_zone_id
+  create_ipv6_record    = true
 }

@@ -1,0 +1,162 @@
+# Deploy PR Preview
+# Creates ephemeral S3 + CloudFront deployment for pull request previews
+# PR previews connect to the Staging API
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [staging, main]
+
+env:
+  AWS_REGION: us-west-2
+  TF_WORKING_DIR: infrastructure/terraform/environments/pr-preview
+  VITE_API_URL: ${{ secrets.STAGING_API_URL }}
+
+jobs:
+  deploy-preview:
+    name: Deploy PR Preview
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run type checking
+        run: npx tsc --noEmit
+
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ env.VITE_API_URL }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.6.0'
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        id: terraform
+        run: |
+          terraform apply -auto-approve \
+            -var="pr_number=${{ github.event.pull_request.number }}" \
+            -var="domain_name=${{ secrets.DOMAIN_NAME }}" \
+            -var="route53_zone_id=${{ secrets.ROUTE53_ZONE_ID }}" \
+            -var="wildcard_certificate_arn=${{ secrets.WILDCARD_CERTIFICATE_ARN }}" \
+            -var="api_url=${{ env.VITE_API_URL }}"
+
+          # Get outputs
+          echo "s3_bucket=$(terraform output -raw s3_bucket_name)" >> $GITHUB_OUTPUT
+          echo "cloudfront_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "preview_url=$(terraform output -raw preview_url)" >> $GITHUB_OUTPUT
+
+      - name: Sync to S3
+        run: |
+          # Sync build output to S3 with cache control headers
+          aws s3 sync dist/ s3://${{ steps.terraform.outputs.s3_bucket }}/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "index.html" \
+            --exclude "*.json"
+
+          # Sync HTML and JSON with no-cache for instant updates
+          aws s3 sync dist/ s3://${{ steps.terraform.outputs.s3_bucket }}/ \
+            --cache-control "no-cache, no-store, must-revalidate" \
+            --include "index.html" \
+            --include "*.json"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.terraform.outputs.cloudfront_id }} \
+            --paths "/*"
+
+      - name: Wait for CloudFront distribution
+        run: |
+          echo "Waiting for CloudFront distribution to deploy..."
+          aws cloudfront wait distribution-deployed \
+            --id ${{ steps.terraform.outputs.cloudfront_id }} || true
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = '${{ steps.terraform.outputs.preview_url }}';
+            const prNumber = context.payload.pull_request.number;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('🚀 PR Preview Deployed')
+            );
+
+            const body = `## 🚀 PR Preview Deployed
+
+            | Environment | URL |
+            |-------------|-----|
+            | **Preview** | ${previewUrl} |
+            | **API** | Staging API |
+
+            **Commit:** \`${{ github.sha }}\`
+
+            > ⏰ This preview will be automatically cleaned up when the PR is closed.
+            `;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+            }
+
+      - name: Deployment summary
+        run: |
+          echo "## PR Preview Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Preview URL:** ${{ steps.terraform.outputs.preview_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Bucket:** ${{ steps.terraform.outputs.s3_bucket }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront ID:** ${{ steps.terraform.outputs.cloudfront_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **API:** Staging" >> $GITHUB_STEP_SUMMARY

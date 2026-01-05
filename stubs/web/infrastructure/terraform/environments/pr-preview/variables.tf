@@ -8,16 +8,25 @@ variable "project_name" {
   default     = "connect2"
 }
 
-variable "environment" {
-  description = "Environment name"
-  type        = string
-  default     = "prod"
-}
-
 variable "aws_region" {
   description = "AWS region"
   type        = string
   default     = "us-west-2"
+}
+
+# =============================================================================
+# PR Preview Variables
+# =============================================================================
+
+variable "pr_number" {
+  description = "Pull request number for this preview"
+  type        = string
+}
+
+variable "ttl_days" {
+  description = "Number of days before PR preview resources expire"
+  type        = number
+  default     = 7
 }
 
 # =============================================================================
@@ -29,16 +38,14 @@ variable "domain_name" {
   type        = string
 }
 
-variable "create_route53_zone" {
-  description = "Create a new Route53 hosted zone (set to false if using existing zone)"
-  type        = bool
-  default     = true
+variable "route53_zone_id" {
+  description = "Route53 zone ID (from staging environment)"
+  type        = string
 }
 
-variable "route53_zone_id" {
-  description = "Existing Route53 zone ID (required if create_route53_zone is false)"
+variable "wildcard_certificate_arn" {
+  description = "ARN of wildcard ACM certificate (*.app.domain.com) from staging"
   type        = string
-  default     = null
 }
 
 # =============================================================================
@@ -46,6 +53,6 @@ variable "route53_zone_id" {
 # =============================================================================
 
 variable "api_url" {
-  description = "URL of the API backend (used for CSP headers)"
+  description = "URL of the Staging API backend"
   type        = string
 }
