@@ -12,6 +12,10 @@ import os
 import sys
 import requests
 from requests.auth import HTTPBasicAuth
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Jira configuration
 JIRA_BASE_URL = "https://vividcg.atlassian.net"

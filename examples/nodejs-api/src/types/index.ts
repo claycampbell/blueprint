@@ -81,6 +81,15 @@ export enum DrawStatus {
   HELD = 'HELD',
 }
 
+export enum EntitlementStatus {
+  PLANNING = 'PLANNING',
+  SUBMITTED = 'SUBMITTED',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  CORRECTIONS = 'CORRECTIONS',
+  APPROVED = 'APPROVED',
+  DENIED = 'DENIED',
+}
+
 export enum DocumentType {
   SURVEY = 'SURVEY',
   TITLE = 'TITLE',
