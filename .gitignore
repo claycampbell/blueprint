@@ -73,3 +73,11 @@ scripts/temp-*.py
 scripts/create-*.py
 scripts/*-temp.py
 COST_OF_OWNERSHIP.pdf
+
+# Assessment time tracking (candidate-specific)
+starter-kit/.assessment-time.json
+
+# Demo project build artifacts
+demo-hybrid-state-workflow/node_modules/
+demo-hybrid-state-workflow/dist/
+demo-hybrid-state-workflow/.vite/
