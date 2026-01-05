@@ -81,3 +81,5 @@ starter-kit/.assessment-time.json
 demo-hybrid-state-workflow/node_modules/
 demo-hybrid-state-workflow/dist/
 demo-hybrid-state-workflow/.vite/
+# Demo project build artifacts
+demo-hybrid-state-workflow/
