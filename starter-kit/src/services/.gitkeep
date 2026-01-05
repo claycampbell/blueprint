@@ -1,0 +1,14 @@
+# Services Directory
+
+This directory contains API service modules for Connect 2.0.
+
+## Assessment Task
+
+Create `projectApi.ts` in this directory with:
+- Mock project data (10-20 projects)
+- Search functionality (filter by name/address)
+- Simulated async delay (500ms)
+- Full TypeScript typing
+- Error handling
+
+Ask Claude Code to help you implement this service!
