@@ -1,12 +1,17 @@
 # Rollback Procedures
 
-**Last Updated:** December 27, 2025
+**Last Updated:** January 2026
 
 ---
 
 ## Overview
 
 This runbook covers how to rollback deployments when issues are discovered in production or other environments.
+
+The Web app is deployed as a static SPA to S3 + CloudFront, making rollbacks straightforward:
+- **S3 versioning** enables instant object restoration
+- **Git reverts** trigger fresh deployments
+- No containers or services to manage
 
 **Key Principle:** Infrastructure changes and application code changes should be in **separate PRs** to enable clean rollbacks.
 
@@ -16,9 +21,9 @@ This runbook covers how to rollback deployments when issues are discovered in pr
 
 | Rollback Type | Method | Time to Complete |
 |---------------|--------|------------------|
-| Application code | Revert PR + redeploy | ~5-10 minutes |
-| Infrastructure | Revert PR + terraform apply | ~5-15 minutes |
-| Emergency (app) | Deploy previous ECS task revision | ~2-5 minutes |
+| Application code | Revert PR + redeploy | ~3-5 minutes |
+| Emergency | Restore S3 objects from version | ~1-2 minutes |
+| Infrastructure | Revert PR + terraform apply | ~5-10 minutes |
 
 ---
 
@@ -46,53 +51,65 @@ This is the cleanest approach - creates an audit trail and triggers a fresh buil
 
 3. **Push to trigger deployment:**
    ```bash
-   git push origin main  # or staging/development
+   git push origin main  # or staging
    ```
 
 4. **Monitor the deployment:**
    - Watch GitHub Actions for build/deploy status
-   - Check ECS service in AWS Console
+   - Check CloudFront invalidation completes
    - Verify application is working
 
-### Method 2: Emergency ECS Rollback
+### Method 2: Emergency S3 Rollback
 
 Use this when you need to rollback immediately without waiting for a new build.
 
 **Steps:**
 
-1. **List recent task definitions:**
+1. **List S3 object versions for index.html:**
    ```bash
-   aws ecs list-task-definitions \
-     --family-prefix connect2-app-prod \
-     --sort DESC \
-     --max-items 5
+   aws s3api list-object-versions \
+     --bucket connect2-web-prod \
+     --prefix index.html \
+     --query 'Versions[0:5].[VersionId,LastModified]'
    ```
 
-2. **Update service to use previous revision:**
+2. **Restore the previous version:**
    ```bash
-   aws ecs update-service \
-     --cluster connect2-app-cluster-prod \
-     --service connect2-app-service-prod \
-     --task-definition connect2-app-prod:<PREVIOUS_REVISION> \
-     --force-new-deployment
+   # Copy previous version to current
+   aws s3api copy-object \
+     --bucket connect2-web-prod \
+     --copy-source "connect2-web-prod/index.html?versionId=<PREVIOUS_VERSION_ID>" \
+     --key index.html \
+     --metadata-directive REPLACE \
+     --cache-control "no-cache, no-store, must-revalidate"
    ```
 
-3. **Wait for rollback to complete:**
+3. **Invalidate CloudFront cache:**
    ```bash
-   aws ecs wait services-stable \
-     --cluster connect2-app-cluster-prod \
-     --services connect2-app-service-prod
+   aws cloudfront create-invalidation \
+     --distribution-id <DISTRIBUTION_ID> \
+     --paths "/*"
    ```
 
 4. **Verify the rollback:**
-   ```bash
-   aws ecs describe-services \
-     --cluster connect2-app-cluster-prod \
-     --services connect2-app-service-prod \
-     --query 'services[0].deployments'
-   ```
+   - Check the application loads correctly
+   - Verify the issue is resolved
 
 **Note:** After emergency rollback, still create a revert PR to keep Git history accurate.
+
+### Method 3: Full S3 Restore
+
+If multiple files need to be restored:
+
+```bash
+# List all versions from a specific time
+aws s3api list-object-versions \
+  --bucket connect2-web-prod \
+  --query 'Versions[?LastModified<=`2025-01-15T00:00:00Z`]'
+
+# For each file, restore to previous version
+# This is tedious - prefer Method 1 (Git revert) for full rollbacks
+```
 
 ---
 
@@ -136,34 +153,11 @@ If GitHub Actions is unavailable:
    terraform apply
    ```
 
-### Method 3: Restore Terraform State (Last Resort)
-
-Only use if state is corrupted:
-
-1. **List state versions in S3:**
+3. **Don't forget to invalidate CloudFront if distribution changed:**
    ```bash
-   aws s3api list-object-versions \
-     --bucket connect2-app-terraform-state-prod \
-     --prefix app/terraform.tfstate \
-     --query 'Versions[0:5].[VersionId,LastModified]'
-   ```
-
-2. **Download previous state:**
-   ```bash
-   aws s3api get-object \
-     --bucket connect2-app-terraform-state-prod \
-     --key app/terraform.tfstate \
-     --version-id <version-id> \
-     restored-state.tfstate
-   ```
-
-3. **Replace current state:**
-   ```bash
-   # Backup current state first
-   terraform state pull > current-state-backup.tfstate
-
-   # Push restored state
-   terraform state push restored-state.tfstate
+   aws cloudfront create-invalidation \
+     --distribution-id <DISTRIBUTION_ID> \
+     --paths "/*"
    ```
 
 ---
@@ -180,7 +174,7 @@ Before rolling back, confirm:
 After rollback:
 
 - [ ] Verify application is working
-- [ ] Monitor logs for errors
+- [ ] Check CloudFront is serving correct content
 - [ ] Create incident report if production was affected
 - [ ] Schedule post-mortem if needed
 
@@ -188,40 +182,49 @@ After rollback:
 
 ## Environment-Specific Commands
 
-### Development
-```bash
-# ECS
-aws ecs update-service \
-  --cluster connect2-app-cluster-dev \
-  --service connect2-app-service-dev \
-  --task-definition connect2-app-dev:<REVISION> \
-  --force-new-deployment
-
-# Git
-git push origin development
-```
-
 ### Staging
+
 ```bash
-# ECS
-aws ecs update-service \
-  --cluster connect2-app-cluster-staging \
-  --service connect2-app-service-staging \
-  --task-definition connect2-app-staging:<REVISION> \
-  --force-new-deployment
+# Check current S3 contents
+aws s3 ls s3://connect2-web-staging/
+
+# List index.html versions
+aws s3api list-object-versions \
+  --bucket connect2-web-staging \
+  --prefix index.html
+
+# Get CloudFront distribution ID
+aws cloudfront list-distributions \
+  --query "DistributionList.Items[?Comment=='connect2-web-staging'].Id"
+
+# Invalidate cache
+aws cloudfront create-invalidation \
+  --distribution-id <STAGING_DIST_ID> \
+  --paths "/*"
 
 # Git
 git push origin staging
 ```
 
 ### Production
+
 ```bash
-# ECS
-aws ecs update-service \
-  --cluster connect2-app-cluster-prod \
-  --service connect2-app-service-prod \
-  --task-definition connect2-app-prod:<REVISION> \
-  --force-new-deployment
+# Check current S3 contents
+aws s3 ls s3://connect2-web-prod/
+
+# List index.html versions
+aws s3api list-object-versions \
+  --bucket connect2-web-prod \
+  --prefix index.html
+
+# Get CloudFront distribution ID
+aws cloudfront list-distributions \
+  --query "DistributionList.Items[?Comment=='connect2-web-prod'].Id"
+
+# Invalidate cache
+aws cloudfront create-invalidation \
+  --distribution-id <PROD_DIST_ID> \
+  --paths "/*"
 
 # Git
 git push origin main
@@ -233,44 +236,58 @@ git push origin main
 
 ### Scenario 1: Bad Code Deploy
 
-**Symptoms:** Application errors, broken functionality
+**Symptoms:** Application errors, broken functionality, white screen
 
 **Solution:**
 1. Revert the PR: `git revert -m 1 <sha>`
 2. Push to branch
-3. Wait for deployment
+3. Wait for deployment (builds, S3 sync, CloudFront invalidation)
 
-### Scenario 2: Infrastructure Change Broke App
+### Scenario 2: CloudFront Configuration Change Broke App
 
-**Symptoms:** App can't connect to resources, security group issues
+**Symptoms:** SSL errors, incorrect redirects, cache issues
 
 **Solution:**
 1. Revert the infrastructure PR
 2. Push to trigger terraform apply
-3. May need to manually restart ECS tasks after
+3. Wait for CloudFront distribution to update (~5-10 min)
 
-### Scenario 3: Database Migration Failed
+### Scenario 3: Wrong Environment Variables in Build
 
-**Symptoms:** App errors related to DB schema
+**Symptoms:** App pointing to wrong API, missing features
 
 **Solution:**
-1. **Do NOT just revert** - may cause data issues
-2. Fix forward with a new migration
-3. Or restore database from backup (separate runbook)
+1. Check GitHub secrets are correct
+2. Re-run the deployment workflow
+3. Or revert to previous working build
 
-### Scenario 4: SSL Certificate Issues
+### Scenario 4: Assets Not Loading
+
+**Symptoms:** JS/CSS 404 errors, broken styles
+
+**Possible causes:**
+- S3 sync incomplete
+- CloudFront cache serving stale content
+- Wrong cache headers
+
+**Solution:**
+1. Check S3 bucket has all expected files
+2. Invalidate CloudFront cache: `/*`
+3. If issue persists, restore from S3 versions
+
+### Scenario 5: SSL Certificate Issues
 
 **Symptoms:** HTTPS not working, certificate errors
 
 **Solution:**
-1. Check ACM certificate status in AWS Console
+1. Check ACM certificate status in AWS Console (us-east-1)
 2. If DNS validation pending, check Route53 records
 3. May take up to 30 minutes for certificate to validate
+4. CloudFront may need 5-10 minutes to pick up new certificate
 
 ---
 
 ## Related Runbooks
 
+- [Deployment Procedures](./DEPLOYMENT.md)
 - [Incident Response](./INCIDENT_RESPONSE.md)
-- [Database Operations](./DATABASE_OPS.md)
-- [Monitoring & Alerts](./MONITORING.md)

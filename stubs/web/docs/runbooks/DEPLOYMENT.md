@@ -1,32 +1,34 @@
 # Deployment Procedures
 
-**Last Updated:** December 27, 2025
+**Last Updated:** January 2026
 
 ---
 
 ## Overview
 
-This runbook covers standard deployment procedures for the Connect 2.0 Web App.
+This runbook covers standard deployment procedures for the Connect 2.0 Web App, which is deployed as a static SPA to S3 + CloudFront.
 
 ---
 
 ## Deployment Flow
 
 ```
-Feature Branch → development → staging → main (production)
+Feature Branch → staging → main (production)
+                    ↓
+              PR Preview (pr-{N}.app.connect.com)
 ```
 
-| Branch | Environment | Deployment | Approval Required |
-|--------|-------------|------------|-------------------|
-| `development` | Dev | Automatic on merge | No |
-| `staging` | Staging | Automatic on merge | No |
-| `main` | Production | Automatic on merge | Yes (recommended) |
+| Branch | Environment | URL | Deployment |
+|--------|-------------|-----|------------|
+| PR branches | PR Preview | `pr-{N}.app.connect.com` | Automatic on PR open/update |
+| `staging` | Staging | `app-staging.connect.com` | Automatic on merge |
+| `main` | Production | `app.connect.com` | Automatic on merge |
 
 ---
 
 ## PR Guidelines
 
-### ⚠️ Important: Separate Infrastructure and Code PRs
+### Separate Infrastructure and Code PRs
 
 **Never mix infrastructure changes and application code in the same PR.**
 
@@ -40,10 +42,10 @@ Feature Branch → development → staging → main (production)
 
 ✅ **Good:**
 - PR #1: "Add user authentication feature" (code only)
-- PR #2: "Add Redis cache for sessions" (infrastructure only)
+- PR #2: "Update CloudFront cache policy" (infrastructure only)
 
 ❌ **Bad:**
-- PR #1: "Add user authentication with Redis cache" (mixed)
+- PR #1: "Add authentication with CloudFront config" (mixed)
 
 ### PR Types
 
@@ -55,20 +57,19 @@ Feature Branch → development → staging → main (production)
 
 **Infrastructure PRs:**
 - Terraform modules and environments
-- Docker configuration
 - GitHub Actions workflows
-- Nginx configuration
+- CloudFront configuration
 
 ---
 
 ## Standard Deployment Process
 
-### 1. Deploy to Development
+### 1. Create PR with Preview
 
 ```bash
 # Create feature branch
-git checkout development
-git pull origin development
+git checkout staging
+git pull origin staging
 git checkout -b feature/my-feature
 
 # Make changes, commit
@@ -79,33 +80,30 @@ git commit -m "feat: add new feature"
 git push -u origin feature/my-feature
 ```
 
-1. Create PR to `development`
-2. Wait for CI to pass (lint, test, build)
-3. Get code review approval
-4. Merge PR
-5. GitHub Actions deploys to Dev automatically
+1. Create PR to `staging`
+2. Wait for CI to pass (lint, type-check, test, build)
+3. PR Preview automatically deployed at `pr-{N}.app.connect.com`
+4. Test your changes on the PR Preview URL
+5. Get code review approval
+6. Merge PR
+
+**PR Preview automatically cleaned up when PR is closed.**
+
+### 2. Staging Deployment
+
+When PR is merged to `staging`:
+
+1. GitHub Actions builds the React app
+2. Build output synced to S3 (`connect2-web-staging`)
+3. CloudFront cache invalidated
+4. Changes live at `app-staging.connect.com`
 
 **Verify:**
 - Check GitHub Actions completed successfully
-- Test the feature in Dev environment
+- Visit `app-staging.connect.com`
+- Test the feature in Staging environment
 
-### 2. Promote to Staging
-
-```bash
-# Create PR from development to staging
-gh pr create --base staging --head development --title "Release to staging"
-```
-
-1. Create PR from `development` to `staging`
-2. Review changes included in release
-3. Merge PR
-4. GitHub Actions deploys to Staging automatically
-
-**Verify:**
-- Run smoke tests on Staging
-- QA sign-off if required
-
-### 3. Deploy to Production
+### 3. Production Deployment
 
 ```bash
 # Create PR from staging to main
@@ -116,12 +114,13 @@ gh pr create --base main --head staging --title "Production release"
 2. Review changes carefully
 3. Get required approvals
 4. Merge PR
-5. GitHub Actions deploys to Production
+5. GitHub Actions runs tests, then deploys
 6. GitHub Release created automatically
 
 **Verify:**
-- Monitor CloudWatch for errors
-- Check application health
+- Check GitHub Actions completed
+- Visit `app.connect.com`
+- Monitor for errors
 - Verify key user flows work
 
 ---
@@ -132,7 +131,7 @@ gh pr create --base main --head staging --title "Production release"
 
 1. **Make changes in feature branch:**
    ```bash
-   git checkout -b infra/add-redis-cache
+   git checkout -b infra/update-cloudfront
    # Edit infrastructure/terraform/...
    ```
 
@@ -159,9 +158,9 @@ When a feature requires both infrastructure and code changes:
 
 Example sequence:
 ```
-Day 1: PR "Add ElastiCache Redis cluster" (infra) → merge
-Day 1: Verify Redis is running in AWS
-Day 1: PR "Use Redis for session caching" (code) → merge
+Day 1: PR "Update CloudFront security headers" (infra) → merge
+Day 1: Verify CloudFront distribution updated
+Day 1: PR "Add new feature using updated headers" (code) → merge
 ```
 
 ---
@@ -173,27 +172,26 @@ If GitHub Actions is unavailable:
 ### Deploy Application
 
 ```bash
-# 1. Build Docker image
-docker build -t connect2-app:latest -f infrastructure/docker/Dockerfile .
+# 1. Build the React app
+npm ci
+npm run build
 
-# 2. Login to ECR
-aws ecr get-login-password --region us-west-2 | \
-  docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-west-2.amazonaws.com
+# 2. Sync to S3 with cache headers
+aws s3 sync dist/ s3://connect2-web-prod/ \
+  --delete \
+  --cache-control "public, max-age=31536000, immutable" \
+  --exclude "index.html" \
+  --exclude "*.json"
 
-# 3. Tag and push
-docker tag connect2-app:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-app-prod:latest
-docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-app-prod:latest
+aws s3 sync dist/ s3://connect2-web-prod/ \
+  --cache-control "no-cache, no-store, must-revalidate" \
+  --include "index.html" \
+  --include "*.json"
 
-# 4. Update ECS service
-aws ecs update-service \
-  --cluster connect2-app-cluster-prod \
-  --service connect2-app-service-prod \
-  --force-new-deployment
-
-# 5. Wait for deployment
-aws ecs wait services-stable \
-  --cluster connect2-app-cluster-prod \
-  --services connect2-app-service-prod
+# 3. Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+  --distribution-id E1234567890ABC \
+  --paths "/*"
 ```
 
 ### Deploy Infrastructure
@@ -213,19 +211,18 @@ terraform apply tfplan
 
 ### Before Deploying to Production
 
-- [ ] Feature tested in Dev environment
+- [ ] Feature tested on PR Preview
 - [ ] Feature tested in Staging environment
 - [ ] All CI checks passing
 - [ ] Code review approved
 - [ ] No mixed infrastructure/code changes
-- [ ] Database migrations tested (if applicable)
 - [ ] Rollback plan identified
 
 ### After Deploying to Production
 
 - [ ] Deployment completed successfully
-- [ ] Application health check passing
-- [ ] No errors in CloudWatch logs
+- [ ] Application loads correctly
+- [ ] CloudFront invalidation completed
 - [ ] Key user flows verified
 - [ ] Team notified of deployment
 
@@ -253,16 +250,52 @@ For urgent production fixes:
    - Get expedited review
    - Merge when approved
 
-4. **Backport to other branches:**
+4. **Backport to staging:**
    ```bash
    git checkout staging
    git cherry-pick <hotfix-commit>
    git push origin staging
-
-   git checkout development
-   git cherry-pick <hotfix-commit>
-   git push origin development
    ```
+
+---
+
+## Environment-Specific Commands
+
+### Staging
+
+```bash
+# Check S3 bucket contents
+aws s3 ls s3://connect2-web-staging/
+
+# Sync to staging
+aws s3 sync dist/ s3://connect2-web-staging/ --delete
+
+# Get CloudFront distribution ID
+aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='connect2-web-staging'].Id"
+
+# Invalidate cache
+aws cloudfront create-invalidation \
+  --distribution-id <STAGING_DIST_ID> \
+  --paths "/*"
+```
+
+### Production
+
+```bash
+# Check S3 bucket contents
+aws s3 ls s3://connect2-web-prod/
+
+# Sync to production
+aws s3 sync dist/ s3://connect2-web-prod/ --delete
+
+# Get CloudFront distribution ID
+aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='connect2-web-prod'].Id"
+
+# Invalidate cache
+aws cloudfront create-invalidation \
+  --distribution-id <PROD_DIST_ID> \
+  --paths "/*"
+```
 
 ---
 

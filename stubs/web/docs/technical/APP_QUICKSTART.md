@@ -486,7 +486,7 @@ After completing setup:
 
 - [CLAUDE.md](../../CLAUDE.md) - AI assistant context
 - [Frontend Architecture](./FRONTEND_ARCHITECTURE.md) - Full architecture spec
-- [Infrastructure](./INFRASTRUCTURE.md) - AWS deployment (ECS, ALB)
+- [Infrastructure](./INFRASTRUCTURE.md) - AWS deployment (S3, CloudFront)
 - [GitHub Actions](./GITHUB_ACTIONS.md) - CI/CD workflows
 - [System Architecture](../../docs/architecture/SYSTEM_ARCHITECTURE.md) - High-level system design
 - [Development Guide](../../../docs/DEVELOPMENT_GUIDE.md) - Overarching development workflow
