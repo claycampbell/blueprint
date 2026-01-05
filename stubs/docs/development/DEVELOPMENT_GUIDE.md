@@ -1,1113 +1,664 @@
-# Development Setup and Environment Guide
+# Connect 2.0 Development Guide
 
-**Version:** 1.0
-**Last Updated:** November 5, 2025
-**Status:** Draft - Ready for Technical Review
-**Related Documents:** [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md), [API_SPECIFICATION.md](API_SPECIFICATION.md)
-
----
-
-## Table of Contents
-
-1. [Overview](#1-overview)
-2. [Prerequisites](#2-prerequisites)
-3. [Local Development Environment Setup](#3-local-development-environment-setup)
-4. [Repository Structure](#4-repository-structure)
-5. [Database Setup](#5-database-setup)
-6. [Running the Application](#6-running-the-application)
-7. [Development Workflow](#7-development-workflow)
-8. [Environment Variables](#8-environment-variables)
-9. [Docker Development Environment](#9-docker-development-environment)
-10. [Troubleshooting](#10-troubleshooting)
-11. [Code Style and Standards](#11-code-style-and-standards)
-12. [IDE Setup](#12-ide-setup)
+**Version:** 2.0
+**Last Updated:** January 2026
+**Status:** Active
 
 ---
 
-## 1. Overview
+## Overview
 
-This guide covers everything a developer needs to set up their local development environment for Connect 2.0. By the end of this guide, you'll have:
-
-- A fully functional local development environment
-- Backend API server running with hot reload
-- Frontend React app running with hot reload
-- PostgreSQL database with seed data
-- Redis cache for sessions
-- All necessary development tools configured
-
-**Estimated Setup Time:** 30-45 minutes
+This guide covers everything developers need to know to contribute to Connect 2.0. It consolidates the development workflow, quality standards, and documentation requirements across both services (API and Web).
 
 ---
 
-## 2. Prerequisites
+## Quick Links
 
-### 2.1 Required Software
+| Service | Quickstart | Architecture | Spec |
+|---------|------------|--------------|------|
+| **API** | [API Quickstart](../api/docs/technical/API_QUICKSTART.md) | [FastAPI Standards](../api/docs/technical/FASTAPI_PROJECT_STANDARDS.md) | [API Specification](../api/docs/technical/API_SPECIFICATION.md) |
+| **Web** | [Web Quickstart](../web/docs/technical/APP_QUICKSTART.md) | [Frontend Architecture](../web/docs/technical/FRONTEND_ARCHITECTURE.md) | N/A |
+| **Infrastructure** | [API Infrastructure](../api/docs/technical/INFRASTRUCTURE.md) | [System Architecture](architecture/SYSTEM_ARCHITECTURE.md) | N/A |
 
-Install the following before proceeding:
+---
 
-| Software | Version | Download Link | Purpose |
-|----------|---------|---------------|---------|
-| **Node.js** | 20.x LTS | https://nodejs.org | JavaScript runtime |
-| **npm** | 10.x | (included with Node.js) | Package manager |
-| **PostgreSQL** | 15.x | https://www.postgresql.org | Database |
-| **Redis** | 7.x | https://redis.io | Cache/sessions |
-| **Git** | 2.40+ | https://git-scm.com | Version control |
-| **Docker** | 24.x | https://docker.com | Containerization (optional) |
-| **VS Code** | Latest | https://code.visualstudio.com | IDE (recommended) |
+## Repository Structure
 
-### 2.2 Verify Installations
+Connect 2.0 is composed of **two independent applications**, each designed to be a standalone repository. See [REPOSITORY_STRUCTURE.md](../architecture/REPOSITORY_STRUCTURE.md) for detailed documentation.
 
-Run these commands to verify installations:
+### Independent Repositories
 
-```bash
-# Node.js and npm
-node --version  # Should show v20.x.x
-npm --version   # Should show 10.x.x
+API and Web are developed and deployed independently. They communicate via HTTPS and have no shared infrastructure dependencies.
 
-# PostgreSQL
-psql --version  # Should show 15.x
+| Repository | Tech Stack | Domain | VPC CIDR |
+|------------|-----------|--------|----------|
+| **connect2-api** | FastAPI + PostgreSQL + Redis | api.connect.com | 10.1.0.0/16 |
+| **connect2-web** | React + Nginx | app.connect.com | 10.2.0.0/16 |
 
-# Redis
-redis-cli --version  # Should show 7.x
+### Initial Discovery Structure
 
-# Git
-git --version  # Should show 2.40+
+During initial discovery, both applications exist in a shared `stubs/` directory but are already structured for extraction:
 
-# Docker (optional)
-docker --version  # Should show 24.x
+```
+stubs/
+├── api/                          # → Future: connect2-api repository
+│   ├── app/                      # Application code
+│   ├── tests/                    # Test suite
+│   ├── docs/                     # API documentation
+│   ├── infrastructure/           # Complete API infrastructure
+│   │   └── terraform/
+│   │       ├── environments/     # dev, staging, prod
+│   │       └── modules/          # VPC, ECS, RDS, Redis, etc.
+│   ├── scripts/                  # Utility scripts (rollback, etc.)
+│   ├── .github/                  # CI/CD workflows
+│   └── README.md                 # Standalone repo documentation
+│
+├── web/                          # → Future: connect2-web repository
+│   ├── src/                      # Application code
+│   ├── docs/                     # Web documentation
+│   ├── infrastructure/           # Complete Web infrastructure
+│   │   └── terraform/
+│   │       ├── environments/     # dev, staging, prod
+│   │       └── modules/          # VPC, ECS, ECR, etc.
+│   ├── scripts/                  # Utility scripts (rollback, etc.)
+│   ├── .github/                  # CI/CD workflows
+│   └── README.md                 # Standalone repo documentation
+│
+└── docs/                         # Overarching documentation
+    ├── architecture/             # System architecture, repository structure
+    ├── development/              # This guide, developer tools
+    └── standards/                # Coding and process standards
 ```
 
-### 2.3 Required Accounts
+### Key Design Principles
 
-You'll need accounts for these services (obtain API keys from team lead):
+1. **No shared infrastructure** — Each application owns its VPC, ECS cluster, and all AWS resources
+2. **Independent deployment** — Deploy API or Web without coordinating with the other
+3. **Cloud provider flexibility** — Either service can be migrated to a different cloud
+4. **Self-contained repositories** — Each directory has everything needed to operate alone
+5. **HTTPS communication** — Web connects to API via public endpoints, not internal networking
 
-- **GitHub**: Access to Connect 2.0 repository
-- **SendGrid**: Email service (API key)
-- **Twilio**: SMS service (Account SID + Auth Token)
-- **Azure**: Document Intelligence (subscription key)
-- **DocuSign** or **Authentisign**: E-signature (OAuth credentials)
+### Working on a Single Service
+
+When working on just the API or Web:
+
+```bash
+# API development (everything you need is in api/)
+cd stubs/api
+uv sync --all-extras
+cp .env.example .env
+uv run uvicorn app.main:app --reload
+
+# Web development (everything you need is in web/)
+cd stubs/web
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Each application is self-contained. You don't need to set up the other service unless you need to test integration.
 
 ---
 
-## 3. Local Development Environment Setup
+## Development Workflow
 
-### 3.1 Clone the Repository
+### 1. Before You Start Coding
+
+- [ ] **Understand the task** - Read the Jira ticket thoroughly
+- [ ] **Check existing code** - Search for similar patterns in the codebase
+- [ ] **Review architecture docs** - Ensure your approach aligns with standards
+- [ ] **Ask questions early** - Clarify requirements before investing time
+
+**Using Claude Code for Jira:** You can interact with Jira directly through Claude Code. Ask naturally about searching issues, creating bugs, updating statuses, or linking related stories. See [Developer Tools Setup](DEVELOPER_TOOLS_SETUP.md#real-world-workflow-examples) for detailed examples.
+
+### 2. While Coding
+
+**For API work:**
+- [ ] Follow [FastAPI Standards](../api/docs/technical/FASTAPI_PROJECT_STANDARDS.md)
+- [ ] Write tests as you go - Don't leave testing for the end
+- [ ] Run pre-commit checks: `uv run ruff check . && uv run mypy app && uv run pytest`
+
+**For Web work:**
+- [ ] Follow [Frontend Architecture](../web/docs/technical/FRONTEND_ARCHITECTURE.md)
+- [ ] Write tests as you go - Don't leave testing for the end
+- [ ] Run pre-commit checks: `npm run lint && npx tsc --noEmit && npm run test -- --run`
+
+**For Both:**
+- [ ] Commit frequently - Small, focused commits with clear messages
+- [ ] Keep infrastructure PRs separate from code PRs
+
+### 3. Before Opening a PR
+
+Use the service-specific PR template checklist. Key items for all PRs:
+
+#### Code Quality
+- [ ] All pre-commit hooks pass
+- [ ] New code has test coverage (target: 80%+ for new code)
+- [ ] No hardcoded secrets, URLs, or environment-specific values
+- [ ] Error handling is appropriate (not swallowing exceptions)
+
+#### Documentation
+- [ ] **Code comments** - Complex logic is explained
+- [ ] **Docstrings/TypeScript types** - Public functions are documented
+- [ ] **README updates** - If you changed how to run/configure something
+
+#### Runbooks (for significant changes)
+- [ ] **Deployment impact** - Does this change require special deployment steps?
+- [ ] **Rollback plan** - How do we undo this if it breaks?
+- [ ] **Monitoring** - What should we watch after deployment?
+
+---
+
+## Quality Gates
+
+### Automated (Pre-commit Hooks)
+
+These run automatically before every commit:
+
+**API (Python/FastAPI):**
+
+| Check | Tool | Blocking? |
+|-------|------|-----------|
+| Linting | Ruff | Yes |
+| Formatting | Ruff | Yes |
+| Type checking | MyPy | Warnings only |
+| Tests | Pytest | Yes |
+
+**Web (TypeScript/React):**
+
+| Check | Tool | Blocking? |
+|-------|------|-----------|
+| Linting | ESLint | Yes |
+| Formatting | Prettier | Yes |
+| Type checking | TypeScript | Yes |
+| Tests | Vitest | Yes |
+
+**Run manually:**
+```bash
+# API
+cd stubs/api
+uv run ruff check . --fix && uv run ruff format . && uv run mypy app && uv run pytest
+
+# Web
+cd stubs/web
+npm run lint -- --fix && npx tsc --noEmit && npm run test -- --run
+```
+
+### CI Pipeline (GitHub Actions)
+
+These run on every PR:
+
+| Check | API | Web | Required to Merge? |
+|-------|-----|-----|-------------------|
+| Lint + Format | `ruff check` | `eslint` | Yes |
+| Type Check | `mypy` | `tsc` | Yes |
+| Unit Tests | `pytest` | `vitest` | Yes |
+| Build | Docker | Docker | Yes |
+
+### Human Review
+
+PR reviewers should verify:
+
+- [ ] Code is readable and maintainable
+- [ ] Approach makes sense for the problem
+- [ ] Tests cover happy path AND edge cases
+- [ ] Documentation is updated
+- [ ] No security concerns
+- [ ] **Infrastructure and code are in separate PRs**
+
+---
+
+## Separate Infrastructure and Code PRs
+
+**Never mix infrastructure changes and application code in the same PR.**
+
+| PR Type | Contains | Examples |
+|---------|----------|----------|
+| **Code PR** | Application code, tests, styles | `feat: add user authentication` |
+| **Infrastructure PR** | Terraform, Docker, GitHub Actions | `infra: add Redis cache` |
+
+**Why?**
+- **Clean rollbacks** - Revert code without affecting infrastructure
+- **Easier reviews** - Reviewers can focus on one type of change
+- **Simpler debugging** - Know exactly what changed if issues arise
+- **Independent timing** - Infrastructure may need to deploy before code
+
+**When a feature needs both:**
+```
+1. PR #1: "infra: Add ElastiCache Redis cluster" → merge, wait for deploy
+2. PR #2: "feat: Use Redis for session caching" → merge
+```
+
+---
+
+## Documentation Requirements
+
+### When to Update Documentation
+
+| Change Type | Required Documentation |
+|-------------|----------------------|
+| **New API endpoint** | API spec auto-updates; verify in `/docs` |
+| **New UI feature** | Update component documentation if complex |
+| **Config change** | Update `.env.example` and quickstart |
+| **Breaking change** | Update migration guide, add to changelog |
+| **Infrastructure** | Update INFRASTRUCTURE.md (API or Web) |
+| **Deployment process** | Update runbook |
+
+### Runbook Requirements
+
+For significant changes, create or update a runbook in `docs/runbooks/`:
+
+**Runbook Template:**
+```markdown
+# [Feature/Change Name] Runbook
+
+## Overview
+Brief description of what this covers.
+
+## Prerequisites
+- What needs to be in place before deployment
+
+## Deployment Steps
+1. Step-by-step deployment process
+2. Include specific commands
+
+## Verification
+- How to verify the deployment succeeded
+- Health checks, smoke tests
+
+## Rollback
+- How to undo if something goes wrong
+- Specific rollback commands
+
+## Monitoring
+- What to watch after deployment
+- Expected metrics/logs
+
+## Troubleshooting
+- Common issues and solutions
+```
+
+---
+
+## Git Workflow
+
+### Branch Naming
+
+```
+<type>/<short-description>
+
+Examples:
+feature/add-user-authentication
+bugfix/fix-draw-calculation
+infra/add-redis-cache
+docs/update-api-spec
+```
+
+### Commit Messages
+
+```
+<type>: <subject>
+
+<body - what and why>
+
+Closes: DP01-XXX
+Related: DP01-YYY
+
+Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Types:** `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `infra`
+
+### PR Process
+
+1. Create feature branch from `development`
+2. Make changes, commit frequently
+3. Push branch, create PR
+4. Fill out PR template checklist
+5. Request review
+6. Address feedback
+7. Merge after approval
+
+---
+
+## Environment Setup
+
+### Required Tools
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Python | 3.12+ | API development |
+| uv | Latest | Python package management |
+| Node.js | 20+ | Web development |
+| npm | 10+ | Node package management |
+| Docker | Latest | Local services, deployment |
+| Git | Latest | Version control |
+| Terraform | 1.0+ | Infrastructure management |
+
+### First-Time Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/blueprint/connect-2.0.git
-cd connect-2.0
+git clone https://github.com/your-org/connect2.git
+cd connect2
 
-# Checkout the development branch
-git checkout develop
-```
+# API setup
+cd stubs/api
+uv sync --all-extras
+cp .env.example .env
 
-### 3.2 Install Dependencies
-
-```bash
-# Install backend dependencies
-cd backend
+# Web setup
+cd ../web
 npm install
+cp .env.example .env.local
 
-# Install frontend dependencies
-cd ../frontend
-npm install
+# Start local services (PostgreSQL, Redis)
+cd ../..
+docker compose up -d
 
-# Return to root
-cd ..
-```
+# Verify API
+cd stubs/api
+uv run uvicorn app.main:app --reload
+# Visit http://localhost:8000/docs
 
-### 3.3 Configure Environment Variables
-
-```bash
-# Copy example environment files
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-Edit `backend/.env` with your local configuration (see [Section 8](#8-environment-variables) for details).
-
----
-
-## 4. Repository Structure
-
-```
-connect-2.0/
-├── backend/                    # Node.js/TypeScript backend
-│   ├── src/
-│   │   ├── modules/            # Feature modules
-│   │   │   ├── projects/       # Project management
-│   │   │   ├── feasibility/    # Feasibility module
-│   │   │   ├── entitlement/    # Entitlement module
-│   │   │   ├── loans/          # Loan origination
-│   │   │   ├── servicing/      # Loan servicing
-│   │   │   ├── contacts/       # Contact management
-│   │   │   ├── documents/      # Document management
-│   │   │   └── auth/           # Authentication
-│   │   ├── shared/             # Shared utilities
-│   │   │   ├── database/       # Database utilities
-│   │   │   ├── events/         # Event bus
-│   │   │   ├── middleware/     # Express middleware
-│   │   │   └── utils/          # Helper functions
-│   │   ├── integrations/       # External integrations
-│   │   │   ├── docusign/
-│   │   │   ├── azure-ai/
-│   │   │   ├── sendgrid/
-│   │   │   └── twilio/
-│   │   ├── app.ts              # Express app setup
-│   │   └── server.ts           # Server entry point
-│   ├── tests/                  # Test files
-│   ├── migrations/             # Database migrations
-│   ├── seeds/                  # Seed data
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env.example
-│
-├── frontend/                   # React frontend
-│   ├── src/
-│   │   ├── pages/              # Page components
-│   │   │   ├── Dashboard/
-│   │   │   ├── Projects/
-│   │   │   ├── Loans/
-│   │   │   └── Settings/
-│   │   ├── components/         # Reusable components
-│   │   │   ├── forms/
-│   │   │   ├── tables/
-│   │   │   ├── layouts/
-│   │   │   └── common/
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── services/           # API client
-│   │   ├── stores/             # State management (Zustand)
-│   │   ├── utils/              # Helper functions
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── public/
-│   ├── tests/
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tsconfig.json
-│   └── .env.example
-│
-├── shared/                     # Shared TypeScript types
-│   └── types/
-│
-├── docs/                       # Documentation
-│   └── technical/
-│
-├── docker-compose.yml          # Docker development setup
-├── .gitignore
-├── README.md
-└── package.json                # Workspace root
-```
-
----
-
-## 5. Database Setup
-
-### 5.1 Create PostgreSQL Database
-
-```bash
-# Connect to PostgreSQL
-psql -U postgres
-
-# Create database and user
-CREATE DATABASE connect2_dev;
-CREATE USER connect2_user WITH ENCRYPTED PASSWORD 'your_password_here';
-GRANT ALL PRIVILEGES ON DATABASE connect2_dev TO connect2_user;
-
-# Exit PostgreSQL
-\q
-```
-
-### 5.2 Run Migrations
-
-```bash
-cd backend
-
-# Run migrations to create schema
-npm run migrate:latest
-
-# Verify migrations
-npm run migrate:status
-```
-
-### 5.3 Seed Development Data
-
-```bash
-# Seed the database with test data
-npm run seed:run
-
-# This creates:
-# - 3 test users (admin, acquisitions, entitlement)
-# - 10 sample projects
-# - 5 sample loans
-# - Sample contacts, entities, documents
-```
-
-### 5.4 Verify Database Setup
-
-```bash
-# Connect to database
-psql -U connect2_user -d connect2_dev
-
-# List tables
-\dt
-
-# You should see:
-# - users
-# - contacts
-# - entities
-# - projects
-# - feasibility_items
-# - entitlement_items
-# - loans
-# - loan_draws
-# - documents
-# - tasks
-# - activity_log
-
-# Exit
-\q
-```
-
----
-
-## 6. Running the Application
-
-### 6.1 Start Backend API Server
-
-```bash
-cd backend
-
-# Development mode (with hot reload)
+# Verify Web (in separate terminal)
+cd stubs/web
 npm run dev
-
-# The API server starts at: http://localhost:3000
-# API documentation: http://localhost:3000/api/docs
-```
-
-**Expected Output:**
-```
-🚀 Server started on port 3000
-✅ Database connected
-✅ Redis connected
-📡 API documentation available at http://localhost:3000/api/docs
-```
-
-### 6.2 Start Frontend Development Server
-
-In a separate terminal:
-
-```bash
-cd frontend
-
-# Development mode (with hot reload)
-npm run dev
-
-# The frontend starts at: http://localhost:5173
-```
-
-**Expected Output:**
-```
-VITE v5.x.x  ready in 1234 ms
-
-➜  Local:   http://localhost:5173/
-➜  Network: use --host to expose
-```
-
-### 6.3 Start Redis (if not running as service)
-
-In a separate terminal:
-
-```bash
-redis-server
-```
-
-### 6.4 Access the Application
-
-Open your browser and navigate to:
-
-- **Frontend**: http://localhost:5173
-- **API**: http://localhost:3000
-- **API Docs** (Swagger): http://localhost:3000/api/docs
-
-**Default Login Credentials:**
-```
-Email: admin@blueprint.com
-Password: Admin123!
+# Visit http://localhost:3000
 ```
 
 ---
 
-## 7. Development Workflow
+## Testing Standards
 
-### 7.1 Branch Strategy
+### Test Coverage Targets
+
+| Type | Target | Critical Modules |
+|------|--------|-----------------|
+| Unit | 80% | Business logic, services, utilities |
+| Integration | 70% | API endpoints, components |
+| E2E | 60% | Critical user flows |
+
+### What to Test
+
+**DO test:**
+- Business logic and calculations
+- API endpoint behavior
+- Component rendering and interaction
+- Error handling
+- Edge cases
+- Security controls
+
+**DON'T test:**
+- Third-party libraries
+- Framework internals
+- Simple getters/setters
+
+### Unit Testing
+
+Unit tests are the foundation of our testing strategy. Every PR must include unit tests for new or modified code.
+
+**API Unit Tests (Pytest):**
 
 ```
-main           (production-ready code)
-  └── develop  (integration branch)
-        ├── feature/PROJECT-123-add-loan-calculator
-        ├── feature/PROJECT-124-entitlement-workflow
-        └── bugfix/PROJECT-125-fix-date-picker
+stubs/api/tests/
+├── unit/                      # Unit tests (isolated, fast)
+│   ├── test_services/         # Service layer tests
+│   ├── test_schemas/          # Pydantic validation tests
+│   └── test_utils/            # Utility function tests
+├── integration/               # Integration tests (with DB)
+│   └── test_api/              # Endpoint tests
+└── conftest.py                # Shared fixtures
 ```
 
-**Creating a Feature Branch:**
-```bash
-# Update develop
-git checkout develop
-git pull origin develop
+**Example API Unit Test:**
+```python
+# tests/unit/test_services/test_project_service.py
+import pytest
+from app.services.project_service import calculate_project_roi
 
-# Create feature branch
-git checkout -b feature/PROJECT-123-add-loan-calculator
+class TestCalculateProjectROI:
+    def test_positive_roi(self):
+        """ROI calculation with profit returns positive percentage."""
+        result = calculate_project_roi(revenue=150000, cost=100000)
+        assert result == 50.0
 
-# Make changes...
+    def test_zero_cost_raises_error(self):
+        """Division by zero is handled gracefully."""
+        with pytest.raises(ValueError, match="Cost cannot be zero"):
+            calculate_project_roi(revenue=100000, cost=0)
 
-# Commit
-git add .
-git commit -m "feat(loans): add loan payment calculator"
-
-# Push to remote
-git push origin feature/PROJECT-123-add-loan-calculator
-
-# Create pull request on GitHub
+    def test_negative_roi(self):
+        """Loss scenario returns negative percentage."""
+        result = calculate_project_roi(revenue=80000, cost=100000)
+        assert result == -20.0
 ```
 
-### 7.2 Making Changes
+**Web Unit Tests (Vitest + React Testing Library):**
 
-**Backend Changes:**
-```bash
-cd backend
-
-# Make code changes
-# Hot reload automatically applies changes
-
-# Run tests
-npm test
-
-# Run linter
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
+```
+stubs/web/src/
+├── api/users/
+│   ├── queries.ts
+│   └── queries.test.ts        # Co-located test
+├── features/dashboard/
+│   ├── components/
+│   │   ├── StatsCard.tsx
+│   │   └── StatsCard.test.tsx # Co-located test
+│   └── hooks/
+│       ├── useMetrics.ts
+│       └── useMetrics.test.ts # Co-located test
+└── lib/
+    ├── utils.ts
+    └── utils.test.ts          # Co-located test
 ```
 
-**Frontend Changes:**
-```bash
-cd frontend
-
-# Make code changes
-# Hot reload automatically applies changes in browser
-
-# Run tests
-npm test
-
-# Run linter
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-```
-
-### 7.3 Database Migrations
-
-**Creating a New Migration:**
-```bash
-cd backend
-
-# Generate migration file
-npm run migrate:create add_loan_status_field
-
-# Edit the generated file in migrations/
-# Example: migrations/20251105_add_loan_status_field.ts
-
-# Run migration
-npm run migrate:latest
-
-# Rollback if needed
-npm run migrate:rollback
-```
-
-**Migration Example:**
+**Example Web Unit Test:**
 ```typescript
-// migrations/20251105_add_loan_status_field.ts
-import { Knex } from 'knex';
+// src/features/dashboard/components/StatsCard.test.tsx
+import { render, screen } from '@testing-library/react';
+import { StatsCard } from './StatsCard';
 
-export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('loans', (table) => {
-    table.string('underwriting_status').defaultTo('PENDING');
+describe('StatsCard', () => {
+  it('renders title and value', () => {
+    render(<StatsCard title="Total Projects" value={42} />);
+
+    expect(screen.getByText('Total Projects')).toBeInTheDocument();
+    expect(screen.getByText('42')).toBeInTheDocument();
   });
-}
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('loans', (table) => {
-    table.dropColumn('underwriting_status');
+  it('shows loading skeleton when loading', () => {
+    render(<StatsCard title="Total Projects" value={0} loading />);
+
+    expect(screen.getByTestId('skeleton')).toBeInTheDocument();
   });
-}
+
+  it('formats large numbers with commas', () => {
+    render(<StatsCard title="Revenue" value={1234567} />);
+
+    expect(screen.getByText('1,234,567')).toBeInTheDocument();
+  });
+});
 ```
 
-### 7.4 Adding a New API Endpoint
+**Unit Test Best Practices:**
+- **Arrange-Act-Assert pattern** - Clear test structure
+- **One assertion per test** (when practical) - Easier debugging
+- **Descriptive test names** - `test_<what>_<condition>_<expected>`
+- **Test edge cases** - Null, empty, boundary values
+- **Mock external dependencies** - Isolate the unit under test
+- **Fast execution** - Unit tests should run in milliseconds
 
-**Step 1: Create Route Handler**
-```typescript
-// backend/src/modules/loans/routes.ts
-import { Router } from 'express';
-import { LoanController } from './controller';
-import { authenticate, authorize } from '../../shared/middleware/auth';
+### Running Tests
 
-const router = Router();
-const controller = new LoanController();
-
-router.post(
-  '/loans/:id/calculate-payment',
-  authenticate,
-  authorize(['ADMIN', 'LOAN_OFFICER']),
-  controller.calculatePayment
-);
-
-export default router;
-```
-
-**Step 2: Implement Controller**
-```typescript
-// backend/src/modules/loans/controller.ts
-export class LoanController {
-  async calculatePayment(req: Request, res: Response) {
-    const { id } = req.params;
-    const { principal, rate, term } = req.body;
-
-    const monthlyPayment = calculateMonthlyPayment(principal, rate, term);
-
-    return res.json({
-      loan_id: id,
-      monthly_payment: monthlyPayment,
-      total_interest: (monthlyPayment * term) - principal
-    });
-  }
-}
-```
-
-**Step 3: Register Route**
-```typescript
-// backend/src/app.ts
-import loanRoutes from './modules/loans/routes';
-
-app.use('/api/v1', loanRoutes);
-```
-
-**Step 4: Test Endpoint**
 ```bash
-curl -X POST http://localhost:3000/api/v1/loans/ln_123/calculate-payment \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"principal": 1000000, "rate": 0.08, "term": 24}'
+# API
+cd stubs/api
+uv run pytest                          # All tests
+uv run pytest -v                       # Verbose
+uv run pytest --cov=app                # With coverage
+uv run pytest -k "test_user"           # Specific tests
+uv run pytest tests/unit/              # Unit tests only
+uv run pytest tests/unit/test_services # Specific directory
+uv run pytest -x                       # Stop on first failure
+
+# Web
+cd stubs/web
+npm run test                           # Watch mode
+npm run test -- --run                  # Single run (CI)
+npm run test:coverage                  # With coverage
+npm run test -- Button.test.tsx        # Specific file
+npm run test -- --reporter=verbose     # Verbose output
+```
+
+### Test Requirements for PRs
+
+Before opening a PR, ensure:
+
+- [ ] **Unit tests pass** - `uv run pytest tests/unit/` or `npm run test -- --run`
+- [ ] **New code has tests** - Every new function/component has corresponding tests
+- [ ] **Coverage meets threshold** - 80% for new code
+- [ ] **Tests are meaningful** - Not just coverage padding, but actual behavior verification
+- [ ] **Edge cases covered** - Null, empty, error conditions tested
+
+---
+
+## Common Patterns
+
+### Adding a New API Endpoint
+
+1. Create Pydantic schemas in `app/schemas/`
+2. Create/update SQLAlchemy model in `app/models/`
+3. Create repository methods in `app/db/repositories/`
+4. Create service layer in `app/services/`
+5. Create route in `app/api/v1/`
+6. Add route to router in `app/api/router.py`
+7. Write tests
+8. Verify in Swagger UI (`/docs`)
+
+### Adding a New Web Feature
+
+1. Create API hooks in `src/api/[domain]/`
+2. Create Zustand store if needed in `src/stores/` (shared) or `src/features/*/store.ts` (private)
+3. Create components in `src/features/[feature]/components/`
+4. Create page in `src/pages/`
+5. Add route in `src/app/routes.tsx`
+6. Write tests
+7. Verify in browser
+
+### Adding a Database Migration
+
+```bash
+cd stubs/api
+
+# Create migration
+uv run alembic revision --autogenerate -m "Add user preferences table"
+
+# Review the generated file in migrations/versions/
+# Edit if needed (especially downgrade function)
+
+# Apply migration
+uv run alembic upgrade head
+
+# Test rollback
+uv run alembic downgrade -1
+uv run alembic upgrade head
+```
+
+### Adding Infrastructure
+
+1. Determine which application needs the infrastructure change
+2. Create/update Terraform module in the appropriate application's location:
+   - API infrastructure: `api/infrastructure/terraform/modules/`
+   - Web infrastructure: `web/infrastructure/terraform/modules/`
+3. Create **separate PR** (not mixed with code)
+4. Run `terraform plan` and review
+5. Get approval before `terraform apply`
+
+**Note:** API and Web have completely independent infrastructure. Changes to one do not affect the other.
+
+---
+
+## Troubleshooting
+
+### Pre-commit Hooks Failing
+
+**API:**
+```bash
+# Run checks manually to see detailed errors
+uv run ruff check .
+uv run mypy app
+uv run pytest -v
+
+# Auto-fix linting issues
+uv run ruff check . --fix
+uv run ruff format .
+```
+
+**Web:**
+```bash
+# Run checks manually
+npm run lint
+npx tsc --noEmit
+npm run test -- --run
+
+# Auto-fix linting
+npm run lint -- --fix
+```
+
+### Tests Failing in CI but Passing Locally
+
+- Check for environment-specific code
+- Verify all dependencies are in `pyproject.toml` or `package.json`
+- Check for race conditions in async tests
+- Ensure database/state is clean between tests
+
+### Can't Connect to Database
+
+```bash
+# Check Docker is running
+docker ps
+
+# Check PostgreSQL container
+docker compose logs db
+
+# Verify connection string in .env
+# DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/connect2
 ```
 
 ---
 
-## 8. Environment Variables
+## Getting Help
 
-### 8.1 Backend Environment Variables
-
-Create `backend/.env` with the following:
-
-```bash
-# Application
-NODE_ENV=development
-PORT=3000
-API_VERSION=v1
-
-# Database
-DATABASE_URL=postgresql://connect2_user:your_password@localhost:5432/connect2_dev
-DATABASE_POOL_MIN=2
-DATABASE_POOL_MAX=10
-
-# Redis
-REDIS_URL=redis://localhost:6379
-REDIS_PASSWORD=
-
-# JWT Authentication
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRATION=7d
-JWT_REFRESH_EXPIRATION=30d
-
-# OAuth 2.0 (for social login)
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=http://localhost:3000/api/v1/auth/google/callback
-
-# SendGrid (Email)
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SENDGRID_FROM_EMAIL=noreply@blueprint.com
-SENDGRID_FROM_NAME=Blueprint Capital
-
-# Twilio (SMS)
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_PHONE_NUMBER=+12065550100
-
-# DocuSign
-DOCUSIGN_INTEGRATION_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DOCUSIGN_USER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DOCUSIGN_ACCOUNT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-DOCUSIGN_PRIVATE_KEY_PATH=./config/docusign_private.key
-DOCUSIGN_OAUTH_BASE_URL=https://account-d.docusign.com
-DOCUSIGN_API_BASE_URL=https://demo.docusign.net/restapi
-
-# Azure Document Intelligence
-AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
-AZURE_DOCUMENT_INTELLIGENCE_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# AWS S3 (Document Storage)
-AWS_ACCESS_KEY_ID=AKIAXXXXXXXXXXXXXXXX
-AWS_SECRET_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-AWS_REGION=us-west-2
-AWS_S3_BUCKET=connect2-dev-documents
-
-# BPO Integration (temporary during Days 1-90)
-BPO_API_URL=https://bpo.blueprint.com/api
-BPO_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
-# Frontend URL (for CORS)
-FRONTEND_URL=http://localhost:5173
-
-# Logging
-LOG_LEVEL=debug
-LOG_FORMAT=json
-
-# Feature Flags
-FEATURE_FLAG_MULTI_TENANCY=false
-FEATURE_FLAG_AI_SUGGESTIONS=true
-```
-
-### 8.2 Frontend Environment Variables
-
-Create `frontend/.env` with the following:
-
-```bash
-# API Configuration
-VITE_API_URL=http://localhost:3000/api/v1
-VITE_API_TIMEOUT=30000
-
-# OAuth (if using social login)
-VITE_GOOGLE_CLIENT_ID=your-google-client-id
-
-# Feature Flags
-VITE_FEATURE_MULTI_TENANCY=false
-VITE_FEATURE_AI_SUGGESTIONS=true
-
-# Analytics (optional)
-VITE_GOOGLE_ANALYTICS_ID=
-```
+- **Technical questions:** Post in `#connect2-dev` Slack channel
+- **Architecture decisions:** Check [ADR docs](../api/docs/adr/) or ask tech lead
+- **Stuck on a bug:** Pair with a teammate or use Claude Code
+- **Process questions:** Ask your manager or scrum master
 
 ---
 
-## 9. Docker Development Environment
-
-### 9.1 Using Docker Compose
-
-For a fully containerized development environment:
-
-```bash
-# Start all services (backend, frontend, postgres, redis)
-docker-compose up
-
-# Start in detached mode
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-
-# Stop and remove volumes (reset database)
-docker-compose down -v
-```
-
-### 9.2 Docker Compose Configuration
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: connect2_user
-      POSTGRES_PASSWORD: connect2_pass
-      POSTGRES_DB: connect2_dev
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    environment:
-      DATABASE_URL: postgresql://connect2_user:connect2_pass@postgres:5432/connect2_dev
-      REDIS_URL: redis://redis:6379
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    depends_on:
-      - postgres
-      - redis
-    command: npm run dev
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    environment:
-      VITE_API_URL: http://localhost:3000/api/v1
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev
-
-volumes:
-  postgres_data:
-  redis_data:
-```
-
-### 9.3 Docker Development Commands
-
-```bash
-# Rebuild containers after dependency changes
-docker-compose build
-
-# Run migrations in container
-docker-compose exec backend npm run migrate:latest
-
-# Run seeds in container
-docker-compose exec backend npm run seed:run
-
-# Access database in container
-docker-compose exec postgres psql -U connect2_user -d connect2_dev
-
-# Access backend shell
-docker-compose exec backend sh
-
-# View backend logs only
-docker-compose logs -f backend
-```
-
----
-
-## 10. Troubleshooting
-
-### 10.1 Common Issues
-
-#### Issue: "Port 3000 already in use"
-
-**Solution:**
-```bash
-# Find process using port 3000
-lsof -i :3000  # macOS/Linux
-netstat -ano | findstr :3000  # Windows
-
-# Kill the process
-kill -9 <PID>  # macOS/Linux
-taskkill /PID <PID> /F  # Windows
-
-# Or change port in backend/.env
-PORT=3001
-```
-
-#### Issue: "Cannot connect to PostgreSQL"
-
-**Solution:**
-```bash
-# Check if PostgreSQL is running
-pg_isready
-
-# Start PostgreSQL service
-# macOS (Homebrew)
-brew services start postgresql
-
-# Linux (systemd)
-sudo systemctl start postgresql
-
-# Windows
-# Start via Services app or pgAdmin
-
-# Verify connection
-psql -U postgres -c "SELECT version();"
-```
-
-#### Issue: "Redis connection refused"
-
-**Solution:**
-```bash
-# Check if Redis is running
-redis-cli ping  # Should return "PONG"
-
-# Start Redis service
-# macOS (Homebrew)
-brew services start redis
-
-# Linux (systemd)
-sudo systemctl start redis
-
-# Windows
-# Download and run Redis from GitHub releases
-```
-
-#### Issue: "Module not found" after git pull
-
-**Solution:**
-```bash
-# Reinstall dependencies
-cd backend
-rm -rf node_modules package-lock.json
-npm install
-
-cd ../frontend
-rm -rf node_modules package-lock.json
-npm install
-```
-
-#### Issue: "Migration failed"
-
-**Solution:**
-```bash
-# Check migration status
-npm run migrate:status
-
-# Rollback last migration
-npm run migrate:rollback
-
-# Re-run migrations
-npm run migrate:latest
-
-# If still failing, reset database (WARNING: deletes all data)
-npm run migrate:rollback --all
-npm run migrate:latest
-npm run seed:run
-```
-
-### 10.2 Debugging Tips
-
-**Backend Debugging (VS Code):**
-
-Create `.vscode/launch.json`:
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Backend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "cwd": "${workspaceFolder}/backend",
-      "skipFiles": ["<node_internals>/**"],
-      "console": "integratedTerminal"
-    }
-  ]
-}
-```
-
-**Frontend Debugging (Browser DevTools):**
-- Chrome DevTools: F12 → Sources tab → Add breakpoints
-- React DevTools: Install extension for component inspection
-- Network tab: Monitor API requests
-
-**Database Debugging:**
-```bash
-# Enable query logging in backend
-# Add to backend/.env
-LOG_SQL_QUERIES=true
-
-# View slow queries
-psql -U connect2_user -d connect2_dev
-SELECT * FROM pg_stat_statements ORDER BY total_time DESC LIMIT 10;
-```
-
----
-
-## 11. Code Style and Standards
-
-### 11.1 TypeScript Standards
-
-**Use strict TypeScript:**
-```typescript
-// tsconfig.json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true
-  }
-}
-```
-
-**Naming Conventions:**
-```typescript
-// Interfaces: PascalCase with 'I' prefix (optional)
-interface User {
-  id: string;
-  email: string;
-}
-
-// Types: PascalCase
-type ProjectStatus = 'LEAD' | 'FEASIBILITY' | 'GO' | 'PASS';
-
-// Classes: PascalCase
-class LoanService {
-  async calculatePayment() {}
-}
-
-// Functions/Methods: camelCase
-function formatCurrency(amount: number): string {}
-
-// Constants: UPPER_SNAKE_CASE
-const MAX_UPLOAD_SIZE = 10_000_000; // 10 MB
-
-// Files: kebab-case
-// loan-service.ts, user-controller.ts
-```
-
-### 11.2 ESLint Configuration
-
-```json
-// .eslintrc.json
-{
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
-  ],
-  "rules": {
-    "no-console": ["warn", { "allow": ["warn", "error"] }],
-    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "react/react-in-jsx-scope": "off"
-  }
-}
-```
-
-### 11.3 Prettier Configuration
-
-```json
-// .prettierrc
-{
-  "semi": true,
-  "trailingComma": "es5",
-  "singleQuote": true,
-  "printWidth": 100,
-  "tabWidth": 2,
-  "useTabs": false,
-  "arrowParens": "avoid"
-}
-```
-
-### 11.4 Git Commit Message Convention
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, no logic change)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
-
-**Examples:**
-```bash
-feat(loans): add payment calculator endpoint
-
-Implemented monthly payment calculation based on principal, rate, and term.
-Includes validation for input parameters.
-
-Closes #123
-
----
-
-fix(auth): resolve JWT expiration bug
-
-Fixed issue where JWT tokens were expiring 1 day early due to
-incorrect millisecond conversion.
-
-Fixes #456
-
----
-
-docs(api): update loan endpoints documentation
-
-Added examples for all loan API endpoints including request/response formats.
-```
-
----
-
-## 12. IDE Setup
-
-### 12.1 VS Code Extensions
-
-Install these recommended extensions:
-
-```json
-// .vscode/extensions.json
-{
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "ms-vscode.vscode-typescript-next",
-    "dsznajder.es7-react-js-snippets",
-    "bradlc.vscode-tailwindcss",
-    "prisma.prisma",
-    "GitHub.copilot",
-    "eamodio.gitlens",
-    "usernamehw.errorlens",
-    "ms-azuretools.vscode-docker"
-  ]
-}
-```
-
-### 12.2 VS Code Settings
-
-```json
-// .vscode/settings.json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
-}
-```
-
-### 12.3 VS Code Snippets
-
-Create custom snippets in `.vscode/typescript.code-snippets`:
-
-```json
-{
-  "Express Route Handler": {
-    "prefix": "route",
-    "body": [
-      "router.${1:get}('${2:/endpoint}', async (req: Request, res: Response) => {",
-      "  try {",
-      "    $0",
-      "    return res.json({ success: true });",
-      "  } catch (error) {",
-      "    return res.status(500).json({ error: error.message });",
-      "  }",
-      "});"
-    ],
-    "description": "Express route handler"
-  },
-  "React Functional Component": {
-    "prefix": "rfc",
-    "body": [
-      "import React from 'react';",
-      "",
-      "interface ${1:Component}Props {",
-      "  $2",
-      "}",
-      "",
-      "export const ${1:Component}: React.FC<${1:Component}Props> = ({ $3 }) => {",
-      "  return (",
-      "    <div>",
-      "      $0",
-      "    </div>",
-      "  );",
-      "};"
-    ],
-    "description": "React functional component with TypeScript"
-  }
-}
-```
-
----
-
-## Appendix A: Quick Reference
-
-### Useful Commands
-
-```bash
-# Backend
-npm run dev              # Start dev server with hot reload
-npm test                 # Run tests
-npm run test:watch       # Run tests in watch mode
-npm run lint             # Run ESLint
-npm run lint:fix         # Fix ESLint issues
-npm run migrate:latest   # Run migrations
-npm run migrate:rollback # Rollback last migration
-npm run seed:run         # Seed database
-
-# Frontend
-npm run dev              # Start dev server
-npm test                 # Run tests
-npm run build            # Build for production
-npm run preview          # Preview production build
-npm run lint             # Run ESLint
-
-# Database
-psql -U connect2_user -d connect2_dev   # Connect to database
-\dt                                      # List tables
-\d table_name                            # Describe table
-\q                                       # Quit
-
-# Git
-git checkout develop                     # Switch to develop branch
-git pull origin develop                  # Update develop branch
-git checkout -b feature/PROJECT-123      # Create feature branch
-git commit -m "feat: add feature"        # Commit changes
-git push origin feature/PROJECT-123      # Push branch
-
-# Docker
-docker-compose up                        # Start all services
-docker-compose down                      # Stop all services
-docker-compose logs -f backend           # View backend logs
-docker-compose exec backend sh           # Access backend shell
-```
-
-### Default Ports
-
-| Service | Port | URL |
-|---------|------|-----|
-| Frontend | 5173 | http://localhost:5173 |
-| Backend API | 3000 | http://localhost:3000 |
-| API Docs | 3000 | http://localhost:3000/api/docs |
-| PostgreSQL | 5432 | localhost:5432 |
-| Redis | 6379 | localhost:6379 |
-
----
-
-**End of Development Setup Guide**
+## Related Documentation
+
+### Overarching
+- [CLAUDE.md](../../CLAUDE.md) - AI assistant context
+- [System Architecture](../architecture/SYSTEM_ARCHITECTURE.md) - High-level design
+- [Repository Structure](../architecture/REPOSITORY_STRUCTURE.md) - Independent repository design
+- [Tech Stack Decisions](../architecture/TECH_STACK_DECISIONS.md) - Why we chose what
+- [Testing Strategy](standards/TESTING_STRATEGY.md) - Testing approach
+- [Git Standards](standards/git-standards.md) - Branch naming, commits, PRs
+- [CI/CD & Release](standards/cicd-and-release.md) - Pipeline and deployment
+- [Developer Tools Setup](DEVELOPER_TOOLS_SETUP.md) - Jira and Everhour integration
+
+### API-Specific
+- [API Quickstart](../api/docs/technical/API_QUICKSTART.md) - API setup guide
+- [FastAPI Standards](../api/docs/technical/FASTAPI_PROJECT_STANDARDS.md) - Code conventions
+- [API Infrastructure](../api/docs/technical/INFRASTRUCTURE.md) - AWS deployment
+- [API GitHub Actions](../api/docs/technical/GITHUB_ACTIONS.md) - CI/CD workflows
+
+### Web-Specific
+- [Web Quickstart](../web/docs/technical/APP_QUICKSTART.md) - Web setup guide
+- [Frontend Architecture](../web/docs/technical/FRONTEND_ARCHITECTURE.md) - Code conventions
+- [Web Infrastructure](../web/docs/technical/INFRASTRUCTURE.md) - AWS deployment
+- [Web GitHub Actions](../web/docs/technical/GITHUB_ACTIONS.md) - CI/CD workflows

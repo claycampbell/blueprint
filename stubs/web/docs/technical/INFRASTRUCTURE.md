@@ -8,53 +8,35 @@
 
 ## Overview
 
-The Connect 2.0 Web App is deployed to AWS using a **polyglot repository** pattern with shared infrastructure:
+The Connect 2.0 Web App is deployed to AWS as a **standalone service** with its own complete infrastructure:
 
 - **Terraform** for infrastructure as code
 - **Docker** for containerization
-- **ECS Fargate** for container orchestration (shared cluster, per-service deployments)
+- **ECS Fargate** for container orchestration (dedicated cluster per environment)
 - **GitHub Actions** for CI/CD
 
-### Shared vs Per-Service Infrastructure
+### Independent Infrastructure
 
-Connect 2.0 uses a **shared infrastructure** pattern where common resources are managed centrally:
+This repository contains **all infrastructure required** to run the Web application. There are no external dependencies or shared resources with other services.
 
-| Component | Scope | Location |
-|-----------|-------|----------|
-| **VPC, Subnets, NAT** | Shared | `infrastructure/terraform/modules/networking/` |
-| **ECS Cluster** | Shared | `infrastructure/terraform/modules/ecs-cluster/` |
-| **Route53 Zone** | Shared | `infrastructure/terraform/modules/route53-zone/` |
-| **SNS Alerts** | Shared | `infrastructure/terraform/modules/sns-alerts/` |
-| **ACM Certificates** | Shared | `infrastructure/terraform/modules/acm/` |
-| **ALB (Web)** | Per-service | `stubs/web/infrastructure/terraform/modules/alb/` |
-| **ECS Service (Web)** | Per-service | `stubs/web/infrastructure/terraform/modules/ecs/` |
-| **CloudFront (optional)** | Per-service | `stubs/web/infrastructure/terraform/modules/cloudfront/` |
+| Component | Module Location |
+|-----------|-----------------|
+| **VPC, Subnets, NAT** | `infrastructure/terraform/modules/networking/` |
+| **ECS Cluster** | `infrastructure/terraform/modules/ecs-cluster/` |
+| **ECS Service** | `infrastructure/terraform/modules/ecs-service/` |
+| **ALB** | `infrastructure/terraform/modules/alb/` |
+| **ECR Repository** | `infrastructure/terraform/modules/ecr/` |
+| **ACM Certificates** | `infrastructure/terraform/modules/acm/` |
+| **Route53 DNS** | `infrastructure/terraform/modules/dns-record/` |
+| **SNS Alerts** | `infrastructure/terraform/modules/sns-alerts/` |
 
-### Remote State Pattern
+### Benefits of Independent Infrastructure
 
-Per-service Terraform uses **remote state** to reference shared infrastructure:
-
-```hcl
-# In stubs/web/infrastructure/terraform/environments/dev/main.tf
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "connect2-terraform-state-dev"
-    key    = "shared/terraform.tfstate"
-    region = "us-west-2"
-  }
-}
-
-# Use shared outputs
-module "ecs_service" {
-  source = "../../modules/ecs"
-
-  vpc_id             = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids = data.terraform_remote_state.shared.outputs.private_subnet_ids
-  ecs_cluster_id     = data.terraform_remote_state.shared.outputs.ecs_cluster_id
-  # ...
-}
-```
+- **No cross-service dependencies** — Deploy, rollback, or destroy without affecting other services
+- **Cloud provider flexibility** — Can be migrated to Azure, GCP, or other providers independently
+- **Isolated blast radius** — Infrastructure issues don't cascade to other services
+- **Clear ownership** — All resources are managed within this repository
+- **Independent scaling** — Scale infrastructure based on Web-specific needs
 
 ---
 
@@ -62,31 +44,29 @@ module "ecs_service" {
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              SHARED INFRASTRUCTURE                               │
+│                         CONNECT 2.0 WEB INFRASTRUCTURE                           │
+│                              (VPC: 10.2.0.0/16)                                  │
 ├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
 │  │                              Route 53                                    │    │
-│  │                    (Hosted Zone: connect2.com)                           │    │
+│  │              app.connect.com / app-{env}.connect.com                     │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                        VPC (3 AZs)                                       │    │
-│  │  Public Subnets: ALBs, NAT Gateway                                       │    │
+│  │              Application Load Balancer (HTTPS)                           │    │
+│  │                    (SSL/TLS termination, health checks)                  │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                      │                                          │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                         VPC (2-3 AZs)                                    │    │
+│  │  Public Subnets: ALB, NAT Gateway                                        │    │
 │  │  Private Subnets: ECS Tasks                                              │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                    ECS Fargate Cluster (Shared)                          │    │
-│  │          connect2-cluster-{env} - capacity provider                      │    │
-│  └─────────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────────┘
-                                       │
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              WEB SERVICE (Per-Service)                           │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │              Application Load Balancer (app.connect2.com)               │    │
-│  │                    (HTTPS termination, health checks)                    │    │
+│  │                ECS Fargate Cluster (connect2-web-cluster-{env})          │    │
+│  │                       (Dedicated to Web service)                         │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
@@ -97,11 +77,12 @@ module "ecs_service" {
 │  │  │   React)    │  │   React)    │  │   React)    │                      │    │
 │  │  └─────────────┘  └─────────────┘  └─────────────┘                      │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
-│                                      │                                          │
+│                                                                                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
 │  │                         ECR (Container Registry)                         │    │
-│  │                     (Stores Docker images for deployment)                │    │
+│  │                         connect2-web-{env}                               │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -131,55 +112,49 @@ module "ecs_service" {
 
 ## Directory Structure
 
-### Shared Infrastructure (Repository Root)
-
 ```
 infrastructure/
-├── terraform/
-│   └── modules/                    # Shared modules used by all services
-│       ├── networking/             # VPC, subnets, NAT gateway
-│       ├── ecs-cluster/            # Shared ECS Fargate cluster
-│       ├── ecs-service/            # Generic ECS service module
-│       ├── alb/                    # Application Load Balancer
-│       ├── acm/                    # SSL/TLS certificates
-│       ├── dns-record/             # Route53 DNS records
-│       ├── route53-zone/           # Route53 hosted zones
-│       └── sns-alerts/             # Alerting topics
-├── scripts/
-│   ├── rollback-api.sh             # API rollback script
-│   ├── rollback-web.sh             # Web rollback script
-│   └── rollback-all.sh             # Full rollback wrapper
-└── docs/
-    └── OVERVIEW.md                 # Infrastructure overview
-```
-
-### Web Infrastructure (Per-Service)
-
-```
-stubs/web/infrastructure/
 ├── docker/
 │   ├── Dockerfile                  # Multi-stage build (Node → Nginx)
 │   ├── nginx.conf                  # SPA routing, caching, security headers
 │   └── .dockerignore               # Files excluded from Docker build
 └── terraform/
-    ├── modules/                    # Web-specific modules
-    │   ├── alb/                    # Web Load Balancer
-    │   ├── ecs/                    # Web ECS service
-    │   └── cloudfront/             # CDN (optional)
+    ├── modules/                    # Reusable Terraform modules
+    │   ├── networking/             # VPC, subnets, NAT gateway
+    │   ├── ecs-cluster/            # ECS Fargate cluster
+    │   ├── ecs-service/            # ECS service definition
+    │   ├── alb/                    # Application Load Balancer
+    │   ├── ecr/                    # Container registry
+    │   ├── acm/                    # SSL/TLS certificates
+    │   ├── dns-record/             # Route53 DNS records
+    │   ├── route53-zone/           # Route53 hosted zones
+    │   └── sns-alerts/             # Alerting topics
     └── environments/               # Environment-specific configurations
         ├── dev/
-        │   ├── main.tf             # Uses remote state for shared infra
+        │   ├── main.tf             # Complete infrastructure definition
         │   ├── variables.tf
-        │   └── terraform.tfvars.example
+        │   ├── outputs.tf
+        │   └── dev.tfvars
         ├── staging/
+        │   ├── main.tf
+        │   ├── variables.tf
+        │   ├── outputs.tf
+        │   └── staging.tfvars
         └── prod/
+            ├── main.tf
+            ├── variables.tf
+            ├── outputs.tf
+            └── prod.tfvars
+
+scripts/
+└── rollback.sh                     # ECS rollback script
 ```
 
 ---
 
 ## Terraform Modules
 
-### networking (shared)
+### networking
 
 Creates the VPC foundation with public and private subnets.
 
@@ -193,12 +168,12 @@ Creates the VPC foundation with public and private subnets.
 
 **Key Variables:**
 ```hcl
-vpc_cidr           = "10.0.0.0/16"
+vpc_cidr           = "10.2.0.0/16"  # Dedicated Web VPC
 az_count           = 2
 enable_nat_gateway = true
 ```
 
-### ecr (per-service)
+### ecr
 
 Creates the Elastic Container Registry for Docker images.
 
@@ -213,7 +188,7 @@ scan_on_push         = true
 image_count_to_keep  = 10
 ```
 
-### alb (per-service)
+### alb
 
 Creates the Application Load Balancer for traffic distribution.
 
@@ -231,12 +206,12 @@ health_check_path = "/"
 certificate_arn   = "arn:aws:acm:..."  # null for HTTP only
 ```
 
-### ecs (per-service)
+### ecs-service
 
 Creates the ECS Fargate service.
 
 **Resources Created:**
-- ECS Service (references shared cluster)
+- ECS Service
 - Task Definition
 - IAM Roles (task execution, task)
 - Security Group
@@ -245,15 +220,15 @@ Creates the ECS Fargate service.
 
 **Key Variables:**
 ```hcl
-cluster_id        = data.terraform_remote_state.shared.outputs.ecs_cluster_id
-container_image   = "123456789.dkr.ecr.us-west-2.amazonaws.com/connect2-web:latest"
-task_cpu          = 256
-task_memory       = 512
-desired_count     = 2
+cluster_id         = module.ecs_cluster.cluster_id
+container_image    = "123456789.dkr.ecr.us-west-2.amazonaws.com/connect2-web:latest"
+task_cpu           = 256
+task_memory        = 512
+desired_count      = 2
 enable_autoscaling = true
 ```
 
-### dns-record (shared)
+### dns-record
 
 Creates Route53 records.
 
@@ -263,8 +238,8 @@ Creates Route53 records.
 
 **Key Variables:**
 ```hcl
-zone_id     = data.terraform_remote_state.shared.outputs.route53_zone_id
-domain_name = "app"  # Results in app.connect2.com
+zone_id     = module.route53_zone.zone_id
+domain_name = "app"  # Results in app.connect.com
 alb_dns     = module.alb.dns_name
 alb_zone_id = module.alb.zone_id
 ```
@@ -275,21 +250,22 @@ alb_zone_id = module.alb.zone_id
 
 ### Initial Setup (One-time)
 
-1. **Ensure shared infrastructure is deployed first:**
+1. **Create S3 bucket for Terraform state:**
    ```bash
-   cd infrastructure/terraform/environments/dev
-   terraform init
-   terraform apply
+   aws s3 mb s3://connect2-web-terraform-state-dev --region us-west-2
+   aws s3api put-bucket-versioning \
+     --bucket connect2-web-terraform-state-dev \
+     --versioning-configuration Status=Enabled
    ```
 
-2. **Configure web environment variables:**
+2. **Configure environment variables:**
    ```bash
-   cd stubs/web/infrastructure/terraform/environments/dev
+   cd infrastructure/terraform/environments/dev
    cp terraform.tfvars.example terraform.tfvars
    # Edit terraform.tfvars with your values
    ```
 
-3. **Deploy web infrastructure:**
+3. **Deploy infrastructure:**
    ```bash
    terraform init
    terraform plan
@@ -319,9 +295,9 @@ docker build -t connect2-web:latest -f infrastructure/docker/Dockerfile .
 docker tag connect2-web:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-web-dev:latest
 docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-web-dev:latest
 
-# Trigger ECS deployment
+# Trigger ECS deployment (to this repository's dedicated cluster)
 aws ecs update-service \
-  --cluster connect2-cluster-dev \
+  --cluster connect2-web-cluster-dev \
   --service connect2-web-service-dev \
   --force-new-deployment
 ```
@@ -451,12 +427,12 @@ If deployment is stuck:
 ```bash
 # Check service events
 aws ecs describe-services \
-  --cluster connect2-cluster-dev \
+  --cluster connect2-web-cluster-dev \
   --services connect2-web-service-dev
 
 # Force new deployment
 aws ecs update-service \
-  --cluster connect2-cluster-dev \
+  --cluster connect2-web-cluster-dev \
   --service connect2-web-service-dev \
   --force-new-deployment
 ```

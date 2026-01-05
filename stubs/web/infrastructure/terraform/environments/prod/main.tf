@@ -1,10 +1,10 @@
 # Web Frontend - Production Environment
 #
-# This configuration deploys the React frontend using shared infrastructure.
-# Includes: ECS Service, ALB, ECR, DNS, SSL Certificate
+# This configuration deploys the React frontend with its own independent infrastructure.
+# Includes: VPC, ECS Cluster, ECS Service, ALB, ECR, DNS, SSL Certificate
 #
-# Prerequisites: Shared infrastructure must be deployed first
-# (see: infrastructure/terraform/environments/prod/)
+# This infrastructure is fully self-contained and can be deployed to any AWS account
+# without dependencies on shared infrastructure.
 
 terraform {
   required_version = ">= 1.6.0"
@@ -17,8 +17,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket       = "connect2-terraform-state-prod"
-    key          = "web/terraform.tfstate"
+    bucket       = "connect2-web-terraform-state-prod"
+    key          = "terraform.tfstate"
     region       = "us-west-2"
     encrypt      = true
     use_lockfile = true
@@ -39,16 +39,43 @@ provider "aws" {
 }
 
 # =============================================================================
-# Remote State - Shared Infrastructure
+# Networking - Own VPC for Web
 # =============================================================================
 
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "connect2-terraform-state-prod"
-    key    = "shared/terraform.tfstate"
-    region = "us-west-2"
-  }
+module "networking" {
+  source = "../../modules/networking"
+
+  project_name       = "${var.project_name}-web"
+  environment        = var.environment
+  vpc_cidr           = var.vpc_cidr
+  az_count           = 2
+  enable_nat_gateway = true
+}
+
+# =============================================================================
+# ECS Cluster - Own cluster for Web
+# =============================================================================
+
+module "ecs_cluster" {
+  source = "../../modules/ecs-cluster"
+
+  project_name              = "${var.project_name}-web"
+  environment               = var.environment
+  enable_container_insights = true
+  enable_spot               = false  # No Spot in production for stability
+}
+
+# =============================================================================
+# Route53 Hosted Zone (optional - create own or use existing)
+# =============================================================================
+
+module "route53_zone" {
+  source = "../../modules/route53-zone"
+  count  = var.create_route53_zone ? 1 : 0
+
+  project_name = "${var.project_name}-web"
+  environment  = var.environment
+  domain_name  = var.domain_name
 }
 
 # =============================================================================
@@ -70,12 +97,12 @@ module "ecr" {
 # =============================================================================
 
 module "acm" {
-  source = "../../../../infrastructure/terraform/modules/acm"
+  source = "../../modules/acm"
 
-  project_name = "${var.project_name}-web"
-  environment  = var.environment
-  domain_name  = "app.${var.domain_name}"
-  zone_id      = data.terraform_remote_state.shared.outputs.route53_zone_id
+  project_name      = "${var.project_name}-web"
+  environment       = var.environment
+  domain_name       = "app.${var.domain_name}"
+  route53_zone_id   = var.create_route53_zone ? module.route53_zone[0].zone_id : var.route53_zone_id
 
   subject_alternative_names = [
     "www.${var.domain_name}"
@@ -87,12 +114,12 @@ module "acm" {
 # =============================================================================
 
 module "alb" {
-  source = "../../../../infrastructure/terraform/modules/alb"
+  source = "../../modules/alb"
 
   project_name               = "${var.project_name}-web"
   environment                = var.environment
-  vpc_id                     = data.terraform_remote_state.shared.outputs.vpc_id
-  public_subnet_ids          = data.terraform_remote_state.shared.outputs.public_subnet_ids
+  vpc_id                     = module.networking.vpc_id
+  public_subnet_ids          = module.networking.public_subnet_ids
   container_port             = var.container_port
   health_check_path          = var.health_check_path
   certificate_arn            = module.acm.certificate_arn
@@ -104,31 +131,31 @@ module "alb" {
 # =============================================================================
 
 module "dns_record" {
-  source = "../../../../infrastructure/terraform/modules/dns-record"
+  source = "../../modules/dns-record"
 
-  zone_id          = data.terraform_remote_state.shared.outputs.route53_zone_id
-  record_name      = "app"
-  alb_dns_name     = module.alb.alb_dns_name
-  alb_zone_id      = module.alb.alb_zone_id
+  route53_zone_id    = var.create_route53_zone ? module.route53_zone[0].zone_id : var.route53_zone_id
+  record_name        = "app"
+  alb_dns_name       = module.alb.alb_dns_name
+  alb_zone_id        = module.alb.alb_zone_id
 }
 
 # =============================================================================
-# ECS Service (uses shared cluster)
+# ECS Service
 # =============================================================================
 
 module "ecs_service" {
-  source = "../../../../infrastructure/terraform/modules/ecs-service"
+  source = "../../modules/ecs-service"
 
   project_name   = var.project_name
   service_name   = "${var.project_name}-web"
   environment    = var.environment
   aws_region     = var.aws_region
 
-  # Shared infrastructure
-  ecs_cluster_arn    = data.terraform_remote_state.shared.outputs.ecs_cluster_arn
-  ecs_cluster_name   = data.terraform_remote_state.shared.outputs.ecs_cluster_name
-  vpc_id             = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids = data.terraform_remote_state.shared.outputs.private_subnet_ids
+  # Own infrastructure
+  ecs_cluster_arn    = module.ecs_cluster.cluster_arn
+  ecs_cluster_name   = module.ecs_cluster.cluster_name
+  vpc_id             = module.networking.vpc_id
+  private_subnet_ids = module.networking.private_subnet_ids
 
   # ALB
   alb_security_group_id = module.alb.security_group_id
@@ -154,7 +181,7 @@ module "ecs_service" {
     },
     {
       name  = "API_URL"
-      value = "https://api.${var.domain_name}"
+      value = var.api_url
     }
   ]
 

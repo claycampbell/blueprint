@@ -8,56 +8,40 @@
 
 ## Overview
 
-The Connect 2.0 API is deployed to AWS using a **polyglot repository** pattern with shared infrastructure:
+The Connect 2.0 API is deployed to AWS as a **standalone service** with its own complete infrastructure:
 
 - **Terraform** for infrastructure as code
 - **Docker** for containerization
-- **ECS Fargate** for container orchestration (shared cluster, per-service deployments)
+- **ECS Fargate** for container orchestration (dedicated cluster per environment)
 - **RDS PostgreSQL** for database
 - **ElastiCache Redis** for caching
 - **GitHub Actions** for CI/CD
 
-### Shared vs Per-Service Infrastructure
+### Independent Infrastructure
 
-Connect 2.0 uses a **shared infrastructure** pattern where common resources are managed centrally:
+This repository contains **all infrastructure required** to run the API service. There are no external dependencies or shared resources with other services.
 
-| Component | Scope | Location |
-|-----------|-------|----------|
-| **VPC, Subnets, NAT** | Shared | `infrastructure/terraform/modules/networking/` |
-| **ECS Cluster** | Shared | `infrastructure/terraform/modules/ecs-cluster/` |
-| **Route53 Zone** | Shared | `infrastructure/terraform/modules/route53-zone/` |
-| **SNS Alerts** | Shared | `infrastructure/terraform/modules/sns-alerts/` |
-| **ACM Certificates** | Shared | `infrastructure/terraform/modules/acm/` |
-| **ALB (API)** | Per-service | `stubs/api/infrastructure/terraform/modules/alb/` |
-| **ECS Service (API)** | Per-service | `stubs/api/infrastructure/terraform/modules/ecs/` |
-| **RDS** | Per-service | `stubs/api/infrastructure/terraform/modules/rds/` |
-| **ElastiCache** | Per-service | `stubs/api/infrastructure/terraform/modules/elasticache/` |
+| Component | Module Location |
+|-----------|-----------------|
+| **VPC, Subnets, NAT** | `infrastructure/terraform/modules/networking/` |
+| **ECS Cluster** | `infrastructure/terraform/modules/ecs-cluster/` |
+| **ECS Service** | `infrastructure/terraform/modules/ecs-service/` |
+| **ALB** | `infrastructure/terraform/modules/alb/` |
+| **RDS PostgreSQL** | `infrastructure/terraform/modules/rds/` |
+| **ElastiCache Redis** | `infrastructure/terraform/modules/elasticache/` |
+| **ECR Repository** | `infrastructure/terraform/modules/ecr/` |
+| **ACM Certificates** | `infrastructure/terraform/modules/acm/` |
+| **Route53 DNS** | `infrastructure/terraform/modules/dns-record/` |
+| **SNS Alerts** | `infrastructure/terraform/modules/sns-alerts/` |
+| **Bastion Host** | `infrastructure/terraform/modules/bastion/` |
 
-### Remote State Pattern
+### Benefits of Independent Infrastructure
 
-Per-service Terraform uses **remote state** to reference shared infrastructure:
-
-```hcl
-# In stubs/api/infrastructure/terraform/environments/dev/main.tf
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "connect2-terraform-state-dev"
-    key    = "shared/terraform.tfstate"
-    region = "us-west-2"
-  }
-}
-
-# Use shared outputs
-module "ecs_service" {
-  source = "../../modules/ecs"
-
-  vpc_id             = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids = data.terraform_remote_state.shared.outputs.private_subnet_ids
-  ecs_cluster_id     = data.terraform_remote_state.shared.outputs.ecs_cluster_id
-  # ...
-}
-```
+- **No cross-service dependencies** — Deploy, rollback, or destroy without affecting other services
+- **Cloud provider flexibility** — Can be migrated to Azure, GCP, or other providers independently
+- **Isolated blast radius** — Infrastructure issues don't cascade to other services
+- **Clear ownership** — All resources are managed within this repository
+- **Independent scaling** — Scale infrastructure based on API-specific needs
 
 ---
 
@@ -65,31 +49,29 @@ module "ecs_service" {
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              SHARED INFRASTRUCTURE                               │
+│                         CONNECT 2.0 API INFRASTRUCTURE                           │
+│                              (VPC: 10.1.0.0/16)                                  │
 ├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
 │  │                              Route 53                                    │    │
-│  │                    (Hosted Zone: connect2.com)                           │    │
+│  │              api.connect.com / api-{env}.connect.com                     │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                        VPC (3 AZs)                                       │    │
-│  │  Public Subnets: ALBs, NAT Gateway                                       │    │
+│  │              Application Load Balancer (HTTPS)                           │    │
+│  │                    (SSL/TLS termination, health checks)                  │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                      │                                          │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │                         VPC (2-3 AZs)                                    │    │
+│  │  Public Subnets: ALB, NAT Gateway, Bastion                               │    │
 │  │  Private Subnets: ECS Tasks, RDS, Redis                                  │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │                    ECS Fargate Cluster (Shared)                          │    │
-│  │          connect2-cluster-{env} - capacity provider                      │    │
-│  └─────────────────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────────────┘
-                                       │
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              API SERVICE (Per-Service)                           │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────────────────────┐    │
-│  │              Application Load Balancer (api.connect2.com)                │    │
-│  │                    (HTTPS termination, health checks)                    │    │
+│  │                ECS Fargate Cluster (connect2-api-cluster-{env})          │    │
+│  │                         (Dedicated to API service)                       │    │
 │  └─────────────────────────────────────────────────────────────────────────┘    │
 │                                      │                                          │
 │  ┌─────────────────────────────────────────────────────────────────────────┐    │
@@ -102,8 +84,14 @@ module "ecs_service" {
 │                          │                    │                                  │
 │  ┌─────────────────────────────┐    ┌─────────────────────────────┐            │
 │  │      RDS PostgreSQL         │    │     ElastiCache Redis       │            │
-│  │   (Multi-AZ in Production)  │    │   (Shared Cache Layer)      │            │
+│  │   (Multi-AZ in Production)  │    │      (Cache Layer)          │            │
 │  └─────────────────────────────┘    └─────────────────────────────┘            │
+│                                                                                  │
+│  ┌─────────────────────────────┐    ┌─────────────────────────────┐            │
+│  │        ECR Repository       │    │    Bastion Host (optional)  │            │
+│  │      connect2-api-{env}     │    │     (DB access via SSM)     │            │
+│  └─────────────────────────────┘    └─────────────────────────────┘            │
+│                                                                                  │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -138,49 +126,44 @@ module "ecs_service" {
 
 ## Directory Structure
 
-### Shared Infrastructure (Repository Root)
-
 ```
 infrastructure/
-├── terraform/
-│   └── modules/                    # Shared modules used by all services
-│       ├── networking/             # VPC, subnets, NAT gateway
-│       ├── ecs-cluster/            # Shared ECS Fargate cluster
-│       ├── ecs-service/            # Generic ECS service module
-│       ├── alb/                    # Application Load Balancer
-│       ├── acm/                    # SSL/TLS certificates
-│       ├── dns-record/             # Route53 DNS records
-│       ├── route53-zone/           # Route53 hosted zones
-│       └── sns-alerts/             # Alerting topics
-├── scripts/
-│   ├── rollback-api.sh             # API rollback script
-│   ├── rollback-web.sh             # Web rollback script
-│   └── rollback-all.sh             # Full rollback wrapper
-└── docs/
-    └── OVERVIEW.md                 # Infrastructure overview
-```
-
-### API Infrastructure (Per-Service)
-
-```
-stubs/api/infrastructure/
 ├── docker/
 │   ├── Dockerfile                  # Multi-stage build (Python → Production)
 │   └── .dockerignore               # Files excluded from Docker build
 └── terraform/
-    ├── modules/                    # API-specific modules
-    │   ├── alb/                    # API Load Balancer
-    │   ├── ecs/                    # API ECS service
+    ├── modules/                    # Reusable Terraform modules
+    │   ├── networking/             # VPC, subnets, NAT gateway
+    │   ├── ecs-cluster/            # ECS Fargate cluster
+    │   ├── ecs-service/            # ECS service definition
+    │   ├── alb/                    # Application Load Balancer
     │   ├── rds/                    # PostgreSQL database
     │   ├── elasticache/            # Redis cache
-    │   └── bastion/                # Bastion host for DB access
+    │   ├── ecr/                    # Container registry
+    │   ├── acm/                    # SSL/TLS certificates
+    │   ├── dns-record/             # Route53 DNS records
+    │   ├── route53-zone/           # Route53 hosted zones
+    │   ├── bastion/                # Bastion host for DB access
+    │   └── sns-alerts/             # Alerting topics
     └── environments/               # Environment-specific configurations
         ├── dev/
-        │   ├── main.tf             # Uses remote state for shared infra
+        │   ├── main.tf             # Complete infrastructure definition
         │   ├── variables.tf
-        │   └── terraform.tfvars.example
+        │   ├── outputs.tf
+        │   └── dev.tfvars
         ├── staging/
+        │   ├── main.tf
+        │   ├── variables.tf
+        │   ├── outputs.tf
+        │   └── staging.tfvars
         └── prod/
+            ├── main.tf
+            ├── variables.tf
+            ├── outputs.tf
+            └── prod.tfvars
+
+scripts/
+└── rollback.sh                     # ECS rollback script
 ```
 
 ---
@@ -426,7 +409,7 @@ docker build -t connect2-api:latest -f infrastructure/docker/Dockerfile --target
 docker tag connect2-api:latest <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-api-dev:latest
 docker push <account-id>.dkr.ecr.us-west-2.amazonaws.com/connect2-api-dev:latest
 
-# Trigger ECS deployment
+# Trigger ECS deployment (to this repository's dedicated cluster)
 aws ecs update-service \
   --cluster connect2-api-cluster-dev \
   --service connect2-api-service-dev \

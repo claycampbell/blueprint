@@ -13,20 +13,20 @@ This project uses GitHub Actions for continuous integration and deployment:
 - **CI (Continuous Integration):** Automated testing on every PR and push
 - **CD (Continuous Deployment):** Automated deployments to AWS environments
 
-### Polyglot Repository Pattern
+### Independent Infrastructure
 
-Connect 2.0 uses a **polyglot repository** with separate CI/CD workflows for each service:
+The Connect 2.0 API is a **standalone repository** with its own complete infrastructure:
 
-| Service | Workflow Location | Cluster | Service Name |
-|---------|-------------------|---------|--------------|
-| **API** | `stubs/api/.github/workflows/` | `connect2-cluster-{env}` | `connect2-api-service-{env}` |
-| **Web** | `stubs/web/.github/workflows/` | `connect2-cluster-{env}` | `connect2-web-service-{env}` |
+| Component | Resource Name |
+|-----------|---------------|
+| **ECS Cluster** | `connect2-api-cluster-{env}` |
+| **ECS Service** | `connect2-api-service-{env}` |
+| **ECR Repository** | `connect2-api-{env}` |
+| **VPC** | `10.1.0.0/16` (dedicated API network) |
+| **ALB** | `api.connect.com` / `api-{env}.connect.com` |
+| **Terraform State** | `connect2-api-terraform-state-{env}` |
 
-Both services deploy to a **shared ECS cluster** but maintain independent:
-- ECR repositories
-- ECS services
-- ALB target groups
-- Deployment workflows
+This repository owns all its infrastructure—no dependencies on external resources or shared state.
 
 ---
 
@@ -251,20 +251,15 @@ The Terraform workflow also allows selecting:
 ### API Workflows
 
 ```
-stubs/api/.github/workflows/
+.github/workflows/
 ├── ci.yml              # Lint, test, type-check on all branches
 ├── deploy-dev.yml      # Deploy to dev on push to development
 ├── deploy-staging.yml  # Deploy to staging on push to staging
 ├── deploy-prod.yml     # Deploy to prod on push to main (with tests + GitHub Release)
-└── terraform.yml       # API-specific infrastructure changes
+└── terraform.yml       # Infrastructure changes (VPC, ECS, RDS, Redis, etc.)
 ```
 
-### Shared Infrastructure (if applicable)
-
-```
-.github/workflows/
-└── terraform-shared.yml  # Shared infrastructure (VPC, ECS cluster, etc.)
-```
+All workflows are self-contained within this repository. No external workflow dependencies.
 
 ---
 
@@ -415,6 +410,9 @@ aws logs tail /ecs/connect2-api-dev --follow
 aws ecs describe-services \
   --cluster connect2-api-cluster-dev \
   --services connect2-api-service-dev
+
+# Check ECS cluster status
+aws ecs describe-clusters --clusters connect2-api-cluster-dev
 ```
 
 ---

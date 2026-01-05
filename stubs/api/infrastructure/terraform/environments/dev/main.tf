@@ -1,10 +1,10 @@
 # API - Development Environment
 #
-# This configuration deploys the FastAPI backend using shared infrastructure.
-# Includes: ECS Service, ALB, RDS PostgreSQL, ElastiCache Redis
+# This configuration deploys the FastAPI backend with its own independent infrastructure.
+# Includes: VPC, ECS Cluster, ECS Service, ALB, RDS PostgreSQL, ElastiCache Redis
 #
-# Prerequisites: Shared infrastructure must be deployed first
-# (see: infrastructure/terraform/environments/dev/)
+# This infrastructure is fully self-contained and can be deployed to any AWS account
+# without dependencies on shared infrastructure.
 
 terraform {
   required_version = ">= 1.6.0"
@@ -14,11 +14,15 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
 
   backend "s3" {
-    bucket       = "connect2-terraform-state-dev"
-    key          = "api/terraform.tfstate"
+    bucket       = "connect2-api-terraform-state-dev"
+    key          = "terraform.tfstate"
     region       = "us-west-2"
     encrypt      = true
     use_lockfile = true
@@ -39,16 +43,30 @@ provider "aws" {
 }
 
 # =============================================================================
-# Remote State - Shared Infrastructure
+# Networking - Own VPC for API
 # =============================================================================
 
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "connect2-terraform-state-dev"
-    key    = "shared/terraform.tfstate"
-    region = "us-west-2"
-  }
+module "networking" {
+  source = "../../modules/networking"
+
+  project_name       = "${var.project_name}-api"
+  environment        = var.environment
+  vpc_cidr           = var.vpc_cidr
+  az_count           = 2
+  enable_nat_gateway = true
+}
+
+# =============================================================================
+# ECS Cluster - Own cluster for API
+# =============================================================================
+
+module "ecs_cluster" {
+  source = "../../modules/ecs-cluster"
+
+  project_name              = "${var.project_name}-api"
+  environment               = var.environment
+  enable_container_insights = true
+  enable_spot               = true  # Use Spot for dev to save costs
 }
 
 # =============================================================================
@@ -70,12 +88,12 @@ module "ecr" {
 # =============================================================================
 
 module "alb" {
-  source = "../../../../infrastructure/terraform/modules/alb"
+  source = "../../modules/alb"
 
   project_name               = "${var.project_name}-api"
   environment                = var.environment
-  vpc_id                     = data.terraform_remote_state.shared.outputs.vpc_id
-  public_subnet_ids          = data.terraform_remote_state.shared.outputs.public_subnet_ids
+  vpc_id                     = module.networking.vpc_id
+  public_subnet_ids          = module.networking.public_subnet_ids
   container_port             = var.container_port
   health_check_path          = var.health_check_path
   certificate_arn            = null # No HTTPS for dev - add certificate_arn for HTTPS
@@ -91,8 +109,8 @@ module "rds" {
 
   project_name               = "${var.project_name}-api"
   environment                = var.environment
-  vpc_id                     = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids         = data.terraform_remote_state.shared.outputs.private_subnet_ids
+  vpc_id                     = module.networking.vpc_id
+  private_subnet_ids         = module.networking.private_subnet_ids
   allowed_security_group_ids = [module.ecs_service.security_group_id]
 
   engine_version        = "16.4"
@@ -122,8 +140,8 @@ module "elasticache" {
 
   project_name               = "${var.project_name}-api"
   environment                = var.environment
-  vpc_id                     = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids         = data.terraform_remote_state.shared.outputs.private_subnet_ids
+  vpc_id                     = module.networking.vpc_id
+  private_subnet_ids         = module.networking.private_subnet_ids
   allowed_security_group_ids = [module.ecs_service.security_group_id]
 
   redis_version       = "7.1"
@@ -144,22 +162,22 @@ module "elasticache" {
 }
 
 # =============================================================================
-# ECS Service (uses shared cluster)
+# ECS Service
 # =============================================================================
 
 module "ecs_service" {
-  source = "../../../../infrastructure/terraform/modules/ecs-service"
+  source = "../../modules/ecs-service"
 
-  project_name     = var.project_name
-  service_name     = "${var.project_name}-api"
-  environment      = var.environment
-  aws_region       = var.aws_region
+  project_name   = var.project_name
+  service_name   = "${var.project_name}-api"
+  environment    = var.environment
+  aws_region     = var.aws_region
 
-  # Shared infrastructure
-  ecs_cluster_arn  = data.terraform_remote_state.shared.outputs.ecs_cluster_arn
-  ecs_cluster_name = data.terraform_remote_state.shared.outputs.ecs_cluster_name
-  vpc_id           = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids = data.terraform_remote_state.shared.outputs.private_subnet_ids
+  # Own infrastructure
+  ecs_cluster_arn    = module.ecs_cluster.cluster_arn
+  ecs_cluster_name   = module.ecs_cluster.cluster_name
+  vpc_id             = module.networking.vpc_id
+  private_subnet_ids = module.networking.private_subnet_ids
 
   # ALB
   alb_security_group_id = module.alb.security_group_id
@@ -220,8 +238,8 @@ module "bastion" {
 
   project_name            = "${var.project_name}-api"
   environment             = var.environment
-  vpc_id                  = data.terraform_remote_state.shared.outputs.vpc_id
-  public_subnet_id        = data.terraform_remote_state.shared.outputs.public_subnet_ids[0]
+  vpc_id                  = module.networking.vpc_id
+  public_subnet_id        = module.networking.public_subnet_ids[0]
   allowed_ssh_cidr_blocks = var.bastion_allowed_cidrs
   ssh_public_key          = var.bastion_ssh_public_key
   create_elastic_ip       = false

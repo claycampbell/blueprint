@@ -155,17 +155,25 @@
 
 ### AWS Architecture
 
-See [infrastructure/docs/OVERVIEW.md](../../infrastructure/docs/OVERVIEW.md) for detailed infrastructure documentation.
+Each application (API and Web) has its own independent infrastructure. See [REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md) for detailed infrastructure documentation.
 
-#### Shared Infrastructure
-- **VPC**: 3 AZs, public/private subnets, NAT Gateway
-- **ECS Cluster**: Fargate capacity provider
-- **Route53**: DNS management
-- **SNS**: Alert topics (critical, warning, info)
+#### API Infrastructure (api/infrastructure/)
+- **VPC**: 10.1.0.0/16 with public/private subnets, NAT Gateway
+- **ECS Cluster**: API-specific Fargate capacity provider
+- **ALB**: Load balancer for api.connect.com
+- **RDS PostgreSQL**: Primary database
+- **ElastiCache Redis**: Caching and sessions
+- **ECR**: API container registry
+- **Route53**: API DNS management
+- **SNS**: API alert topics
 
-#### Per-Service Resources
-- **API**: ALB, ECS Service, RDS PostgreSQL, ElastiCache Redis, ECR
-- **Web**: ALB, ECS Service, ECR
+#### Web Infrastructure (web/infrastructure/)
+- **VPC**: 10.2.0.0/16 with public/private subnets, NAT Gateway
+- **ECS Cluster**: Web-specific Fargate capacity provider
+- **ALB**: Load balancer for app.connect.com
+- **ECR**: Web container registry
+- **Route53**: Web DNS management
+- **SNS**: Web alert topics
 
 ### Environment Strategy
 
@@ -362,8 +370,7 @@ GET /health → 200 OK
 ## Related Documents
 
 - [TECH_STACK_DECISIONS.md](./TECH_STACK_DECISIONS.md) - Authoritative tech stack decisions
-- [REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md) - Repository organization
-- [infrastructure/docs/OVERVIEW.md](../../infrastructure/docs/OVERVIEW.md) - Infrastructure details
+- [REPOSITORY_STRUCTURE.md](./REPOSITORY_STRUCTURE.md) - Repository organization and infrastructure details
 - [api/docs/DATABASE_SCHEMA.md](../../api/docs/DATABASE_SCHEMA.md) - Database schema
 - [api/docs/API_SPECIFICATION.md](../../api/docs/API_SPECIFICATION.md) - API reference
 

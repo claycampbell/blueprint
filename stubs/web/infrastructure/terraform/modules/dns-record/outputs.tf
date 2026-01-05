@@ -1,0 +1,9 @@
+output "fqdn" {
+  description = "Fully qualified domain name of the record"
+  value       = aws_route53_record.main.fqdn
+}
+
+output "name" {
+  description = "Name of the record"
+  value       = aws_route53_record.main.name
+}

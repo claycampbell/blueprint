@@ -1,499 +1,417 @@
-# Repository Structure & Infrastructure Architecture
+# Repository Structure
 
+**Version:** 2.0
 **Last Updated:** January 2026
+**Related Documents:** [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md), [DEVELOPMENT_GUIDE.md](../development/DEVELOPMENT_GUIDE.md)
 
 ---
 
 ## Overview
 
-This document describes the polyglot repository structure for Connect 2.0, which contains both the API (FastAPI) and Web (React) applications in a single Git repository with independent deployments.
+Connect 2.0 is composed of **two independent applications**, each designed to be a standalone repository with its own complete infrastructure. This architecture enables:
 
-**Key Principles:**
-- Single repository, multiple applications
-- Independent deployments per application
-- Shared infrastructure for networking and compute cluster
-- Path-based CI/CD triggers
-- Granular rollback capability per service
+- **Independent deployment** — Deploy API or Web without coordinating with the other
+- **Cloud provider flexibility** — Move one service to a different cloud without affecting the other
+- **Team autonomy** — Different teams can own each repository
+- **Isolated blast radius** — Infrastructure issues in one service don't cascade
+- **Clear ownership** — All resources for a service live in its repository
 
 ---
 
-## Repository Structure
+## Repository Separation
+
+### Current State (Monorepo for Development)
+
+During initial discovery, both applications exist in a shared `stubs/` directory:
 
 ```
-connect2/
-├── api/                              # FastAPI Backend
-│   ├── .github/workflows/
-│   │   ├── ci.yml                    # Lint, test, type-check
-│   │   ├── deploy-dev.yml            # Deploy to dev on merge
-│   │   ├── deploy-staging.yml        # Deploy to staging
-│   │   └── deploy-prod.yml           # Deploy to production
-│   ├── app/                          # Application code
-│   ├── docs/
-│   │   ├── runbooks/
-│   │   │   ├── DEPLOYMENT.md
-│   │   │   └── ROLLBACK.md           # API-specific rollback procedures
-│   │   └── technical/
-│   │       ├── API_QUICKSTART.md
-│   │       └── BACKEND_ARCHITECTURE.md
-│   ├── infrastructure/
-│   │   └── terraform/
-│   │       ├── environments/
-│   │       │   ├── dev/main.tf
-│   │       │   ├── staging/main.tf
-│   │       │   └── prod/main.tf
-│   │       └── modules/              # API-specific modules only
-│   │           ├── rds/              # PostgreSQL database
-│   │           ├── elasticache/      # Redis cache
-│   │           └── bastion/          # DB access host
-│   ├── migrations/                   # Alembic migrations
-│   ├── scripts/
-│   │   └── rollback.sh               # One-command API rollback
-│   ├── tests/
-│   ├── Dockerfile
-│   └── README.md
+stubs/
+├── api/                    # Connect 2.0 API (standalone)
+└── web/                    # Connect 2.0 Web (standalone)
+```
+
+### Target State (Separate Repositories)
+
+Each application will be extracted to its own repository:
+
+| Repository | Purpose | Domain |
+|------------|---------|--------|
+| `connect2-api` | FastAPI backend service | api.connect.com |
+| `connect2-web` | React frontend application | app.connect.com |
+
+**Extraction is straightforward** — Each directory is already self-contained with all code, infrastructure, documentation, and CI/CD workflows needed to operate independently.
+
+---
+
+## API Repository Structure
+
+The API repository contains a FastAPI backend with PostgreSQL and Redis.
+
+```
+connect2-api/
+├── app/                          # Application code
+│   ├── api/                      # API routes
+│   │   └── v1/                   # Versioned endpoints
+│   ├── core/                     # Core config, security
+│   ├── db/                       # Database setup, repositories
+│   ├── models/                   # SQLAlchemy models
+│   ├── schemas/                  # Pydantic schemas
+│   ├── services/                 # Business logic
+│   └── main.py                   # Application entry point
 │
-├── web/                              # React Frontend
-│   ├── .github/workflows/
-│   │   ├── ci.yml
-│   │   ├── deploy-dev.yml
-│   │   ├── deploy-staging.yml
-│   │   └── deploy-prod.yml
-│   ├── src/                          # Application code
-│   ├── docs/
-│   │   ├── runbooks/
-│   │   │   ├── DEPLOYMENT.md
-│   │   │   └── ROLLBACK.md           # Web-specific rollback procedures
-│   │   └── technical/
-│   │       ├── APP_QUICKSTART.md
-│   │       └── FRONTEND_ARCHITECTURE.md
-│   ├── infrastructure/
-│   │   └── terraform/
-│   │       ├── environments/
-│   │       │   ├── dev/main.tf
-│   │       │   ├── staging/main.tf
-│   │       │   └── prod/main.tf
-│   │       └── modules/              # Web-specific modules (if any)
-│   ├── scripts/
-│   │   └── rollback.sh               # One-command web rollback
-│   ├── tests/
-│   ├── Dockerfile
-│   └── README.md
+├── infrastructure/
+│   ├── docker/
+│   │   ├── Dockerfile            # Multi-stage Python build
+│   │   └── .dockerignore
+│   └── terraform/
+│       ├── modules/              # Reusable Terraform modules
+│       │   ├── networking/       # VPC, subnets, NAT gateway
+│       │   ├── ecs-cluster/      # Fargate cluster
+│       │   ├── ecs-service/      # ECS service definition
+│       │   ├── alb/              # Application Load Balancer
+│       │   ├── rds/              # PostgreSQL database
+│       │   ├── elasticache/      # Redis cache
+│       │   ├── ecr/              # Container registry
+│       │   ├── acm/              # SSL certificates
+│       │   ├── dns-record/       # Route53 records
+│       │   ├── route53-zone/     # DNS hosted zone
+│       │   ├── bastion/          # DB access host
+│       │   └── sns-alerts/       # Alerting
+│       └── environments/         # Per-environment configs
+│           ├── dev/
+│           ├── staging/
+│           └── prod/
 │
-├── infrastructure/                   # Shared Infrastructure
-│   ├── .github/workflows/
-│   │   └── deploy-shared.yml         # Manual trigger, rarely run
-│   ├── terraform/
-│   │   ├── environments/
-│   │   │   ├── dev/main.tf
-│   │   │   ├── staging/main.tf
-│   │   │   └── prod/main.tf
-│   │   └── modules/
-│   │       ├── networking/           # VPC, subnets, NAT gateway
-│   │       ├── ecs-cluster/          # Shared Fargate cluster
-│   │       ├── route53-zone/         # DNS hosted zone
-│   │       ├── sns-alerts/           # Shared alert topics
-│   │       ├── alb/                  # Reusable ALB module
-│   │       ├── ecs-service/          # Reusable ECS service module
-│   │       ├── acm/                  # Reusable certificate module
-│   │       └── dns-record/           # Reusable Route53 record module
-│   ├── docs/
-│   │   ├── INFRASTRUCTURE_OVERVIEW.md
-│   │   ├── TERRAFORM_GUIDE.md
-│   │   └── runbooks/
-│   │       └── SHARED_INFRA_ROLLBACK.md
-│   └── scripts/
-│       └── rollback.sh               # Shared infra rollback (wraps git revert)
+├── migrations/                   # Alembic database migrations
+├── tests/                        # Test suite
+├── scripts/                      # Utility scripts
+│   └── rollback.sh               # ECS rollback
 │
-├── scripts/                          # Repository-wide scripts
-│   ├── rollback-all.sh               # Wrapper to rollback all services
-│   └── generate-types.sh             # Generate TS types from OpenAPI
-│
-├── docs/                             # Cross-cutting documentation
-│   ├── standards/
-│   │   ├── git-standards.md
-│   │   ├── cicd-and-release.md
-│   │   └── observability-and-operations.md
-│   ├── security/
-│   │   └── SECURITY_COMPLIANCE.md
-│   ├── architecture/
-│   │   ├── TECH_STACK_DECISIONS.md
-│   │   ├── BPO_CONNECT_ARCHITECTURE_DECISION.md
-│   │   └── REPOSITORY_STRUCTURE.md   # This document
-│   └── development/
-│       ├── DEVELOPMENT_GUIDE.md
-│       ├── CODE_REVIEW_GUIDELINES.md
-│       └── PRE_COMMIT_HOOKS.md
+├── docs/
+│   ├── technical/
+│   │   ├── API_QUICKSTART.md
+│   │   ├── API_SPECIFICATION.md
+│   │   ├── FASTAPI_PROJECT_STANDARDS.md
+│   │   ├── INFRASTRUCTURE.md
+│   │   └── GITHUB_ACTIONS.md
+│   └── runbooks/
+│       ├── DEPLOYMENT.md
+│       └── ROLLBACK.md
 │
 ├── .github/
 │   └── workflows/
-│       └── pr-checks.yml             # Shared PR validation
+│       ├── ci.yml                # Lint, test, type-check
+│       ├── deploy-dev.yml        # Deploy to dev
+│       ├── deploy-staging.yml    # Deploy to staging
+│       ├── deploy-prod.yml       # Deploy to production
+│       └── terraform.yml         # Infrastructure changes
 │
-├── docker-compose.yml                # Local development
-├── CLAUDE.md                         # AI assistant instructions
+├── .env.example
+├── pyproject.toml
 └── README.md
 ```
 
+### API Infrastructure Summary
+
+| Resource | Description | CIDR/Domain |
+|----------|-------------|-------------|
+| **VPC** | Dedicated API network | `10.1.0.0/16` |
+| **ECS Cluster** | Fargate capacity provider | `connect2-api-cluster-{env}` |
+| **ALB** | HTTPS load balancer | `api.connect.com` |
+| **RDS PostgreSQL** | Primary database | Multi-AZ in prod |
+| **ElastiCache Redis** | Caching and sessions | Cluster mode in prod |
+| **ECR** | Container registry | `connect2-api-{env}` |
+| **Terraform State** | S3 backend | `connect2-api-terraform-state-{env}` |
+
 ---
 
-## Domain Architecture
+## Web Repository Structure
 
-The API and Web applications use separate subdomains:
+The Web repository contains a React frontend served via Nginx.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Internet                              │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-          ┌───────────────┴───────────────┐
-          │                               │
-          ▼                               ▼
-   api.connect.com                 app.connect.com
-          │                               │
-          ▼                               ▼
-  ┌───────────────┐               ┌───────────────┐
-  │   API ALB     │               │   Web ALB     │
-  │  (HTTPS:443)  │               │  (HTTPS:443)  │
-  └───────┬───────┘               └───────┬───────┘
-          │                               │
-          ▼                               ▼
-  ┌───────────────┐               ┌───────────────┐
-  │  API Fargate  │               │  Web Fargate  │
-  │   Service     │               │   Service     │
-  └───────┬───────┘               └───────────────┘
-          │
-    ┌─────┴─────┐
-    ▼           ▼
-┌───────┐  ┌───────┐
-│  RDS  │  │ Redis │
-└───────┘  └───────┘
+connect2-web/
+├── src/                          # Application code
+│   ├── app/                      # App shell, routes, providers
+│   ├── pages/                    # Route pages
+│   ├── api/                      # TanStack Query hooks
+│   ├── stores/                   # Zustand stores
+│   ├── features/                 # Feature modules
+│   ├── components/               # Shared components
+│   │   ├── ui/                   # Primitives (Button, Input)
+│   │   └── common/               # Composed (DataTable)
+│   ├── hooks/                    # Shared hooks
+│   ├── lib/                      # Utilities
+│   ├── styles/                   # Global CSS
+│   └── types/                    # TypeScript types
+│
+├── infrastructure/
+│   ├── docker/
+│   │   ├── Dockerfile            # Multi-stage Node → Nginx build
+│   │   ├── nginx.conf            # SPA routing, caching
+│   │   └── .dockerignore
+│   └── terraform/
+│       ├── modules/              # Reusable Terraform modules
+│       │   ├── networking/       # VPC, subnets, NAT gateway
+│       │   ├── ecs-cluster/      # Fargate cluster
+│       │   ├── ecs-service/      # ECS service definition
+│       │   ├── alb/              # Application Load Balancer
+│       │   ├── ecr/              # Container registry
+│       │   ├── acm/              # SSL certificates
+│       │   ├── dns-record/       # Route53 records
+│       │   ├── route53-zone/     # DNS hosted zone
+│       │   └── sns-alerts/       # Alerting
+│       └── environments/         # Per-environment configs
+│           ├── dev/
+│           ├── staging/
+│           └── prod/
+│
+├── tests/                        # Test suite
+├── scripts/                      # Utility scripts
+│   └── rollback.sh               # ECS rollback
+│
+├── docs/
+│   ├── technical/
+│   │   ├── APP_QUICKSTART.md
+│   │   ├── FRONTEND_ARCHITECTURE.md
+│   │   ├── INFRASTRUCTURE.md
+│   │   └── GITHUB_ACTIONS.md
+│   └── runbooks/
+│       ├── DEPLOYMENT.md
+│       └── ROLLBACK.md
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                # Lint, test, type-check, build
+│       ├── deploy-dev.yml        # Deploy to dev
+│       ├── deploy-staging.yml    # Deploy to staging
+│       ├── deploy-prod.yml       # Deploy to production
+│       └── terraform.yml         # Infrastructure changes
+│
+├── .env.example
+├── package.json
+└── README.md
 ```
 
-**Why separate domains:**
-- Third-party API access is cleaner (`api.connect.com` for external integrations)
-- Independent rate limiting and WAF rules per domain
-- Simpler CORS configuration
-- Independent SSL certificates
-- Clearer separation of concerns
+### Web Infrastructure Summary
+
+| Resource | Description | CIDR/Domain |
+|----------|-------------|-------------|
+| **VPC** | Dedicated Web network | `10.2.0.0/16` |
+| **ECS Cluster** | Fargate capacity provider | `connect2-web-cluster-{env}` |
+| **ALB** | HTTPS load balancer | `app.connect.com` |
+| **ECR** | Container registry | `connect2-web-{env}` |
+| **Terraform State** | S3 backend | `connect2-web-terraform-state-{env}` |
 
 ---
 
-## Infrastructure Ownership
+## Key Design Decisions
 
-### Shared Infrastructure (`infrastructure/`)
+### No Shared Infrastructure
 
-Deployed once per environment, rarely changes. Both API and Web depend on these resources.
+Each repository contains **all infrastructure** needed to run independently:
 
-| Resource | Purpose |
-|----------|---------|
-| VPC | Single network for all services |
-| Subnets | Public (ALBs) and private (Fargate, RDS) |
-| NAT Gateway | Outbound internet for private subnets |
-| ECS Cluster | Logical grouping for Fargate services |
-| Route53 Hosted Zone | DNS zone for `connect.com` |
-| SNS Topics | Shared alerting for on-call team |
+| Aspect | API Repository | Web Repository |
+|--------|----------------|----------------|
+| **VPC** | Own VPC (10.1.0.0/16) | Own VPC (10.2.0.0/16) |
+| **ECS Cluster** | Dedicated cluster | Dedicated cluster |
+| **Terraform State** | Separate S3 bucket | Separate S3 bucket |
+| **CI/CD Workflows** | Self-contained | Self-contained |
+| **Documentation** | Complete for API | Complete for Web |
 
-### API Infrastructure (`api/infrastructure/`)
+### No Remote State Dependencies
 
-API-specific resources that only the API service needs.
+Unlike polyglot repository patterns, there are **no `terraform_remote_state` data sources** referencing external infrastructure. Each environment's `main.tf` creates everything it needs.
 
-| Resource | Purpose |
-|----------|---------|
-| ALB | Load balancer for `api.connect.com` |
-| ACM Certificate | SSL cert for `api.connect.com` |
-| Route53 A Record | Points `api.connect.com` to API ALB |
-| ECS Service | API Fargate service definition |
-| ECS Task Definition | API container configuration |
-| RDS PostgreSQL | Primary database |
-| ElastiCache Redis | Caching and sessions |
-| Bastion Host | Secure database access |
-| Security Groups | API-specific network rules |
-| CloudWatch Logs/Alarms | API monitoring and alerts |
+### Independent Deployment Pipelines
 
-### Web Infrastructure (`web/infrastructure/`)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         API REPOSITORY                               │
+├─────────────────────────────────────────────────────────────────────┤
+│  Push to development → CI → Deploy to Dev (api-dev.connect.com)     │
+│  Push to staging     → CI → Deploy to Staging                        │
+│  Push to main        → CI → Deploy to Production (api.connect.com)  │
+└─────────────────────────────────────────────────────────────────────┘
 
-Web-specific resources that only the Web application needs.
-
-| Resource | Purpose |
-|----------|---------|
-| ALB | Load balancer for `app.connect.com` |
-| ACM Certificate | SSL cert for `app.connect.com` |
-| Route53 A Record | Points `app.connect.com` to Web ALB |
-| ECS Service | Web Fargate service definition |
-| ECS Task Definition | Web container configuration |
-| Security Groups | Web-specific network rules |
-| CloudWatch Logs/Alarms | Web monitoring and alerts |
-
----
-
-## How App Terraform Uses Shared Infrastructure
-
-Each application's Terraform reads outputs from the shared infrastructure state:
-
-```hcl
-# api/infrastructure/terraform/environments/prod/main.tf
-
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "connect2-terraform-state-prod"
-    key    = "shared/terraform.tfstate"
-    region = "us-west-2"
-  }
-}
-
-# Use shared VPC and cluster
-module "ecs_service" {
-  source = "../../modules/ecs-service"
-
-  cluster_arn        = data.terraform_remote_state.shared.outputs.ecs_cluster_arn
-  vpc_id             = data.terraform_remote_state.shared.outputs.vpc_id
-  private_subnet_ids = data.terraform_remote_state.shared.outputs.private_subnet_ids
-  public_subnet_ids  = data.terraform_remote_state.shared.outputs.public_subnet_ids
-  # ...
-}
+┌─────────────────────────────────────────────────────────────────────┐
+│                         WEB REPOSITORY                               │
+├─────────────────────────────────────────────────────────────────────┤
+│  Push to development → CI → Deploy to Dev (app-dev.connect.com)     │
+│  Push to staging     → CI → Deploy to Staging                        │
+│  Push to main        → CI → Deploy to Production (app.connect.com)  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Communication Between Services
 
-## Terraform State Organization
+The Web app communicates with the API via HTTPS:
 
-All state files are stored in a single S3 bucket per environment with versioning enabled:
-
-| Bucket | State Key | Contains |
-|--------|-----------|----------|
-| `connect2-terraform-state-dev` | `shared/terraform.tfstate` | VPC, cluster, Route53 zone |
-| `connect2-terraform-state-dev` | `api/terraform.tfstate` | API ALB, RDS, Redis, ECS service |
-| `connect2-terraform-state-dev` | `web/terraform.tfstate` | Web ALB, ECS service |
-
-Same pattern for `staging` and `prod` buckets.
-
----
-
-## CI/CD: Path-Based Deployments
-
-GitHub Actions workflows trigger based on which paths changed in a PR:
-
-```yaml
-# api/.github/workflows/deploy-prod.yml
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'api/**'
-      - '!api/docs/**'
-
-# web/.github/workflows/deploy-prod.yml
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'web/**'
-      - '!web/docs/**'
-
-# infrastructure/.github/workflows/deploy-shared.yml
-on:
-  workflow_dispatch:  # Manual trigger only
-  push:
-    branches: [main]
-    paths:
-      - 'infrastructure/**'
+```
+┌─────────────┐         HTTPS          ┌─────────────┐
+│  Web App    │ ─────────────────────► │   API       │
+│ app.connect │   api.connect.com/v1   │ api.connect │
+└─────────────┘                        └─────────────┘
 ```
 
-### Deployment Scenarios
+**Configuration:**
+- Web app uses `VITE_API_URL` environment variable
+- API provides CORS configuration for the Web domain
 
-| PR Contains | Workflows Triggered | Result |
-|-------------|---------------------|--------|
-| `api/` only | `deploy-api` | 1 deployment |
-| `web/` only | `deploy-web` | 1 deployment |
-| `api/` + `web/` | Both | 2 parallel deployments |
-| `infrastructure/` | `deploy-shared` | 1 deployment (manual approval) |
-| `api/` + `infrastructure/` | Both | 2 deployments |
-| All three | All three | 3 deployments |
+| Environment | Web Domain | API URL |
+|-------------|------------|---------|
+| Dev | app-dev.connect.com | https://api-dev.connect.com |
+| Staging | app-staging.connect.com | https://api-staging.connect.com |
+| Prod | app.connect.com | https://api.connect.com |
 
 ---
 
-## Rollback Strategy
+## Environment Configuration
 
-### Rollback Commands
+### API Environments
 
-Each service has its own one-command rollback script:
+| Environment | Terraform State Bucket | Domain | Resources |
+|-------------|------------------------|--------|-----------|
+| **Dev** | `connect2-api-terraform-state-dev` | api-dev.connect.com | Minimal, Spot instances |
+| **Staging** | `connect2-api-terraform-state-staging` | api-staging.connect.com | Production-like, Spot |
+| **Prod** | `connect2-api-terraform-state-prod` | api.connect.com | Full HA, Multi-AZ |
 
-| Situation | Command |
-|-----------|---------|
-| API broke | `./api/scripts/rollback.sh prod` |
-| Web broke | `./web/scripts/rollback.sh prod` |
-| Both broke | `./scripts/rollback-all.sh prod` |
-| Shared infra broke | `git revert -m 1 <sha> && git push` |
+### Web Environments
 
-### Individual Service Rollback
+| Environment | Terraform State Bucket | Domain | Resources |
+|-------------|------------------------|--------|-----------|
+| **Dev** | `connect2-web-terraform-state-dev` | app-dev.connect.com | Minimal, Spot instances |
+| **Staging** | `connect2-web-terraform-state-staging` | app-staging.connect.com | Production-like, Spot |
+| **Prod** | `connect2-web-terraform-state-prod` | app.connect.com | Full HA, no Spot |
+
+---
+
+## Benefits of This Structure
+
+### 1. Cloud Provider Flexibility
+
+Either repository can be migrated independently:
+
+```
+Example: Move API to Azure while Web stays on AWS
+
+Before:
+  API (AWS) ←── HTTPS ──→ Web (AWS)
+
+After:
+  API (Azure) ←── HTTPS ──→ Web (AWS)
+
+Only change: Update VITE_API_URL in Web's environment config
+```
+
+### 2. Independent Scaling
+
+Scale each service based on its specific needs:
+
+- **API** might need more database capacity
+- **Web** might need CDN or edge caching
+- Neither affects the other's infrastructure
+
+### 3. Team Autonomy
+
+Different teams can own each repository:
+
+- **Backend Team** → connect2-api repository
+- **Frontend Team** → connect2-web repository
+- No coordination needed for infrastructure changes
+
+### 4. Simplified Rollbacks
+
+Roll back one service without affecting the other:
 
 ```bash
-# api/scripts/rollback.sh
-#!/bin/bash
-set -euo pipefail
+# API had a bad deployment? Roll back API only
+cd connect2-api
+./scripts/rollback.sh prod
 
-ENV=${1:-prod}
-SERVICE="connect2-api-${ENV}"
-CLUSTER="connect2-cluster-${ENV}"
-
-echo "Finding previous task definition for ${SERVICE}..."
-
-# Get the second-most-recent task definition (the one before current)
-PREV_TASK_DEF=$(aws ecs list-task-definitions \
-  --family-prefix "${SERVICE}" \
-  --sort DESC \
-  --max-items 2 \
-  --query 'taskDefinitionArns[1]' \
-  --output text)
-
-if [ "$PREV_TASK_DEF" == "None" ] || [ -z "$PREV_TASK_DEF" ]; then
-  echo "ERROR: No previous task definition found to rollback to."
-  exit 1
-fi
-
-echo "Rolling back to: ${PREV_TASK_DEF}"
-
-aws ecs update-service \
-  --cluster "${CLUSTER}" \
-  --service "${SERVICE}" \
-  --task-definition "${PREV_TASK_DEF}" \
-  --force-new-deployment
-
-echo "Waiting for service to stabilize..."
-aws ecs wait services-stable \
-  --cluster "${CLUSTER}" \
-  --services "${SERVICE}"
-
-echo "Rollback complete. Service ${SERVICE} is now running ${PREV_TASK_DEF}"
-echo ""
-echo "IMPORTANT: Create a revert PR to keep Git history accurate:"
-echo "  git revert -m 1 <merge-commit-sha>"
-echo "  git push origin main"
+# Web is unaffected and continues serving users
 ```
 
-### Coordinated Rollback (All Services)
+### 5. Clear Blast Radius
+
+Infrastructure issues are isolated:
+
+- API VPC misconfiguration → Only API affected
+- Web ECS cluster issue → Only Web affected
+- No cascading failures between services
+
+---
+
+## Extracting to Separate Repositories
+
+When ready to split into separate repositories:
+
+### 1. Create New Repositories
 
 ```bash
-# scripts/rollback-all.sh
-#!/bin/bash
-set -euo pipefail
-
-ENV=${1:-prod}
-
-echo "============================================"
-echo "Rolling back ALL services in ${ENV}"
-echo "============================================"
-echo ""
-
-echo "[1/2] Rolling back API..."
-./api/scripts/rollback.sh "${ENV}"
-echo ""
-
-echo "[2/2] Rolling back Web..."
-./web/scripts/rollback.sh "${ENV}"
-echo ""
-
-echo "============================================"
-echo "All services rolled back in ${ENV}"
-echo "============================================"
-echo ""
-echo "If shared infrastructure also needs rollback:"
-echo "  git revert -m 1 <commit-sha>"
-echo "  git push origin main"
-echo "  # Wait for terraform apply workflow"
+# Create empty repositories
+gh repo create your-org/connect2-api --private
+gh repo create your-org/connect2-web --private
 ```
 
-### Rollback Decision Matrix
+### 2. Extract API
 
-| Symptom | Likely Cause | Rollback Action |
-|---------|--------------|-----------------|
-| API 5xx errors after deploy | Bad API code | `./api/scripts/rollback.sh` |
-| Web errors after deploy | Bad web code | `./web/scripts/rollback.sh` |
-| API can't reach database | Infra change (SG, VPC) | Check infra PR, possibly `git revert` |
-| Both apps broken | Shared infra or coordinated deploy | `./scripts/rollback-all.sh` + investigate |
-| DNS not resolving | Route53 change | `git revert` the infra PR |
-| SSL certificate errors | ACM change | Wait (propagation) or `git revert` |
+```bash
+# From the monorepo root
+cd stubs/api
 
-### Why Shared Infrastructure Rollback is Different
+# Initialize new repo
+git init
+git remote add origin git@github.com:your-org/connect2-api.git
 
-Shared infrastructure rollback requires `git revert` rather than a script because:
-
-1. **Terraform state** - Infrastructure rollback requires `terraform apply` with the previous configuration, not just pointing to a previous version
-2. **Blast radius** - Rolling back VPC or cluster affects both apps simultaneously
-3. **Safety** - Human review is important before rolling back networking
-4. **Rarity** - Shared infrastructure should change infrequently
-
----
-
-## ECS Architecture Clarification
-
-A common point of confusion:
-
-| Term | What It Is | Shared? |
-|------|------------|---------|
-| **ECR** | Docker image registry (stores images) | One registry, multiple repositories |
-| **ECS Cluster** | Logical grouping of services | Yes - one cluster, multiple services |
-| **ECS Service** | Manages running tasks for one app | No - one per app |
-| **ECS Task Definition** | Container blueprint (image, CPU, memory) | No - one per app |
-| **Fargate Task** | Running container instance | No - belongs to a service |
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    ECR (Registry)                           │
-│  ┌─────────────────┐    ┌─────────────────┐                │
-│  │ connect2-api    │    │ connect2-web    │                │
-│  │ :abc123, :latest│    │ :def456, :latest│                │
-│  └─────────────────┘    └─────────────────┘                │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                    pulls images
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│              ECS Cluster (shared)                           │
-│                                                             │
-│  ┌─────────────────────┐    ┌─────────────────────┐        │
-│  │ Service: api        │    │ Service: web        │        │
-│  │ ┌─────┐ ┌─────┐    │    │ ┌─────┐ ┌─────┐    │        │
-│  │ │Task │ │Task │    │    │ │Task │ │Task │    │        │
-│  │ └─────┘ └─────┘    │    │ └─────┘ └─────┘    │        │
-│  └─────────────────────┘    └─────────────────────┘        │
-└─────────────────────────────────────────────────────────────┘
+# Copy .gitignore, commit, push
+git add .
+git commit -m "Initial commit: Extract API from monorepo"
+git push -u origin main
 ```
 
----
+### 3. Extract Web
 
-## Migration from Current Structure
+```bash
+cd stubs/web
 
-If migrating from separate VPCs per app to shared infrastructure:
+git init
+git remote add origin git@github.com:your-org/connect2-web.git
 
-### Phase 1: Create Shared Infrastructure
-1. Deploy `infrastructure/terraform/environments/{env}/`
-2. Creates new shared VPC, cluster, Route53 zone
-3. Old infrastructure remains running
+git add .
+git commit -m "Initial commit: Extract Web from monorepo"
+git push -u origin main
+```
 
-### Phase 2: Migrate API
-1. Update `api/infrastructure/` to use remote state from shared
-2. Remove networking module from API terraform
-3. Deploy - API moves to shared VPC
-4. Verify API works
+### 4. Configure GitHub Secrets
 
-### Phase 3: Migrate Web
-1. Update `web/infrastructure/` to use remote state from shared
-2. Remove networking module from Web terraform
-3. Deploy - Web moves to shared VPC
-4. Verify Web works
+For each repository, add these secrets:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
 
-### Phase 4: Cleanup
-1. Destroy old VPCs (now empty)
-2. Remove duplicate modules
-3. Update documentation
+### 5. Deploy Infrastructure
+
+```bash
+# In each repository
+cd infrastructure/terraform/environments/dev
+terraform init
+terraform apply -var-file=dev.tfvars
+```
 
 ---
 
 ## Related Documentation
 
-- [Git Standards](./standards/git-standards.md) - Branching, commits, PRs
-- [CI/CD & Release](./standards/cicd-and-release.md) - Deployment pipeline, rollback requirements
-- [Observability & Operations](./standards/observability-and-operations.md) - Logging, metrics, incident response
-- [Tech Stack Decisions](./architecture/TECH_STACK_DECISIONS.md) - Technology choices
-- [Security Compliance](./security/SECURITY_COMPLIANCE.md) - Security requirements
+### API
+- [API README](../../api/README.md) - Quick start guide
+- [API Infrastructure](../../api/docs/technical/INFRASTRUCTURE.md) - Detailed infrastructure docs
+- [API GitHub Actions](../../api/docs/technical/GITHUB_ACTIONS.md) - CI/CD workflows
+
+### Web
+- [Web README](../../web/README.md) - Quick start guide
+- [Web Infrastructure](../../web/docs/technical/INFRASTRUCTURE.md) - Detailed infrastructure docs
+- [Web GitHub Actions](../../web/docs/technical/GITHUB_ACTIONS.md) - CI/CD workflows
+
+### Architecture
+- [System Architecture](./SYSTEM_ARCHITECTURE.md) - High-level system design
+- [Tech Stack Decisions](./TECH_STACK_DECISIONS.md) - Technology choices

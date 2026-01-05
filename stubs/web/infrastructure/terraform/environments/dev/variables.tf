@@ -1,3 +1,7 @@
+# =============================================================================
+# General Variables
+# =============================================================================
+
 variable "project_name" {
   description = "Project name for resource naming"
   type        = string
@@ -16,7 +20,20 @@ variable "aws_region" {
   default     = "us-west-2"
 }
 
-# Container
+# =============================================================================
+# Networking Variables
+# =============================================================================
+
+variable "vpc_cidr" {
+  description = "CIDR block for the Web VPC"
+  type        = string
+  default     = "10.2.0.0/16"
+}
+
+# =============================================================================
+# Container Variables
+# =============================================================================
+
 variable "container_image" {
   description = "Docker image to deploy"
   type        = string
@@ -34,7 +51,10 @@ variable "health_check_path" {
   default     = "/"
 }
 
-# ECS Task
+# =============================================================================
+# ECS Task Variables
+# =============================================================================
+
 variable "task_cpu" {
   description = "Task CPU units"
   type        = number
@@ -63,4 +83,14 @@ variable "max_capacity" {
   description = "Maximum task count for autoscaling"
   type        = number
   default     = 2
+}
+
+# =============================================================================
+# Application Variables
+# =============================================================================
+
+variable "api_url" {
+  description = "URL of the API backend"
+  type        = string
+  default     = "https://api-dev.connect2.com"
 }
