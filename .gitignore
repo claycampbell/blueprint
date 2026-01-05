@@ -73,3 +73,6 @@ scripts/temp-*.py
 scripts/create-*.py
 scripts/*-temp.py
 COST_OF_OWNERSHIP.pdf
+
+# Demo project build artifacts
+demo-hybrid-state-workflow/
