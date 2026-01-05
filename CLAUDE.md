@@ -27,6 +27,21 @@ This is a **documentation repository** for the Blueprint/Connect 2.0 platform de
 - Evaluating integration approaches
 - Prioritizing backlog items
 
+**[VALUE_STREAMS.md](VALUE_STREAMS.md)** - Executive view of Blueprint's end-to-end business value streams (Version 3.4):
+- Seven value streams (VS1-VS7) from lead intake through builder accounting
+- Current system ownership map (BPO, SharePoint, Connect 1.0)
+- Key decision gates and handoff points
+- Integration pain points and manual workflows
+- Connect 2.0 transformation strategy aligned with MVP phases
+- User personas mapped to value streams
+
+**Use this to understand:**
+- How Blueprint's business operates end-to-end
+- Which systems own which parts of the workflow
+- Where manual handoffs create friction
+- How Connect 2.0 will unify fragmented processes
+- Target metrics and improvements for each value stream
+
 ### Strategic Planning Documents
 **Blueprint Workshop — Detailed Summary & Outcomes.txt** - Workshop outcomes from October 1, 2025:
 - Blueprint's strategic direction and operating model
@@ -43,6 +58,7 @@ This is a **documentation repository** for the Blueprint/Connect 2.0 platform de
 - Program roles and responsibilities (PLT structure)
 
 ### Supporting Documents
+- **Blueprint_Value_Streams_(exec view)_v3_4.pdf** - Visual flow diagram of all 7 value streams
 - **Blueprint - Demo Notes.pdf** - Detailed walkthrough of current systems (Connect 1.0, BPO, SharePoint)
 - **Blueprint_LOE.xlsx** - Level of effort estimates (spreadsheet format)
 
@@ -52,10 +68,18 @@ This is a **documentation repository** for the Blueprint/Connect 2.0 platform de
 Strategic Planning Documents
 ├── Workshop Outcomes → Informed the program design
 ├── Project Charter → Formal program structure
+├── VALUE_STREAMS.md → Business process flow (v3.4)
 └── PRD → Consolidated technical requirements
+
+VALUE_STREAMS.md (January 2026)
+├── Maps 7 value streams (VS1-VS7)
+├── Documents current system ownership
+├── Identifies integration gaps and pain points
+└── Aligns with Connect 2.0 transformation strategy
 
 PRODUCT_REQUIREMENTS_DOCUMENT.md
 ├── Synthesizes all source documents
+├── References VALUE_STREAMS.md for business context
 ├── Adds technical depth (APIs, data models, integrations)
 └── Provides actionable backlog for engineering
 ```
@@ -619,6 +643,18 @@ MCP (Model Context Protocol) servers are configured in `.mcp.json` at the projec
 **Note:** Use environment variable references (`${VAR_NAME}`) for secrets. Never commit actual API keys.
 
 ### Project Skills
+
+**Document Ingestion** - [.claude/skills/document-ingestion/SKILL.md](.claude/skills/document-ingestion/SKILL.md)
+- Intelligent ingestion of new/updated business documents (PDFs, DOCX, TXT, MD)
+- **Document Analysis:** Extract entities, processes, metrics, requirements from source documents
+- **Impact Mapping:** Identify affected documentation, code areas, and configuration
+- **Documentation Updates:** Systematically update CLAUDE.md, PRD, VALUE_STREAMS.md, and supporting docs
+- **Code Change Flagging:** Create implementation checklists for developers
+- **Jira Integration:** Optionally create epics and tasks for implementation work
+- **Conflict Detection:** Identify contradictions with existing documentation
+- **Change Reporting:** Comprehensive reports showing all impacts and next steps
+- Use when Blueprint leadership provides updated strategy docs, workshop summaries, or process flows
+- Invoke with: `@document-ingestion <path/to/document.pdf> [--scope analysis|documentation|full]`
 
 **Jira Automation** - [.claude/skills/jira-automation/SKILL.md](.claude/skills/jira-automation/SKILL.md)
 - Complete Jira automation toolkit using REST API (equivalent to MCP capabilities)
