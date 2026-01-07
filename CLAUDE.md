@@ -84,6 +84,83 @@ The PRD is the consolidated source of truth. When updating:
 
 **IMPORTANT:** All code changes must be committed to feature branches and merged via pull requests. Never commit directly to `main`.
 
+#### Developer Workflow Rules
+
+**MANDATORY PRACTICES - Read this before starting any task:**
+
+1. **Always Start in Planning Mode**
+   - Before writing any code, use the brainstorming/planning skill or process
+   - Think through the approach, identify edge cases, and consider alternatives
+   - Create a clear plan before implementation
+   - Use `/superpowers:brainstorm` for design refinement when needed
+
+2. **Create a New Branch for Every Task**
+   - **NEVER** work directly on `main` or any shared branch
+   - Create a new feature branch before beginning any new task or development work
+   - Branch naming: `<name>/<feature-description>` (e.g., `clay/add-user-authentication`)
+   - Even for small changes or bug fixes, use a feature branch
+
+3. **Rebase Often**
+   - **Before starting any new task**: Rebase your branch on latest `main`
+   - **Before creating a PR**: Rebase to ensure clean integration
+   - **When main has new commits**: Rebase your feature branch regularly
+   - Command: `git checkout main && git pull && git checkout <your-branch> && git rebase main`
+
+4. **Keep Pull Requests Small and Manageable**
+   - **Target**: PRs should be reviewable in 15-30 minutes
+   - **Ideal size**: < 400 lines of code changed (excluding generated code, tests, docs)
+   - **Break large features** into multiple PRs with logical boundaries
+   - **One concern per PR**: Don't mix refactoring with new features
+   - **Benefits**: Faster reviews, easier debugging, reduced merge conflicts
+
+5. **Always Tag co-pilot as Reviewer**
+   - Every PR must tag `@co-pilot` as a reviewer
+   - Wait for approval before merging (unless emergency hotfix)
+   - Address review comments promptly
+   - Use PR comments to explain complex decisions
+
+6. **Developer Merges Their Own PRs**
+   - **After approval**: The developer who created the PR is responsible for merging
+   - **Merge method**: Use "Squash and merge" for clean git history
+   - **After merge**: Immediately delete the feature branch
+   - **Command**: `gh pr merge --squash --delete-branch`
+   - **Verify**: Check that main branch is clean after merge
+
+7. **Standard Task Workflow**
+   ```
+   Rebase → Plan → Create Branch → Implement → Test → Commit → Push → PR → Review → Merge → Delete Branch
+   ```
+
+**Example Complete Workflow:**
+```bash
+# 1. Sync with main and rebase
+git checkout main
+git pull origin main
+
+# 2. Create feature branch (or rebase existing)
+git checkout -b clay/add-feature-x
+
+# 3. Plan/brainstorm with Claude Code before coding
+# 4. Implement feature with tests
+# 5. Commit changes
+
+git add .
+git commit -m "feat: Add feature X (DP01-123)"
+
+# 6. Before creating PR, rebase on latest main
+git fetch origin
+git rebase origin/main
+
+# 7. Push and create PR
+git push -u origin clay/add-feature-x
+gh pr create --title "Add Feature X" --body "..." --reviewer co-pilot
+
+# 8. After approval, merge and clean up
+gh pr merge --squash --delete-branch
+git checkout main
+git pull origin main
+```
+
 **Branch Naming Convention:**
 - Format: `<name>/<feature-description>`
 - Examples:
@@ -711,9 +788,239 @@ ruff check . --fix                 # Lint only
 
 **Full Documentation:** [docs/development/PRE_COMMIT_HOOKS.md](docs/development/PRE_COMMIT_HOOKS.md)
 
+## Testing Requirements
+
+**IMPORTANT:** All code changes require appropriate test coverage. Tests are automatically run by pre-commit hooks and will block commits if they fail.
+
+### Minimum Test Coverage Expectations
+
+**By Code Type:**
+- **Business logic**: 90%+ coverage required
+- **API endpoints**: 80%+ coverage required (all happy paths + error cases)
+- **Utilities/helpers**: 95%+ coverage required
+- **UI components**: 70%+ coverage required (critical interactions)
+- **Integration tests**: All critical user flows
+
+**Coverage is NOT enough - tests must be meaningful:**
+- Test behavior, not implementation
+- Test edge cases and error conditions
+- Test integration points between modules
+
+### When to Use Each Test Type
+
+**Unit Tests (majority of tests):**
+- Business logic functions
+- Utility functions
+- Service classes
+- Data transformations
+- Validation logic
+- **Example**: Testing `calculateLoanInterest()` function
+
+**Integration Tests:**
+- API endpoint behavior (request → response)
+- Database operations (CRUD)
+- External service interactions (mocked)
+- Authentication/authorization flows
+- **Example**: Testing `POST /api/projects` creates database record
+
+**E2E Tests (selective, high-value flows):**
+- Critical user journeys
+- Multi-step workflows
+- **Example**: Lead intake → feasibility → approval flow
+- **Note**: Expensive to maintain, keep minimal
+
+### Testing Requirements by Change Type
+
+**New Features:**
+- ✅ Unit tests for all business logic
+- ✅ Integration tests for API endpoints
+- ✅ E2E test for primary user flow (if critical feature)
+- ✅ Tests must pass before PR
+
+**Bug Fixes:**
+- ✅ Add regression test that reproduces the bug
+- ✅ Verify test fails before fix
+- ✅ Verify test passes after fix
+- ✅ Document the bug scenario in test name
+
+**Refactoring:**
+- ✅ All existing tests must still pass
+- ✅ Add tests if coverage gaps discovered
+- ✅ Update tests if behavior intentionally changes
+- ❌ Don't reduce test coverage during refactoring
+
+**Documentation/Config Changes:**
+- Tests not required for markdown-only changes
+- Tests required if config affects runtime behavior
+
+### Testing in LocalStack Environment
+
+**Local Development:**
+- Run tests against LocalStack for AWS service mocking
+- Use `docker-compose up localstack` before running tests
+- Configure tests to use LocalStack endpoints (see `.env.test`)
+
+**Pre-Commit:**
+- All tests run automatically via `.claude/hooks/pre-commit.sh`
+- **Commits blocked if tests fail** - fix tests before committing
+
+**CI/CD:**
+- GitHub Actions runs full test suite on every PR
+- Must pass before merge allowed
+
+## Code Review Standards
+
+### What Makes a Good Code Review Comment?
+
+**Do:**
+- **Be specific**: "This function could cause a race condition if two users update simultaneously" vs. "This looks wrong"
+- **Explain why**: "We should validate email format here to prevent invalid data in the database"
+- **Suggest solutions**: "Consider using a Map here instead of an array for O(1) lookups"
+- **Ask questions**: "Could we simplify this by using the existing `formatDate()` utility?"
+- **Praise good work**: "Nice error handling here - this will make debugging much easier"
+- **Link to standards**: "Per [TECHNOLOGY_STACK_DECISION.md](TECHNOLOGY_STACK_DECISION.md), we're using async/await instead of .then()"
+
+**Don't:**
+- ❌ Be vague: "This doesn't look right"
+- ❌ Make it personal: "You always forget to add tests"
+- ❌ Nitpick style: "I prefer 4 spaces" (use linters/formatters for this)
+- ❌ Approve without reading: "LGTM" when you haven't actually reviewed
+- ❌ Argue in comments: Take heated discussions to Slack/video call
+
+### Response Time Expectations
+
+**For Reviewers (co-pilot):**
+- **Critical/Hotfix PRs**: Within 2 hours during business hours
+- **Standard PRs**: Within 1 business day
+- **Large PRs (>400 lines)**: Within 2 business days
+- **Documentation-only PRs**: Within 1 business day
+
+**For PR Authors:**
+- **Respond to comments**: Within 1 business day
+- **Address requested changes**: Within 2 business days
+- **Re-request review**: After addressing all comments
+
+### When to Use Each Review Action
+
+**Approve:**
+- Code meets all standards
+- Tests pass and coverage is adequate
+- No significant concerns
+- Minor suggestions are optional (use "Comment" for these)
+
+**Request Changes:**
+- Security vulnerabilities found
+- Tests are missing or inadequate
+- Breaking changes without migration plan
+- Code doesn't follow project standards
+- Significant logic errors or bugs
+
+**Comment Only:**
+- Asking clarifying questions
+- Suggesting optional improvements
+- Pointing out minor issues that don't block merge
+- Sharing knowledge ("FYI, there's also a utility for this...")
+
+### Handling Disagreements
+
+1. **Author's first response**: Explain your reasoning with specifics
+2. **Reviewer's follow-up**: If still concerned, escalate to team discussion
+3. **Team discussion**: Async in Slack or sync call if complex
+4. **Document decision**: If it's architectural, create an ADR in [docs/architecture/decisions/](docs/architecture/decisions/)
+5. **Move forward**: Once decided, update code and move on (no grudges)
+
+## Definition of Done
+
+### Task Checklist: When is Work "Done"?
+
+A task is **complete** only when ALL of the following are true:
+
+**Code Complete:**
+- [ ] Feature implemented per acceptance criteria
+- [ ] Code follows project conventions (see [TECHNOLOGY_STACK_DECISION.md](TECHNOLOGY_STACK_DECISION.md))
+- [ ] No linter errors or warnings
+- [ ] No console.log() or debug code left in
+- [ ] Error handling implemented
+- [ ] Edge cases handled
+
+**Tests:**
+- [ ] Unit tests written and passing
+- [ ] Integration tests written and passing (if applicable)
+- [ ] Test coverage meets minimums (see Testing Requirements above)
+- [ ] Manual testing completed
+- [ ] No tests skipped or commented out
+
+**Documentation:**
+- [ ] Inline code comments for complex logic
+- [ ] JSDoc comments for public APIs
+- [ ] README updated (if new module/service)
+- [ ] PRD updated (if requirements changed)
+- [ ] API documentation updated (if endpoints changed)
+
+**Code Review:**
+- [ ] PR created with descriptive title and body
+- [ ] @co-pilot tagged as reviewer
+- [ ] All review comments addressed
+- [ ] PR approved
+- [ ] CI/CD checks passing (tests, lint, build)
+
+**Jira:**
+- [ ] Jira ticket status updated to "Done"
+- [ ] Completion comment added with summary
+- [ ] Time logged in Everhour
+- [ ] Related tickets linked (if applicable)
+
+**Git:**
+- [ ] Commits follow format: `type: description (DP01-XXX)`
+- [ ] Branch rebased on latest main
+- [ ] PR merged via "Squash and merge"
+- [ ] Feature branch deleted
+
+**Deployment:**
+- [ ] Code deployed to dev environment
+- [ ] Smoke test passed in dev
+- [ ] Ready for staging deployment (if applicable)
+
+### Code Complete vs. Done
+
+**Code Complete** = Code written and locally tested
+**Done** = Everything above ✅
+
+**Why the distinction matters:**
+- Moving a ticket to "Done" signals to team it's truly finished
+- Incomplete tasks block dependent work
+- Impacts sprint velocity calculations
+- Creates false sense of progress
+
+**Anti-Pattern to Avoid:**
+```
+❌ Dev: "I'm done with the code, just need to write tests"
+   → Task is NOT done. Status should be "In Progress"
+
+❌ Dev: "PR is up, marking ticket as Done"
+   → Task is NOT done until PR is merged
+
+❌ Dev: "It works on my machine, pushing to main"
+   → Tests must pass, PR must be reviewed
+```
+
+### When to Mark a Task as Done
+
+**Mark as Done when:**
+- ✅ All checklist items above are complete
+- ✅ PR is merged to main
+- ✅ Code is deployed to dev environment
+- ✅ You would be comfortable with another developer taking over
+
+**Don't mark as Done if:**
+- ❌ "Just needs code review" → Status: "In Review"
+- ❌ "Waiting for deployment" → Status: "Ready for Deploy"
+- ❌ "Need to write tests" → Status: "In Progress"
+- ❌ "Works but needs cleanup" → Status: "In Progress"
+
 ## Document Status
 
-**Last Updated**: December 14, 2025
+**Last Updated**: December 17, 2025
 **Status**: Active Development Documentation
 **Jira Project**: DP01 - Datapage
 **Next Milestone**: Day 30 Architecture Review
