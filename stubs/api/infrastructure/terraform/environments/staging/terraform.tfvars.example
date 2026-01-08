@@ -1,0 +1,14 @@
+# Staging Environment Variables
+# Copy this file to terraform.tfvars and fill in the values
+
+# Required
+domain_name     = "example.com"
+container_image = "123456789012.dkr.ecr.us-west-2.amazonaws.com/connect2-api-staging:latest"
+
+# Optional: Override subdomain (default: api-staging)
+# subdomain = "api-staging"
+
+# Optional: Enable bastion host
+# enable_bastion = true
+# bastion_allowed_cidrs = ["YOUR_IP/32"]
+# bastion_ssh_public_key = "ssh-rsa AAAA..."
